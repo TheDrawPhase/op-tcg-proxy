@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Piece TCG Reseller</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0a0a12; color: #e2e8f0; min-height: 100vh; }
+  button { cursor: pointer; }
+  input, select { outline: none; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg,#1a1040,#0d0820); border-bottom: 1px solid #2d2060; padding: 14px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .header-title { font-weight: 700; font-size: 18px; color: #f0c040; }
+  .header-sub { font-size: 12px; color: #a78bfa; }
+  .stats { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .stat { background: #1a1040; border-radius: 8px; padding: 6px 12px; text-align: center; min-width: 75px; }
+  .stat-label { font-size: 10px; color: #94a3b8; }
+  .stat-val { font-weight: 700; font-size: 14px; }
+
+  /* Tabs */
+  .tabs { display: flex; border-bottom: 1px solid #2d2060; background: #0d0820; }
+  .tab { padding: 12px 22px; background: none; border: none; font-size: 14px; border-bottom: 2px solid transparent; color: #94a3b8; }
+  .tab.active { color: #f0c040; border-bottom-color: #f0c040; font-weight: 700; }
+
+  /* Banner */
+  .banner { background: #2d1500; border-bottom: 1px solid #f0a040; padding: 10px 20px; font-size: 13px; color: #fbbf24; text-align: center; }
+  .banner button { background: none; border: none; color: #f0c040; font-weight: 700; text-decoration: underline; font-size: 13px; }
+
+  /* Content */
+  .content { padding: 20px; max-width: 900px; margin: 0 auto; }
+
+  /* Card / panel */
+  .panel { background: #13102a; border-radius: 12px; padding: 20px; border: 1px solid #2d2060; margin-bottom: 16px; }
+  .panel-title { font-weight: 700; color: #a78bfa; margin-bottom: 10px; }
+
+  /* Search */
+  .search-row { display: flex; gap: 8px; }
+  .search-input { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #3d2080; background: #1a1640; color: #e2e8f0; font-size: 14px; }
+  .search-btn { padding: 10px 20px; border-radius: 8px; background: #7c3aed; color: #fff; border: none; font-weight: 600; min-width: 90px; font-size: 14px; }
+  .search-btn:disabled { background: #4a2090; }
+  .search-hint { font-size: 12px; color: #6b7280; margin-bottom: 10px; }
+  .search-hint span { color: #a78bfa; }
+  .err { color: #f87171; font-size: 13px; margin-top: 8px; }
+  .searching { color: #a78bfa; font-size: 13px; margin-top: 8px; }
+
+  /* Results grid */
+  .results-grid { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 10px; }
+  .result-card { background: #1a1040; border: 1px solid #3d2080; border-radius: 8px; padding: 8px; cursor: pointer; text-align: center; transition: border-color .15s; }
+  .result-card:hover { border-color: #a78bfa; }
+  .result-card img { width: 100%; border-radius: 4px; margin-bottom: 4px; }
+  .result-card .no-img { height: 80px; background: #2d2060; border-radius: 4px; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 10px; }
+  .result-name { font-size: 11px; color: #e2e8f0; line-height: 1.3; font-weight: 600; }
+  .result-num { font-size: 10px; color: #7c6fcd; margin-top: 2px; }
+  .result-price { font-size: 11px; color: #34d399; margin-top: 3px; font-weight: 700; }
+
+  /* Selected card */
+  .selected-wrap { display: flex; gap: 20px; flex-wrap: wrap; }
+  .selected-img { width: 150px; border-radius: 8px; box-shadow: 0 4px 20px rgba(124,58,237,.5); flex-shrink: 0; }
+  .selected-no-img { width: 150px; height: 210px; background: #2d2060; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 12px; flex-shrink: 0; }
+  .selected-info { flex: 1; min-width: 240px; }
+  .selected-name { font-weight: 700; font-size: 18px; color: #f0c040; margin-bottom: 2px; }
+  .selected-set { color: #a78bfa; font-size: 13px; }
+  .selected-meta { color: #6b7280; font-size: 12px; margin-bottom: 14px; }
+
+  /* Price table */
+  .price-table { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 2px; font-size: 12px; margin-bottom: 14px; }
+  .price-table .th { padding: 4px 8px; background: #1a1040; color: #94a3b8; font-weight: 600; }
+  .price-table .td { padding: 5px 8px; background: #1a1640; }
+  .price-table .td.active { color: #f0c040; font-weight: 700; }
+  .price-table .td.green { color: #34d399; }
+  .price-table .td.purple { color: #a78bfa; }
+  .price-table .td.yellow { color: #f0c040; font-weight: 600; }
+
+  /* Add controls */
+  .add-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .cond-select { padding: 8px 12px; border-radius: 6px; background: #1a1640; border: 1px solid #3d2080; color: #e2e8f0; font-size: 13px; }
+  .qty-input { width: 60px; padding: 8px 10px; border-radius: 6px; background: #1a1640; border: 1px solid #3d2080; color: #e2e8f0; font-size: 13px; }
+  .add-btn { padding: 8px 18px; border-radius: 6px; background: #7c3aed; color: #fff; border: none; font-weight: 600; font-size: 13px; }
+  .tcggo-link { padding: 8px 14px; border-radius: 6px; background: #1a1640; color: #a78bfa; border: 1px solid #3d2080; text-decoration: none; font-size: 12px; }
+
+  /* Offer sheet */
+  .offer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .offer-title { font-weight: 700; color: #f0c040; }
+  .offer-total { color: #34d399; font-weight: 700; font-size: 16px; }
+  .offer-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1a1640; }
+  .offer-thumb { width: 42px; border-radius: 4px; flex-shrink: 0; }
+  .offer-thumb-blank { width: 42px; height: 58px; background: #2d2060; border-radius: 4px; flex-shrink: 0; }
+  .offer-card-name { font-weight: 600; font-size: 13px; }
+  .offer-card-sub { font-size: 11px; color: #94a3b8; }
+  .offer-prices { text-align: right; }
+  .offer-market { color: #34d399; font-size: 12px; }
+  .offer-price { color: #f0c040; font-weight: 700; }
+  .offer-perc { color: #a78bfa; font-size: 11px; }
+  .remove-btn { background: none; border: none; color: #f87171; font-size: 22px; line-height: 1; padding: 0 4px; }
+  .offer-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .accept-btn { flex: 1; padding: 12px; border-radius: 8px; background: #059669; color: #fff; border: none; font-weight: 700; font-size: 14px; }
+  .clear-btn { padding: 12px 18px; border-radius: 8px; background: #7f1d1d; color: #fca5a5; border: none; font-size: 13px; }
+
+  /* Inventory */
+  .inv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .inv-filter { padding: 8px 14px; border-radius: 8px; border: 1px solid #3d2080; background: #1a1640; color: #e2e8f0; font-size: 13px; width: 240px; }
+  .inv-stats { color: #94a3b8; font-size: 13px; }
+  .inv-stats .green { color: #34d399; }
+  .inv-stats .yellow { color: #f0c040; }
+  .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
+  .inv-card { background: #13102a; border-radius: 10px; border: 1px solid #2d2060; overflow: hidden; }
+  .inv-card img { width: 100%; }
+  .inv-card .no-img { height: 100px; background: #1a1040; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 11px; }
+  .inv-card-body { padding: 8px 10px; }
+  .inv-name { font-weight: 600; font-size: 12px; line-height: 1.3; margin-bottom: 1px; }
+  .inv-sub { font-size: 10px; color: #7c6fcd; margin-bottom: 3px; }
+  .inv-cond { font-size: 11px; color: #94a3b8; }
+  .inv-cost { font-size: 11px; color: #34d399; }
+  .inv-val { font-size: 11px; color: #f0c040; }
+  .inv-date { font-size: 10px; color: #6b7280; margin-top: 2px; }
+  .inv-remove { margin-top: 6px; width: 100%; padding: 4px; border-radius: 4px; background: #3f0f0f; color: #f87171; border: none; font-size: 11px; }
+  .empty { text-align: center; color: #6b7280; padding: 60px; font-size: 14px; }
+
+  /* Settings */
+  .settings-wrap { display: flex; flex-direction: column; gap: 16px; max-width: 460px; }
+  .key-hint { font-size: 12px; color: #94a3b8; margin-bottom: 12px; }
+  .key-hint a { color: #a78bfa; }
+  .key-row { display: flex; gap: 8px; }
+  .key-input { flex: 1; padding: 10px 12px; border-radius: 6px; border: 1px solid #3d2080; background: #1a1640; color: #e2e8f0; font-size: 13px; }
+  .key-save { padding: 10px 16px; border-radius: 6px; background: #7c3aed; color: #fff; border: none; font-weight: 600; font-size: 13px; }
+  .key-ok { margin-top: 8px; font-size: 12px; color: #34d399; }
+  .perc-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .perc-label { width: 145px; font-size: 13px; }
+  .perc-range { flex: 1; accent-color: #7c3aed; }
+  .perc-num { width: 48px; padding: 4px 6px; border-radius: 4px; border: 1px solid #3d2080; background: #1a1640; color: #f0c040; font-size: 13px; text-align: center; }
+  .perc-pct { color: #7c6fcd; font-size: 13px; }
+  .perc-example { margin-top: 12px; padding: 12px; background: #0d0820; border-radius: 8px; font-size: 12px; color: #94a3b8; }
+  .perc-example span { color: #f0c040; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e1b4b; border: 1px solid #7c3aed; border-radius: 8px; padding: 10px 22px; color: #e2e8f0; font-size: 14px; z-index: 999; box-shadow: 0 4px 20px rgba(0,0,0,.6); white-space: nowrap; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="font-size:28px">🏴‍☠️</div>
+  <div>
+    <div class="header-title">One Piece TCG</div>
+    <div class="header-sub">Reseller Buylist & Inventory</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Cards</div><div class="stat-val" id="stat-cards" style="color:#a78bfa">0</div></div>
+    <div class="stat"><div class="stat-label">Cost</div><div class="stat-val" id="stat-cost" style="color:#34d399">$0.00</div></div>
+    <div class="stat"><div class="stat-label">Value</div><div class="stat-val" id="stat-value" style="color:#f0c040">$0.00</div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('buylist')">💰 Buylist</button>
+  <button class="tab" onclick="switchTab('inventory')">📦 Inventory</button>
+  <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
+</div>
+
+<div id="no-key-banner" class="banner" style="display:none">
+  ⚠️ No API key set. Go to <button onclick="switchTab('settings')">⚙️ Settings</button> and paste your RapidAPI key to enable card search.
+</div>
+
+<!-- BUYLIST TAB -->
+<div id="tab-buylist" class="content">
+  <div class="panel">
+    <div class="panel-title">🔍 Card Search</div>
+    <div class="search-hint">Search by card name — e.g. <span>"Rayleigh"</span>, <span>"Monkey D. Luffy"</span>, <span>"Nami"</span></div>
+    <div class="search-row">
+      <input id="search-input" class="search-input" placeholder="e.g. Rayleigh or Luffy..." onkeydown="if(event.key==='Enter') doSearch()" />
+      <button class="search-btn" id="search-btn" onclick="doSearch()">Search</button>
+    </div>
+    <div id="search-status"></div>
+    <div id="results-grid" class="results-grid"></div>
+  </div>
+
+  <div id="selected-panel" class="panel" style="display:none">
+    <div id="selected-content"></div>
+  </div>
+
+  <div id="offer-panel" class="panel" style="display:none">
+    <div class="offer-header">
+      <div class="offer-title">📋 Current Offer Sheet</div>
+      <div class="offer-total" id="offer-total">Total: $0.00</div>
+    </div>
+    <div id="offer-rows"></div>
+    <div class="offer-actions">
+      <button class="accept-btn" onclick="acceptOffer()">✅ Accept Offer & Add to Inventory</button>
+      <button class="clear-btn" onclick="clearSession()">Clear</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVENTORY TAB -->
+<div id="tab-inventory" class="content" style="display:none">
+  <div class="inv-header">
+    <input class="inv-filter" placeholder="Filter by name or set..." oninput="renderInventory()" id="inv-filter" />
+    <div class="inv-stats" id="inv-stats"></div>
+  </div>
+  <div id="inv-grid"></div>
+</div>
+
+<!-- SETTINGS TAB -->
+<div id="tab-settings" class="content" style="display:none">
+  <div class="settings-wrap">
+    <div class="panel">
+      <div class="panel-title">🔑 RapidAPI Key (TCGgo)</div>
+      <div class="key-hint">
+        Find your key at <a href="https://rapidapi.com/tcggopro/api/one-piece-tcg-prices/playground" target="_blank">RapidAPI Playground ↗</a> — look for <strong style="color:#e2e8f0">X-RapidAPI-Key</strong> in the code snippets on the right side.
+      </div>
+      <div class="key-row">
+        <input type="password" id="key-input" class="key-input" placeholder="Paste your RapidAPI key here..." />
+        <button class="key-save" onclick="saveKey()">Save</button>
+      </div>
+      <div id="key-ok" class="key-ok" style="display:none"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">⚙️ Buy Percentage Settings</div>
+      <p style="font-size:12px;color:#94a3b8;margin-bottom:14px">Set what % of TCGPlayer market price you offer per condition.</p>
+      <div id="perc-rows"></div>
+      <div class="perc-example" id="perc-example"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PROXY = 'https://op-tcg-proxy-production.up.railway.app';
+const EUR_TO_USD = 1.08;
+const CONDITIONS = ['NM','LP','MP','HP','DMG'];
+const COND_FULL = {NM:'Near Mint',LP:'Lightly Played',MP:'Moderately Played',HP:'Heavily Played',DMG:'Damaged'};
+const COND_MULT = {NM:1.0,LP:0.80,MP:0.64,HP:0.40,DMG:0.25};
+
+let state = {
+  apiKey: '',
+  buyPercs: {NM:50,LP:40,MP:30,HP:20,DMG:10},
+  inventory: [],
+  session: [],
+  selectedCard: null,
+  selectedCond: 'NM',
+  selectedQty: 1,
+  currentTab: 'buylist'
+};
+
+// --- STORAGE ---
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
+
+function loadState() {
+  state.apiKey = load('op-apikey', '');
+  state.buyPercs = load('op-buypercs', {NM:50,LP:40,MP:30,HP:20,DMG:10});
+  state.inventory = load('op-inventory', []);
+  if (state.apiKey) document.getElementById('key-input').value = state.apiKey;
+}
+
+// --- TABS ---
+function switchTab(tab) {
+  ['buylist','inventory','settings'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none';
+    document.querySelectorAll('.tab')[['buylist','inventory','settings'].indexOf(t)].classList.toggle('active', t === tab);
+  });
+  state.currentTab = tab;
+  if (tab === 'inventory') renderInventory();
+  if (tab === 'settings') renderSettings();
+  updateBanner();
+}
+
+function updateBanner() {
+  document.getElementById('no-key-banner').style.display = (!state.apiKey && state.currentTab !== 'settings') ? '' : 'none';
+}
+
+// --- TOAST ---
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = '';
+  setTimeout(() => t.style.display = 'none', 2800);
+}
+
+// --- SEARCH ---
+async function doSearch() {
+  const raw = document.getElementById('search-input').value.trim();
+  if (!raw) return;
+  if (!state.apiKey) { setStatus('<span class="err">Please add your RapidAPI key in ⚙️ Settings first.</span>'); return; }
+
+  const cardName = raw.replace(/\b(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|r|uc|c)\b/gi,'').replace(/\s+/g,' ').trim() || raw;
+  document.getElementById('search-btn').disabled = true;
+  document.getElementById('search-btn').textContent = '⏳...';
+  setStatus('<div class="searching">⏳ Searching...</div>');
+  document.getElementById('results-grid').innerHTML = '';
+
+  try {
+    const res = await fetch(`${PROXY}/cards?search=${encodeURIComponent(cardName)}`);
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+    const cards = Array.isArray(data) ? data : (data.data || []);
+    cards.forEach(c => { if (c.prices?.tcg_player) c.prices.tcgplayer = c.prices.tcg_player; });
+    if (!cards.length) { setStatus(`<div class="err">No cards found for "${cardName}". Try a shorter name.</div>`); }
+    else { setStatus(''); renderResults(cards.slice(0,12)); }
+  } catch(e) {
+    setStatus(`<div class="err">Search failed: ${e.message}</div>`);
+  }
+
+  document.getElementById('search-btn').disabled = false;
+  document.getElementById('search-btn').textContent = 'Search';
+}
+
+function setStatus(html) { document.getElementById('search-status').innerHTML = html; }
+
+function renderResults(cards) {
+  const grid = document.getElementById('results-grid');
+  grid.innerHTML = '';
+  cards.forEach((card, i) => {
+    const nmEur = card.prices?.tcgplayer?.market_price;
+    const nmUsd = nmEur != null ? (nmEur * EUR_TO_USD).toFixed(2) : null;
+    const div = document.createElement('div');
+    div.className = 'result-card';
+    div.innerHTML = `
+      ${card.image ? `<img src="${card.image}" onerror="this.style.display='none'" />` : '<div class="no-img">No image</div>'}
+      <div class="result-name">${card.name || card.name_numbered}</div>
+      <div class="result-num">${card.card_number || ''}</div>
+      <div class="result-num">${card.episode?.name || ''}</div>
+      ${nmUsd ? `<div class="result-price">$${nmUsd} NM</div>` : ''}
+    `;
+    div.onclick = () => selectCard(card);
+    grid.appendChild(div);
+  });
+}
+
+// --- SELECTED CARD ---
+function selectCard(card) {
+  state.selectedCard = card;
+  document.getElementById('results-grid').innerHTML = '';
+  document.getElementById('search-input').value = card.name || card.name_numbered;
+  renderSelectedCard();
+}
+
+function getPrice(card, cond) {
+  const nmEur = card?.prices?.tcgplayer?.market_price;
+  if (nmEur == null) return null;
+  return parseFloat((nmEur * EUR_TO_USD * COND_MULT[cond]).toFixed(2));
+}
+
+function getBuyPrice(mp, cond) {
+  return mp != null ? ((mp * state.buyPercs[cond]) / 100).toFixed(2) : null;
+}
+
+function renderSelectedCard() {
+  const card = state.selectedCard;
+  if (!card) return;
+  const panel = document.getElementById('selected-panel');
+  panel.style.display = '';
+
+  let tableRows = CONDITIONS.map(cond => {
+    const mp = getPrice(card, cond);
+    const bp = getBuyPrice(mp, cond);
+    return `
+      <div class="td ${state.selectedCond===cond?'active':''}">${COND_FULL[cond]}</div>
+      <div class="td green">${mp!=null?'$'+mp:'—'}</div>
+      <div class="td purple">${state.buyPercs[cond]}%</div>
+      <div class="td yellow">${bp!=null?'$'+bp:'—'}</div>
+    `;
+  }).join('');
+
+  const condOpts = CONDITIONS.map(c => `<option value="${c}" ${c===state.selectedCond?'selected':''}>${COND_FULL[c]}</option>`).join('');
+
+  document.getElementById('selected-content').innerHTML = `
+    <div class="selected-wrap">
+      <div>
+        ${card.image ? `<img class="selected-img" src="${card.image}" onerror="this.style.display='none'" />` : '<div class="selected-no-img">No Image</div>'}
+      </div>
+      <div class="selected-info">
+        <div class="selected-name">${card.name || card.name_numbered}</div>
+        <div class="selected-set">${card.episode?.name || ''} • ${card.card_number || ''}</div>
+        <div class="selected-meta" style="margin-top:2px">${card.rarity||''} • ${card.color||''}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">TCGPlayer Prices & Buy Offers <span style="color:#6b7280">(LP+ estimated from NM)</span></div>
+        <div class="price-table">
+          <div class="th">Condition</div><div class="th">TCGPlayer</div><div class="th">Buy %</div><div class="th">Offer</div>
+          ${tableRows}
+        </div>
+        <div class="add-row">
+          <select class="cond-select" onchange="state.selectedCond=this.value;renderSelectedCard()">
+            ${condOpts}
+          </select>
+          <input type="number" class="qty-input" min="1" value="${state.selectedQty}" onchange="state.selectedQty=Math.max(1,parseInt(this.value)||1)" />
+          <button class="add-btn" onclick="addToSession()">+ Add to Offer</button>
+          ${card.tcggo_url ? `<a class="tcggo-link" href="${card.tcggo_url}" target="_blank">View on TCGgo ↗</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// --- SESSION / OFFER ---
+function addToSession() {
+  const card = state.selectedCard;
+  if (!card) return;
+  const mp = getPrice(card, state.selectedCond);
+  const bp = mp != null ? parseFloat(getBuyPrice(mp, state.selectedCond)) : null;
+  state.session.push({
+    id: Date.now() + Math.random(),
+    name: card.name || card.name_numbered,
+    cardNumber: card.card_number || '',
+    set: card.episode?.name || '',
+    image: card.image || null,
+    tcggoUrl: card.tcggo_url || null,
+    condition: state.selectedCond,
+    qty: state.selectedQty,
+    marketPrice: mp,
+    buyPrice: bp,
+    buyPerc: state.buyPercs[state.selectedCond]
+  });
+  renderOfferSheet();
+  showToast(`Added ${card.name} (${state.selectedCond}) to offer`);
+}
+
+function renderOfferSheet() {
+  const panel = document.getElementById('offer-panel');
+  if (!state.session.length) { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  const total = state.session.reduce((s,e) => s + (e.buyPrice||0)*e.qty, 0);
+  document.getElementById('offer-total').textContent = 'Total: $' + total.toFixed(2);
+  document.getElementById('offer-rows').innerHTML = state.session.map(e => `
+    <div class="offer-row">
+      ${e.image ? `<img class="offer-thumb" src="${e.image}" onerror="this.style.display='none'" />` : '<div class="offer-thumb-blank"></div>'}
+      <div style="flex:1">
+        <div class="offer-card-name">${e.name}</div>
+        <div class="offer-card-sub">${e.cardNumber} • ${e.set} • ${COND_FULL[e.condition]} × ${e.qty}</div>
+      </div>
+      <div class="offer-prices">
+        <div class="offer-market">Market: ${e.marketPrice!=null?'$'+e.marketPrice:'—'}</div>
+        <div class="offer-price">Offer: ${e.buyPrice!=null?'$'+(e.buyPrice*e.qty).toFixed(2):'—'}</div>
+        <div class="offer-perc">${e.buyPerc}% × ${e.qty}</div>
+      </div>
+      <button class="remove-btn" onclick="removeFromSession(${e.id})">×</button>
+    </div>
+  `).join('');
+}
+
+function removeFromSession(id) {
+  state.session = state.session.filter(e => e.id !== id);
+  renderOfferSheet();
+}
+
+function clearSession() { state.session = []; renderOfferSheet(); }
+
+function acceptOffer() {
+  if (!state.session.length) return;
+  const date = new Date().toLocaleDateString();
+  state.inventory.push(...state.session.map(e => ({ ...e, id: Date.now()+Math.random(), dateAdded: date })));
+  save('op-inventory', state.inventory);
+  state.session = [];
+  renderOfferSheet();
+  updateStats();
+  showToast('✅ Offer accepted! Cards added to inventory.');
+  switchTab('inventory');
+}
+
+// --- INVENTORY ---
+function renderInventory() {
+  const filter = document.getElementById('inv-filter').value.toLowerCase();
+  const filtered = state.inventory.filter(i =>
+    (i.name||'').toLowerCase().includes(filter) ||
+    (i.set||'').toLowerCase().includes(filter)
+  );
+  const totalCost = state.inventory.reduce((s,i) => s+(i.buyPrice||0)*i.qty, 0);
+  const totalVal = state.inventory.reduce((s,i) => s+(i.marketPrice||0)*i.qty, 0);
+  document.getElementById('inv-stats').innerHTML =
+    `${filtered.length} cards • Cost: <span class="green">$${totalCost.toFixed(2)}</span> • Value: <span class="yellow">$${totalVal.toFixed(2)}</span>`;
+
+  if (!filtered.length) {
+    document.getElementById('inv-grid').innerHTML = '<div class="empty">No inventory yet. Accept offers in the Buylist tab.</div>';
+    return;
+  }
+  document.getElementById('inv-grid').innerHTML = `<div class="inv-grid">${filtered.map(item => `
+    <div class="inv-card">
+      ${item.image ? `<img src="${item.image}" onerror="this.style.display='none'" />` : '<div class="no-img">No image</div>'}
+      <div class="inv-card-body">
+        <div class="inv-name">${item.name}</div>
+        <div class="inv-sub">${item.cardNumber} • ${item.set}</div>
+        <div class="inv-cond">${COND_FULL[item.condition]||item.condition} × ${item.qty}</div>
+        <div class="inv-cost">Cost: $${item.buyPrice!=null?(item.buyPrice*item.qty).toFixed(2):'—'}</div>
+        <div class="inv-val">Value: $${item.marketPrice!=null?(item.marketPrice*item.qty).toFixed(2):'—'}</div>
+        <div class="inv-date">${item.dateAdded}</div>
+        <button class="inv-remove" onclick="removeFromInventory(${item.id})">Remove</button>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+function removeFromInventory(id) {
+  state.inventory = state.inventory.filter(i => i.id !== id);
+  save('op-inventory', state.inventory);
+  updateStats();
+  renderInventory();
+}
+
+// --- SETTINGS ---
+function saveKey() {
+  const k = document.getElementById('key-input').value.trim();
+  if (!k) return;
+  state.apiKey = k;
+  save('op-apikey', k);
+  document.getElementById('key-ok').style.display = '';
+  document.getElementById('key-ok').textContent = '✅ Key saved: ...' + k.slice(-8);
+  updateBanner();
+  showToast('✅ API key saved!');
+}
+
+function renderSettings() {
+  const rows = document.getElementById('perc-rows');
+  rows.innerHTML = CONDITIONS.map(cond => `
+    <div class="perc-row">
+      <div class="perc-label">${COND_FULL[cond]}</div>
+      <input type="range" class="perc-range" min="1" max="100" value="${state.buyPercs[cond]}"
+        oninput="updatePerc('${cond}',parseInt(this.value))" />
+      <input type="number" class="perc-num" min="1" max="100" value="${state.buyPercs[cond]}"
+        onchange="updatePerc('${cond}',Math.min(100,Math.max(1,parseInt(this.value)||1)))" />
+      <div class="perc-pct">%</div>
+    </div>
+  `).join('');
+  updatePercExample();
+}
+
+function updatePerc(cond, val) {
+  state.buyPercs[cond] = val;
+  save('op-buypercs', state.buyPercs);
+  renderSettings();
+}
+
+function updatePercExample() {
+  document.getElementById('perc-example').innerHTML =
+    `💡 $10.00 NM card at ${state.buyPercs.NM}% = <span>$${(10*state.buyPercs.NM/100).toFixed(2)}</span> offer`;
+}
+
+// --- STATS ---
+function updateStats() {
+  document.getElementById('stat-cards').textContent = state.inventory.length;
+  const cost = state.inventory.reduce((s,i) => s+(i.buyPrice||0)*i.qty, 0);
+  const val = state.inventory.reduce((s,i) => s+(i.marketPrice||0)*i.qty, 0);
+  document.getElementById('stat-cost').textContent = '$' + cost.toFixed(2);
+  document.getElementById('stat-value').textContent = '$' + val.toFixed(2);
+}
+
+// --- INIT ---
+loadState();
+updateStats();
+updateBanner();
+renderSettings();
+if (state.apiKey) {
+  document.getElementById('key-ok').style.display = '';
+  document.getElementById('key-ok').textContent = '✅ Key saved: ...' + state.apiKey.slice(-8);
+}
+</script>
+</body>
+</html>
