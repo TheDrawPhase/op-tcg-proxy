@@ -1,12 +1,13 @@
 const express = require("express");
 const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = "one-piece-tcg-prices.p.rapidapi.com";
 
-// Manually set CORS headers on every single request
+// CORS headers on every request
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -14,6 +15,9 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") return res.sendStatus(200);
   next();
 });
+
+// Serve the frontend app
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
