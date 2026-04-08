@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One Piece TCG Reseller</title>
 <style>
+*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#0a0a12;color:#e2e8f0;min-height:100vh;font-size:15px}
 button{cursor:pointer;font-family:inherit}
 input,select,textarea{outline:none;font-family:inherit}
 a{text-decoration:none}
-
 .header{background:linear-gradient(135deg,#1a1040,#0d0820);border-bottom:1px solid #2d2060;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .header-title{font-weight:700;font-size:20px;color:#f0c040}
 .header-sub{font-size:13px;color:#a78bfa}
@@ -17,18 +17,14 @@ a{text-decoration:none}
 .stat{background:#1a1040;border-radius:8px;padding:7px 13px;text-align:center;min-width:80px}
 .stat-label{font-size:11px;color:#94a3b8}
 .stat-val{font-weight:700;font-size:15px}
-
 .tabs{display:flex;border-bottom:1px solid #2d2060;background:#0d0820;overflow-x:auto}
 .tab{padding:13px 18px;background:none;border:none;font-size:13px;border-bottom:2px solid transparent;color:#94a3b8;white-space:nowrap}
 .tab.active{color:#f0c040;border-bottom-color:#f0c040;font-weight:700}
-
 .banner{background:#2d1500;border-bottom:1px solid #f0a040;padding:10px 20px;font-size:13px;color:#fbbf24;text-align:center}
 .banner button{background:none;border:none;color:#f0c040;font-weight:700;text-decoration:underline;font-size:13px;cursor:pointer}
-
 .content{padding:18px;max-width:980px;margin:0 auto}
 .panel{background:#13102a;border-radius:10px;padding:18px;border:1px solid #2d2060;margin-bottom:16px}
 .panel-title{font-weight:700;color:#a78bfa;margin-bottom:12px;font-size:15px}
-
 .search-row{display:flex;gap:8px}
 .search-input{flex:1;padding:10px 14px;border-radius:8px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:14px}
 .search-btn{padding:10px 20px;border-radius:8px;background:#7c3aed;color:#fff;border:none;font-weight:600;min-width:90px;font-size:14px}
@@ -37,7 +33,6 @@ a{text-decoration:none}
 .hint span{color:#a78bfa}
 .err{color:#f87171;font-size:13px;margin-top:7px}
 .searching-msg{color:#a78bfa;font-size:13px;margin-top:7px}
-
 .results-grid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px}
 .result-card{background:#1a1040;border:1px solid #3d2080;border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:border-color .15s}
 .result-card:hover{border-color:#a78bfa}
@@ -46,7 +41,6 @@ a{text-decoration:none}
 .result-name{font-size:11px;color:#e2e8f0;line-height:1.3;font-weight:600}
 .result-num{font-size:10px;color:#7c6fcd;margin-top:2px}
 .result-price{font-size:11px;color:#34d399;margin-top:3px;font-weight:700}
-
 .selected-wrap{display:flex;gap:18px;flex-wrap:wrap}
 .selected-img{width:130px;border-radius:8px;box-shadow:0 4px 20px rgba(124,58,237,.5);flex-shrink:0}
 .selected-no-img{width:130px;height:182px;background:#2d2060;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:12px;flex-shrink:0}
@@ -54,7 +48,6 @@ a{text-decoration:none}
 .selected-name{font-weight:700;font-size:18px;color:#f0c040;margin-bottom:3px}
 .selected-set{color:#a78bfa;font-size:13px}
 .selected-meta{color:#6b7280;font-size:12px;margin-bottom:14px}
-
 .price-table{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2px;font-size:13px;margin-bottom:14px}
 .th{padding:5px 8px;background:#1a1040;color:#94a3b8;font-weight:600}
 .td{padding:6px 8px;background:#1a1640}
@@ -62,22 +55,20 @@ a{text-decoration:none}
 .td.green{color:#34d399}
 .td.purple{color:#a78bfa}
 .td.yellow{color:#f0c040;font-weight:600}
-
 .add-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .cond-select,.qty-input{padding:8px 12px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:13px}
 .qty-input{width:65px}
 .add-btn{padding:8px 16px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:13px}
 .ext-link{padding:8px 12px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;font-size:12px}
-
 .offer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .offer-title{font-weight:700;color:#f0c040;font-size:15px}
 .offer-total{color:#34d399;font-weight:700;font-size:16px}
-.offer-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a1640}
+.offer-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #1a1640}
 .offer-thumb{width:40px;border-radius:3px;flex-shrink:0}
 .offer-thumb-blank{width:40px;height:55px;background:#2d2060;border-radius:3px;flex-shrink:0}
 .offer-card-name{font-weight:600;font-size:13px}
 .offer-card-sub{font-size:11px;color:#94a3b8}
-.remove-btn{background:none;border:none;color:#f87171;font-size:22px;line-height:1;padding:0 4px}
+.remove-btn{background:none;border:none;color:#f87171;font-size:22px;line-height:1;padding:0 4px;flex-shrink:0}
 .offer-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .accept-btn{flex:1;padding:12px;border-radius:8px;background:#059669;color:#fff;border:none;font-weight:700;font-size:14px;min-width:200px}
 .clear-btn{padding:12px 18px;border-radius:8px;background:#7f1d1d;color:#fca5a5;border:none;font-size:13px}
@@ -85,11 +76,9 @@ a{text-decoration:none}
 .fee-input{padding:8px 11px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:13px;width:130px}
 .fee-label{font-size:13px;color:#94a3b8;width:95px}
 .seller-select{padding:8px 11px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:13px;flex:1;min-width:160px}
-
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
 .toolbar-input{padding:8px 13px;border-radius:7px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px;flex:1;min-width:150px}
 .toolbar-select{padding:8px 11px;border-radius:7px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
-
 .inv-list{display:flex;flex-direction:column;gap:5px}
 .inv-row{display:flex;align-items:center;gap:12px;background:#13102a;border:1px solid #2d2060;border-radius:8px;padding:10px 14px;cursor:pointer;transition:border-color .15s}
 .inv-row:hover{border-color:#a78bfa}
@@ -101,15 +90,12 @@ a{text-decoration:none}
 .inv-row-conds{flex:2;display:flex;flex-wrap:wrap;gap:4px}
 .inv-row-cost{flex:1;font-size:13px;color:#34d399;text-align:right;white-space:nowrap}
 .inv-row-val{flex:1;font-size:13px;color:#f0c040;text-align:right;white-space:nowrap}
-.inv-row-actions{display:flex;gap:4px;flex-shrink:0}
-
 .sheet-card{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color .15s}
 .sheet-card:hover{border-color:#a78bfa}
 .sheet-seller{font-weight:700;font-size:15px;color:#f0c040}
 .sheet-date{font-size:12px;color:#94a3b8}
 .progress-bar{background:#1a1040;border-radius:4px;height:6px;margin-top:8px;overflow:hidden}
 .progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#34d399)}
-
 .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:3px}
 .badge-pending{background:#2d1a00;color:#f0a040}
 .badge-partial{background:#1a2d00;color:#a0d040}
@@ -118,10 +104,9 @@ a{text-decoration:none}
 .badge-shipped{background:#0d1a2d;color:#60a5fa}
 .badge-missing{background:#2d0d0d;color:#f87171}
 .badge-whatnot{background:#2d0d2d;color:#d946ef}
-
 .sheet-detail-header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
 .back-btn{padding:8px 14px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:13px}
-.checklist-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #1a1640}
+.checklist-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #1a1640}
 .checklist-thumb{width:38px;border-radius:3px;flex-shrink:0}
 .checklist-thumb-blank{width:38px;height:52px;background:#2d2060;border-radius:3px;flex-shrink:0}
 .status-btn{padding:5px 9px;border-radius:4px;font-size:11px;font-weight:700;border:none;cursor:pointer}
@@ -130,18 +115,15 @@ a{text-decoration:none}
 .status-shipped{background:#0d1a2d;color:#60a5fa}
 .status-missing{background:#2d0d0d;color:#f87171}
 .status-whatnot{background:#2d0d2d;color:#d946ef}
-
 .seller-card{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:16px;margin-bottom:12px}
 .seller-card-name{font-weight:700;font-size:15px;color:#f0c040}
 .seller-field{font-size:12px;color:#94a3b8;margin-bottom:4px}
 .seller-field a{color:#60a5fa}
 .add-seller-btn{padding:10px 20px;border-radius:8px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:14px;margin-bottom:16px}
-
 .whatnot-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
 .whatnot-stat{background:#1a1040;border:1px solid #2d2060;border-radius:10px;padding:16px;text-align:center}
 .whatnot-stat-label{font-size:12px;color:#94a3b8;margin-bottom:5px}
 .whatnot-stat-val{font-weight:700;font-size:22px}
-
 .finance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
 .finance-card{background:#13102a;border:1px solid #2d2060;border-radius:10px;padding:18px}
 .finance-card-title{font-size:13px;color:#94a3b8;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
@@ -150,7 +132,6 @@ a{text-decoration:none}
 .finance-total{background:linear-gradient(135deg,#1a1040,#0d0820);border:1px solid #7c3aed;border-radius:10px;padding:18px;text-align:center;margin-bottom:22px}
 .finance-total-label{font-size:13px;color:#a78bfa;margin-bottom:7px}
 .finance-total-val{font-size:38px;font-weight:700;color:#f0c040}
-
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal{background:#13102a;border-radius:12px;border:1px solid #2d2060;padding:22px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
 .modal-title{font-weight:700;font-size:16px;color:#f0c040;margin-bottom:16px}
@@ -160,7 +141,6 @@ a{text-decoration:none}
 .modal-actions{display:flex;gap:10px;margin-top:16px}
 .modal-save{flex:1;padding:10px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:14px}
 .modal-cancel{padding:10px 16px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#94a3b8;font-size:14px}
-
 .settings-wrap{display:flex;flex-direction:column;gap:16px;max-width:520px}
 .key-hint{font-size:12px;color:#94a3b8;margin-bottom:12px}
 .key-hint a{color:#a78bfa}
@@ -172,7 +152,6 @@ a{text-decoration:none}
 .tier-input{width:76px;padding:7px 8px;border-radius:5px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px;text-align:center}
 .add-tier-btn{padding:7px 14px;border-radius:5px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:12px;margin-top:4px}
 .remove-tier-btn{padding:4px 9px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:12px}
-
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #7c3aed;border-radius:8px;padding:11px 24px;color:#e2e8f0;font-size:14px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.6);white-space:nowrap;display:none}
 .empty{text-align:center;color:#6b7280;padding:55px;font-size:14px}
 </style>
@@ -181,10 +160,7 @@ a{text-decoration:none}
 
 <div class="header">
   <div style="font-size:24px">🏴‍☠️</div>
-  <div>
-    <div class="header-title">One Piece TCG Reseller</div>
-    <div class="header-sub">Buylist & Inventory Manager</div>
-  </div>
+  <div><div class="header-title">One Piece TCG Reseller</div><div class="header-sub">Buylist &amp; Inventory Manager</div></div>
   <div class="stats">
     <div class="stat"><div class="stat-label">Cards</div><div class="stat-val" id="stat-cards" style="color:#a78bfa">0</div></div>
     <div class="stat"><div class="stat-label">Cost</div><div class="stat-val" id="stat-cost" style="color:#34d399">$0.00</div></div>
@@ -250,12 +226,11 @@ a{text-decoration:none}
     </div>
     <div id="offer-rows"></div>
     <div class="offer-actions">
-      <button class="accept-btn" onclick="acceptOffer()">✅ Save Offer Sheet & Add to Inventory</button>
+      <button class="accept-btn" onclick="acceptOffer()">✅ Save Offer Sheet &amp; Add to Inventory</button>
       <button class="clear-btn" onclick="clearSession()">Clear</button>
     </div>
   </div>
 
-  <!-- Manual Entry -->
   <div class="panel">
     <div class="panel-title" style="cursor:pointer" onclick="toggleManual()">✏️ Manual Card Entry <span id="manual-toggle-icon" style="font-size:11px;color:#6b7280">▼ expand</span></div>
     <div id="manual-entry-form" style="display:none;margin-top:10px">
@@ -293,9 +268,6 @@ a{text-decoration:none}
     <div id="offers-list"></div>
   </div>
   <div id="offers-detail-view" style="display:none"><div id="offers-detail-content"></div></div>
-
-  <!-- Hidden PDF print area -->
-  <div id="pdf-area" style="display:none"></div>
 </div>
 
 <!-- INVENTORY -->
@@ -323,7 +295,7 @@ a{text-decoration:none}
       <option value="perc-asc">Buy % Low→High</option>
     </select>
   </div>
-  <div id="inv-stats-bar" style="font-size:12px;color:#94a3b8;margin-bottom:10px;flex-wrap:wrap;display:flex;gap:6px"></div>
+  <div id="inv-stats-bar" style="font-size:12px;color:#94a3b8;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
   <div id="inv-list"></div>
 </div>
 
@@ -337,7 +309,7 @@ a{text-decoration:none}
       <option value="cost-desc">Cost High→Low</option>
       <option value="value-desc">Value High→Low</option>
     </select>
-    <button onclick="clearWhatnot()" style="padding:7px 14px;border-radius:7px;background:#3f0f0f;border:none;color:#f87171;font-size:12px">🗑 Clear Show</button>
+    <button onclick="clearWhatnot()" style="padding:8px 14px;border-radius:7px;background:#3f0f0f;border:none;color:#f87171;font-size:13px">🗑 Clear Show</button>
   </div>
   <div id="whatnot-list"></div>
 </div>
@@ -350,13 +322,12 @@ a{text-decoration:none}
 
 <!-- FINANCES -->
 <div id="tab-finance" class="content" style="display:none">
-  <div class="finance-total" id="finance-total-box">
+  <div class="finance-total">
     <div class="finance-total-label">💰 Total Business Net Worth</div>
     <div class="finance-total-val" id="finance-net-worth">$0.00</div>
     <div id="finance-breakdown" style="font-size:12px;color:#94a3b8;margin-top:6px"></div>
     <button onclick="snapshotNetWorth()" style="margin-top:12px;padding:8px 18px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:13px;cursor:pointer">📸 Save Snapshot</button>
   </div>
-
   <div class="finance-grid">
     <div class="finance-card">
       <div class="finance-card-title">📦 Inventory Value</div>
@@ -382,8 +353,6 @@ a{text-decoration:none}
       </div>
     </div>
   </div>
-
-  <!-- Net Worth Chart -->
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div class="panel-title" style="margin-bottom:0">📈 Net Worth History</div>
@@ -396,11 +365,9 @@ a{text-decoration:none}
         <button onclick="if(confirm('Clear all net worth history?')){finances.history=[];save('op-finances',finances);renderFinanceChart();}" style="padding:6px 12px;border-radius:6px;background:#3f0f0f;border:none;color:#f87171;font-size:12px;cursor:pointer">Clear</button>
       </div>
     </div>
-    <canvas id="networth-chart" style="width:100%;height:220px"></canvas>
-    <div id="chart-empty" style="display:none;text-align:center;color:#6b7280;padding:40px;font-size:13px">No snapshots yet. Click "Save Snapshot" to record your current net worth.</div>
+    <canvas id="networth-chart" style="width:100%;height:220px;display:none"></canvas>
+    <div id="chart-empty" style="text-align:center;color:#6b7280;padding:40px;font-size:13px">No snapshots yet. Click "Save Snapshot" to record your current net worth.</div>
   </div>
-
-  <!-- Whatnot Show History -->
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div class="panel-title" style="margin-bottom:0">📺 Whatnot Show History</div>
@@ -408,7 +375,6 @@ a{text-decoration:none}
     </div>
     <div id="whatnot-history-list"></div>
   </div>
-
   <div class="panel">
     <div class="panel-title">📊 Inventory Breakdown</div>
     <div id="fin-inv-detail" style="font-size:13px;color:#94a3b8"></div>
@@ -429,8 +395,8 @@ a{text-decoration:none}
     </div>
     <div class="panel">
       <div class="panel-title">⚙️ Tiered Buy Percentages</div>
-      <p style="font-size:11px;color:#94a3b8;margin-bottom:12px">Set buy % based on card market price. First matching tier wins.</p>
-      <div style="display:grid;grid-template-columns:70px 70px 60px 60px auto;gap:4px;font-size:11px;color:#94a3b8;margin-bottom:5px">
+      <p style="font-size:12px;color:#94a3b8;margin-bottom:12px">Set buy % based on card market price. First matching tier wins.</p>
+      <div style="display:grid;grid-template-columns:80px 80px 65px 65px auto;gap:4px;font-size:12px;color:#94a3b8;margin-bottom:6px">
         <div>Min ($)</div><div>Max ($)</div><div>NM %</div><div>LP %</div><div></div>
       </div>
       <div id="tier-rows"></div>
@@ -456,7 +422,7 @@ a{text-decoration:none}
 </div>
 
 <div class="modal-overlay" id="inv-detail-modal" style="display:none" onclick="if(event.target===this)closeInvDetail()">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:560px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
       <div id="inv-detail-title" class="modal-title" style="margin-bottom:0"></div>
       <button onclick="closeInvDetail()" style="background:none;border:none;color:#f87171;font-size:22px;cursor:pointer;line-height:1">×</button>
@@ -468,22 +434,24 @@ a{text-decoration:none}
 <div class="toast" id="toast"></div>
 
 <script>
-const PROXY='https://op-tcg-proxy-production.up.railway.app';
-const EUR_USD=1.08;
-const CONDITIONS=['NM','LP','MP','HP','DMG'];
-const COND_FULL={NM:'Near Mint',LP:'Lightly Played',MP:'Moderately Played',HP:'Heavily Played',DMG:'Damaged'};
-const COND_MULT={NM:1.0,LP:0.80,MP:0.64,HP:0.40,DMG:0.25};
-const STATUS_LABELS={pending:'Pending',onhand:'On Hand',shipped:'Shipped',missing:'Missing',whatnot:'Whatnot'};
-const STATUS_CLASS={pending:'status-pending',onhand:'status-onhand',shipped:'status-shipped',missing:'status-missing',whatnot:'status-whatnot'};
-const STATUS_CYCLE=['pending','onhand','shipped','missing','whatnot'];
+const PROXY = 'https://op-tcg-proxy-production.up.railway.app';
+const EUR_USD = 1.08;
+const CONDITIONS = ['NM','LP','MP','HP','DMG'];
+const COND_FULL = {NM:'Near Mint',LP:'Lightly Played',MP:'Moderately Played',HP:'Heavily Played',DMG:'Damaged'};
+const COND_MULT = {NM:1.0,LP:0.80,MP:0.64,HP:0.40,DMG:0.25};
+const STATUS_LABELS = {pending:'Pending',onhand:'On Hand',shipped:'Shipped',missing:'Missing',whatnot:'Whatnot'};
+const STATUS_CLASS = {pending:'status-pending',onhand:'status-onhand',shipped:'status-shipped',missing:'status-missing',whatnot:'status-whatnot'};
+const STATUS_BADGE = {pending:'badge-pending',onhand:'badge-onhand',shipped:'badge-shipped',missing:'badge-missing',whatnot:'badge-whatnot'};
+const STATUS_CYCLE = ['pending','onhand','shipped','missing','whatnot'];
 
-let st={apiKey:'',tiers:[],inventory:[],offers:[],sellers:[],session:[],selectedCard:null,selectedCond:'NM',selectedQty:1,editingSellerId:null,editingOfferId:null,currentTab:'buylist'};
-let finances={paypal:0,bank:0,cash:0};
+let st = {apiKey:'',tiers:[],inventory:[],offers:[],sellers:[],session:[],selectedCard:null,selectedCond:'NM',selectedQty:1,editingSellerId:null,editingOfferId:null,currentTab:'buylist'};
+let finances = {paypal:0,bank:0,cash:0,history:[],whatnotShows:[]};
 
-function today(){const n=new Date();return`${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}/${String(n.getFullYear()).slice(2)}`}
-function uid(){return Date.now()+Math.random()}
-function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function today(){const n=new Date();return String(n.getMonth()+1).padStart(2,'0')+'/'+String(n.getDate()).padStart(2,'0')+'/'+String(n.getFullYear()).slice(2);}
+function uid(){return Date.now()+Math.random();}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function el(id){return document.getElementById(id);}
 
 function loadAll(){
   st.apiKey=load('op-apikey','');
@@ -498,15 +466,15 @@ function loadAll(){
   finances=load('op-finances',{paypal:0,bank:0,cash:0,history:[],whatnotShows:[]});
   if(!finances.history)finances.history=[];
   if(!finances.whatnotShows)finances.whatnotShows=[];
-  if(st.apiKey){document.getElementById('key-input').value=st.apiKey;document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+st.apiKey.slice(-8);}
-  document.getElementById('fin-paypal').value=finances.paypal||0;
-  document.getElementById('fin-bank').value=finances.bank||0;
-  document.getElementById('fin-cash').value=finances.cash||0;
+  if(st.apiKey){el('key-input').value=st.apiKey;el('key-ok').style.display='';el('key-ok').textContent='✅ Key saved: ...'+st.apiKey.slice(-8);}
+  el('fin-paypal').value=finances.paypal||0;
+  el('fin-bank').value=finances.bank||0;
+  el('fin-cash').value=finances.cash||0;
 }
 
 function switchTab(tab){
   ['buylist','offers','inventory','whatnot','sellers','finance','settings'].forEach((t,i)=>{
-    document.getElementById('tab-'+t).style.display=t===tab?'':'none';
+    el('tab-'+t).style.display=t===tab?'':'none';
     document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
   });
   st.currentTab=tab;
@@ -519,567 +487,489 @@ function switchTab(tab){
   if(tab==='settings')renderTiers();
 }
 
-function updateBanner(){document.getElementById('no-key-banner').style.display=(!st.apiKey&&st.currentTab!=='settings')?'':'none';}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='';setTimeout(()=>t.style.display='none',2800);}
+function updateBanner(){el('no-key-banner').style.display=(!st.apiKey&&st.currentTab!=='settings')?'':'';}
+function showToast(msg){const t=el('toast');t.textContent=msg;t.style.display='';setTimeout(()=>t.style.display='none',2800);}
 
-// --- SEARCH ---
+// ── SEARCH ──────────────────────────────────────────────────────────────────
 async function doSearch(){
-  const raw=document.getElementById('search-input').value.trim();
+  const raw=el('search-input').value.trim();
   if(!raw)return;
   if(!st.apiKey){setStatus('<span class="err">Please add your RapidAPI key in ⚙️ Settings.</span>');return;}
   const cardName=raw.replace(/\b(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc|c)\b/gi,'').replace(/\s+/g,' ').trim()||raw;
-  const btn=document.getElementById('search-btn');
-  btn.disabled=true;btn.textContent='⏳...';
+  const btn=el('search-btn');btn.disabled=true;btn.textContent='⏳...';
   setStatus('<div class="searching-msg">⏳ Searching...</div>');
-  document.getElementById('results-grid').innerHTML='';
-  st.selectedCard=null;document.getElementById('selected-panel').style.display='none';
+  el('results-grid').innerHTML='';
+  st.selectedCard=null;el('selected-panel').style.display='none';
   try{
     let allCards=[],page=1,totalPages=1;
     do{
-      setStatus(`<div class="searching-msg">⏳ Loading page ${page}${totalPages>1?' of '+totalPages:''}...</div>`);
-      const res=await fetch(`${PROXY}/cards?search=${encodeURIComponent(cardName)}&page=${page}&per_page=20`);
+      setStatus('<div class="searching-msg">⏳ Loading page '+page+(totalPages>1?' of '+totalPages:'')+'...</div>');
+      const res=await fetch(PROXY+'/cards?search='+encodeURIComponent(cardName)+'&page='+page+'&per_page=20');
       if(!res.ok)throw new Error('API error '+res.status);
       const data=await res.json();
       const cards=Array.isArray(data)?data:(data.data||[]);
-      cards.forEach(c=>{if(c.prices?.tcg_player)c.prices.tcgplayer=c.prices.tcg_player;});
+      cards.forEach(c=>{if(c.prices&&c.prices.tcg_player)c.prices.tcgplayer=c.prices.tcg_player;});
       allCards=allCards.concat(cards);
-      if(data.paging){
-        totalPages=data.paging.total||1;
-        // Stop if we got no cards (safety) or reached last page
-        if(!cards.length)break;
-        page++;
-      }else break;
+      if(data.paging){totalPages=data.paging.total||1;if(!cards.length)break;page++;}else break;
     }while(page<=totalPages);
-    if(!allCards.length)setStatus(`<div class="err">No cards found for "${cardName}".</div>`);
-    else{setStatus(`<div style="font-size:11px;color:#6b7280;margin-top:5px">${allCards.length} cards found</div>`);renderResults(allCards);}
-  }catch(e){setStatus(`<div class="err">Search failed: ${e.message}</div>`);}
+    if(!allCards.length)setStatus('<div class="err">No cards found for "'+cardName+'".</div>');
+    else{setStatus('<div style="font-size:11px;color:#6b7280;margin-top:5px">'+allCards.length+' cards found</div>');renderResults(allCards);}
+  }catch(e){setStatus('<div class="err">Search failed: '+e.message+'</div>');}
   btn.disabled=false;btn.textContent='Search';
 }
 
-function setStatus(h){document.getElementById('search-status').innerHTML=h;}
+function setStatus(h){el('search-status').innerHTML=h;}
 
 function renderResults(cards){
-  const grid=document.getElementById('results-grid');grid.innerHTML='';
-  cards.forEach(card=>{
-    const nmEur=card.prices?.tcgplayer?.market_price;
+  const grid=el('results-grid');grid.innerHTML='';
+  cards.forEach(function(card){
+    const nmEur=card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
     const nmUsd=nmEur!=null?(nmEur*EUR_USD).toFixed(2):null;
     const d=document.createElement('div');d.className='result-card';
-    d.innerHTML=`${card.image?`<img src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="no-img-sm">No image</div>'}
-      <div class="result-name">${card.name||card.name_numbered}</div>
-      <div class="result-num">${card.card_number||''}</div>
-      <div class="result-num">${card.episode?.name||''}</div>
-      ${nmUsd?`<div class="result-price">$${nmUsd} NM</div>`:''}`;
-    d.onclick=()=>selectCard(card);grid.appendChild(d);
+    d.innerHTML=(card.image?'<img src="'+card.image+'" onerror="this.style.display=\'none\'"/>'
+      :'<div class="no-img-sm">No image</div>')
+      +'<div class="result-name">'+(card.name||card.name_numbered||'')+'</div>'
+      +'<div class="result-num">'+(card.card_number||'')+'</div>'
+      +'<div class="result-num">'+(card.episode&&card.episode.name?card.episode.name:'')+'</div>'
+      +(nmUsd?'<div class="result-price">$'+nmUsd+' NM</div>':'');
+    d.onclick=function(){selectCard(card);};
+    grid.appendChild(d);
   });
 }
 
 function selectCard(card){
   st.selectedCard=card;
-  document.getElementById('results-grid').innerHTML='';
-  document.getElementById('search-input').value=card.name||card.name_numbered;
+  el('results-grid').innerHTML='';
+  el('search-input').value=card.name||card.name_numbered||'';
   renderSelectedCard();
 }
 
 function getTieredPerc(nmPrice,cond){
-  const tier=st.tiers.find(t=>nmPrice>=t.min&&nmPrice<=t.max);
+  const tier=st.tiers.find(function(t){return nmPrice>=t.min&&nmPrice<=t.max;});
   if(!tier)return 50;
   const map={NM:'nm',LP:'lp',MP:'mp',HP:'hp',DMG:'dmg'};
   return tier[map[cond]]||50;
 }
 
 function getPrice(card,cond){
-  const nmEur=card?.prices?.tcgplayer?.market_price;
+  const nmEur=card&&card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
   if(nmEur==null)return null;
   return parseFloat((nmEur*EUR_USD*COND_MULT[cond]).toFixed(2));
 }
 
 function renderSelectedCard(){
   const card=st.selectedCard;if(!card)return;
-  document.getElementById('selected-panel').style.display='';
-  const nmEur=card.prices?.tcgplayer?.market_price;
+  el('selected-panel').style.display='';
+  const nmEur=card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
   const nmUsd=nmEur!=null?nmEur*EUR_USD:null;
-  const condOpts=CONDITIONS.map(c=>`<option value="${c}" ${c===st.selectedCond?'selected':''}>${COND_FULL[c]}</option>`).join('');
-  const closeBtn=`<button onclick="st.selectedCard=null;document.getElementById('selected-panel').style.display='none'" style="float:right;background:none;border:none;color:#f87171;font-size:20px;cursor:pointer;margin-top:-2px">×</button>`;
-  const rows=CONDITIONS.map(cond=>{
+  let rows='';
+  CONDITIONS.forEach(function(cond){
     const mp=getPrice(card,cond);
     const perc=nmUsd!=null?getTieredPerc(nmUsd,cond):'—';
     const bp=mp!=null?((mp*perc)/100).toFixed(2):null;
-    return`<div class="td ${st.selectedCond===cond?'active-row':''}">${COND_FULL[cond]}</div>
-      <div class="td green">${mp!=null?'$'+mp:'—'}</div>
-      <div class="td purple">${perc}%</div>
-      <div class="td yellow">${bp!=null?'$'+bp:'—'}</div>`;
-  }).join('');
-  document.getElementById('selected-content').innerHTML=`${closeBtn}
-    <div class="selected-wrap">
-      <div>${card.image?`<img class="selected-img" src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="selected-no-img">No Image</div>'}</div>
-      <div class="selected-info">
-        <div class="selected-name">${card.name||card.name_numbered}</div>
-        <div class="selected-set">${card.episode?.name||''} • ${card.card_number||''}</div>
-        <div class="selected-meta">${card.rarity||''} • ${card.color||''}</div>
-        <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">TCGPlayer Prices • % by price tier</div>
-        <div class="price-table">
-          <div class="th">Condition</div><div class="th">TCGPlayer</div><div class="th">Buy %</div><div class="th">Offer</div>
-          ${rows}
-        </div>
-        <div class="add-row">
-          <select class="cond-select" onchange="st.selectedCond=this.value;renderSelectedCard()">${condOpts}</select>
-          <input type="number" class="qty-input" min="1" value="${st.selectedQty}" onchange="st.selectedQty=Math.max(1,parseInt(this.value)||1)"/>
-          <button class="add-btn" onclick="addToSession()">+ Add to Offer</button>
-          <button class="add-btn" style="background:#0d6640" onclick="addDirectToInventory()">+ Direct to Inventory</button>
-          ${card.tcggo_url?`<a class="ext-link" style="color:#a78bfa;border:1px solid #3d2080" href="${card.tcggo_url}" target="_blank">TCGgo ↗</a>`:''}
-          ${card.tcgplayer_id?`<a class="ext-link" style="color:#34d399;border:1px solid #1a4030" href="https://www.tcgplayer.com/product/${card.tcgplayer_id}" target="_blank">TCGPlayer ↗</a>`:''}
-        </div>
-      </div>
-    </div>`;
+    rows+='<div class="td '+(st.selectedCond===cond?'active-row':'')+'">'+COND_FULL[cond]+'</div>'
+      +'<div class="td green">'+(mp!=null?'$'+mp:'—')+'</div>'
+      +'<div class="td purple">'+perc+'%</div>'
+      +'<div class="td yellow">'+(bp!=null?'$'+bp:'—')+'</div>';
+  });
+  let condOpts='';
+  CONDITIONS.forEach(function(c){condOpts+='<option value="'+c+'"'+(c===st.selectedCond?' selected':'')+'>'+COND_FULL[c]+'</option>';});
+  el('selected-content').innerHTML=
+    '<button onclick="st.selectedCard=null;el(\'selected-panel\').style.display=\'none\'" style="float:right;background:none;border:none;color:#f87171;font-size:20px;cursor:pointer;margin-top:-2px">×</button>'
+    +'<div class="selected-wrap">'
+    +'<div>'+(card.image?'<img class="selected-img" src="'+card.image+'" onerror="this.style.display=\'none\'"/>':'<div class="selected-no-img">No Image</div>')+'</div>'
+    +'<div class="selected-info">'
+    +'<div class="selected-name">'+(card.name||card.name_numbered||'')+'</div>'
+    +'<div class="selected-set">'+(card.episode&&card.episode.name?card.episode.name:'')+' • '+(card.card_number||'')+'</div>'
+    +'<div class="selected-meta">'+(card.rarity||'')+' • '+(card.color||'')+'</div>'
+    +'<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">TCGPlayer Prices • % by price tier</div>'
+    +'<div class="price-table"><div class="th">Condition</div><div class="th">TCGPlayer</div><div class="th">Buy %</div><div class="th">Offer</div>'+rows+'</div>'
+    +'<div class="add-row">'
+    +'<select class="cond-select" onchange="st.selectedCond=this.value;renderSelectedCard()">'+condOpts+'</select>'
+    +'<input type="number" class="qty-input" min="1" value="'+st.selectedQty+'" onchange="st.selectedQty=Math.max(1,parseInt(this.value)||1)"/>'
+    +'<button class="add-btn" onclick="addToSession()">+ Add to Offer</button>'
+    +'<button class="add-btn" style="background:#0d6640" onclick="addDirectToInventory()">+ Direct to Inventory</button>'
+    +(card.tcggo_url?'<a class="ext-link" style="color:#a78bfa;border:1px solid #3d2080" href="'+card.tcggo_url+'" target="_blank">TCGgo ↗</a>':'')
+    +(card.tcgplayer_id?'<a class="ext-link" style="color:#34d399;border:1px solid #1a4030" href="https://www.tcgplayer.com/product/'+card.tcgplayer_id+'" target="_blank">TCGPlayer ↗</a>':'')
+    +'</div></div></div>';
 }
 
-// --- SESSION ---
+// ── SESSION ──────────────────────────────────────────────────────────────────
 function addToSession(){
   const card=st.selectedCard;if(!card)return;
   const mp=getPrice(card,st.selectedCond);
-  const nmEur=card.prices?.tcgplayer?.market_price;
+  const nmEur=card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
   const nmUsd=nmEur!=null?nmEur*EUR_USD:null;
   const perc=nmUsd!=null?getTieredPerc(nmUsd,st.selectedCond):50;
   const bp=mp!=null?parseFloat(((mp*perc)/100).toFixed(2)):null;
-  st.session.push({id:uid(),name:card.name||card.name_numbered,cardNumber:card.card_number||'',set:card.episode?.name||'',image:card.image||null,tcggoUrl:card.tcggo_url||null,tcgplayerId:card.tcgplayer_id||null,condition:st.selectedCond,qty:st.selectedQty,marketPrice:mp,buyPrice:bp,buyPerc:perc});
-  renderOfferSheet();showToast(`Added ${card.name} (${st.selectedCond}) to offer`);
+  st.session.push({id:uid(),name:card.name||card.name_numbered||'',cardNumber:card.card_number||'',set:card.episode&&card.episode.name?card.episode.name:'',image:card.image||null,tcgplayerId:card.tcgplayer_id||null,condition:st.selectedCond,qty:st.selectedQty,marketPrice:mp,buyPrice:bp,buyPerc:perc});
+  renderOfferSheet();
+  showToast('Added '+(card.name||'card')+' ('+st.selectedCond+') to offer');
 }
 
 function addDirectToInventory(){
   const card=st.selectedCard;if(!card)return;
   const mp=getPrice(card,st.selectedCond);
-  st.inventory.push({id:uid(),name:card.name||card.name_numbered,cardNumber:card.card_number||'',set:card.episode?.name||'',image:card.image||null,condition:st.selectedCond,qty:st.selectedQty,marketPrice:mp,buyPrice:0,buyPerc:0,sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null,dateAdded:today()});
-  save('op-inventory',st.inventory);updateStats();showToast(`✅ Added directly to inventory!`);
+  st.inventory.push({id:uid(),name:card.name||card.name_numbered||'',cardNumber:card.card_number||'',set:card.episode&&card.episode.name?card.episode.name:'',image:card.image||null,tcgplayerId:card.tcgplayer_id||null,condition:st.selectedCond,qty:st.selectedQty,marketPrice:mp,buyPrice:0,buyPerc:0,sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null,dateAdded:today()});
+  save('op-inventory',st.inventory);updateStats();showToast('✅ Added directly to inventory!');
 }
 
 function onSellerSelectChange(){
-  document.getElementById('new-seller-name-wrap').style.display=document.getElementById('offer-seller-select').value==='__new__'?'':'none';
+  el('new-seller-name-wrap').style.display=el('offer-seller-select').value==='__new__'?'':'none';
 }
 
 function updateSessionCard(idx,field,val){if(st.session[idx])st.session[idx][field]=val;}
 
 function updateSessionCardPerc(idx,perc){
-  if(!st.session[idx])return;
-  if(isNaN(perc)||perc<1)return;
+  if(!st.session[idx]||isNaN(perc)||perc<1)return;
   st.session[idx].buyPerc=perc;
-  // Recalc offer price from market price and new %
-  if(st.session[idx].marketPrice!=null){
-    st.session[idx].buyPrice=parseFloat(((st.session[idx].marketPrice*perc)/100).toFixed(2));
-  }
-  // Re-render just the offer rows so inputs update
+  if(st.session[idx].marketPrice!=null)st.session[idx].buyPrice=parseFloat(((st.session[idx].marketPrice*perc)/100).toFixed(2));
   renderOfferSheet();
 }
 
 function recalcSessionCard(idx){
-  // When market price changes, recalc offer using current %
   const e=st.session[idx];
   if(!e||e.marketPrice==null||e.buyPerc==null)return;
   e.buyPrice=parseFloat(((e.marketPrice*e.buyPerc)/100).toFixed(2));
 }
 
 function renderOfferTotals(){
-  const cardTotal=st.session.reduce((s,e)=>s+(e.buyPrice||0)*e.qty,0);
-  const ship=parseFloat(document.getElementById('fee-shipping')?.value||0)||0;
-  const other=parseFloat(document.getElementById('fee-other')?.value||0)||0;
+  const cardTotal=st.session.reduce(function(s,e){return s+(e.buyPrice||0)*e.qty;},0);
+  const ship=parseFloat((el('fee-shipping')&&el('fee-shipping').value)||0)||0;
+  const other=parseFloat((el('fee-other')&&el('fee-other').value)||0)||0;
   const grand=cardTotal+ship+other;
-  document.getElementById('offer-total').textContent='$'+grand.toFixed(2);
-  document.getElementById('fee-note').textContent=`Cards: $${cardTotal.toFixed(2)} + Ship: $${ship.toFixed(2)} + Other: $${other.toFixed(2)} = $${grand.toFixed(2)}`;
+  if(el('offer-total'))el('offer-total').textContent='$'+grand.toFixed(2);
+  if(el('fee-note'))el('fee-note').textContent='Cards: $'+cardTotal.toFixed(2)+' + Ship: $'+ship.toFixed(2)+' + Other: $'+other.toFixed(2)+' = $'+grand.toFixed(2);
   const count=st.session.length;
-  const badge=document.getElementById('session-badge');
-  if(badge){badge.style.display=count?'':'none';badge.textContent=`${count} card${count!==1?'s':''} in offer`;}
-  const ce=document.getElementById('offer-card-count');if(ce)ce.textContent=`(${count} card${count!==1?'s':''})`;
+  const badge=el('session-badge');
+  if(badge){badge.style.display=count?'':'none';badge.textContent=count+' card'+(count!==1?'s':'')+' in offer';}
+  const ce=el('offer-card-count');if(ce)ce.textContent='('+count+' card'+(count!==1?'s':'')+')';
 }
 
 function renderOfferSheet(){
-  const panel=document.getElementById('offer-panel');
+  const panel=el('offer-panel');
   if(!st.session.length){panel.style.display='none';return;}
   panel.style.display='';
-  const sel=document.getElementById('offer-seller-select');
+  const sel=el('offer-seller-select');
   const curVal=sel.value;
-  sel.innerHTML=`<option value="">— Select Seller —</option><option value="__inperson__">🏪 In Person / Vending</option><option value="__new__">➕ New Seller...</option>`;
-  st.sellers.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
+  sel.innerHTML='<option value="">— Select Seller —</option><option value="__inperson__">🏪 In Person / Vending</option><option value="__new__">➕ New Seller...</option>';
+  st.sellers.forEach(function(s){const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
   sel.value=curVal||'';
   renderOfferTotals();
-  document.getElementById('offer-rows').innerHTML=st.session.map((e,i)=>`
-    <div class="offer-row">
-      ${e.image?`<img class="offer-thumb" src="${e.image}" onerror="this.style.display='none'"/>`:'<div class="offer-thumb-blank"></div>'}
-      <div style="flex:1">
-        <div class="offer-card-name">${e.name}</div>
-        <div class="offer-card-sub">${e.cardNumber} • ${e.set} • ${COND_FULL[e.condition]||e.condition} × ${e.qty}</div>
-        <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:10px;color:#94a3b8">Mkt $</span>
-          <input type="number" step="0.01" min="0" value="${e.marketPrice!=null?e.marketPrice:''}" placeholder="—"
-            style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#34d399;font-size:11px"
-            oninput="updateSessionCard(${i},'marketPrice',parseFloat(this.value)||null);recalcSessionCard(${i});renderOfferTotals()"/>
-          <span style="font-size:10px;color:#94a3b8">Buy%</span>
-          <input type="number" step="1" min="1" max="100" value="${e.buyPerc!=null?e.buyPerc:''}" placeholder="—"
-            style="width:48px;padding:3px 5px;border-radius:4px;border:1px solid #7c3aed;background:#1a1040;color:#a78bfa;font-size:11px;font-weight:700"
-            oninput="updateSessionCardPerc(${i},parseInt(this.value));renderOfferTotals()"/>
-          <span style="font-size:10px;color:#94a3b8">Offer $</span>
-          <input type="number" step="0.01" min="0" value="${e.buyPrice!=null?e.buyPrice:''}" placeholder="—"
-            style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#f0c040;font-size:11px;font-weight:600"
-            oninput="updateSessionCard(${i},'buyPrice',parseFloat(this.value)||null);renderOfferTotals()"/>
-          <span style="font-size:10px;color:#a78bfa">× ${e.qty} = ${e.buyPrice!=null?(e.buyPrice*e.qty).toFixed(2):'—'}</span>
-        </div>
-      </div>
-      <button class="remove-btn" onclick="removeFromSession(${e.id})">×</button>
-    </div>`).join('');
+  let html='';
+  st.session.forEach(function(e,i){
+    html+='<div class="offer-row">'
+      +(e.image?'<img class="offer-thumb" src="'+e.image+'" onerror="this.style.display=\'none\'"/>':'<div class="offer-thumb-blank"></div>')
+      +'<div style="flex:1">'
+      +'<div class="offer-card-name">'+e.name+'</div>'
+      +'<div class="offer-card-sub">'+e.cardNumber+' • '+e.set+' • '+(COND_FULL[e.condition]||e.condition)+' × '+e.qty+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center">'
+      +'<span style="font-size:10px;color:#94a3b8">Mkt $</span>'
+      +'<input type="number" step="0.01" min="0" value="'+(e.marketPrice!=null?e.marketPrice:'')+'" placeholder="—" style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#34d399;font-size:11px" oninput="updateSessionCard('+i+',\'marketPrice\',parseFloat(this.value)||null);recalcSessionCard('+i+');renderOfferTotals()"/>'
+      +'<span style="font-size:10px;color:#94a3b8">Buy%</span>'
+      +'<input type="number" step="1" min="1" max="100" value="'+(e.buyPerc!=null?e.buyPerc:'')+'" placeholder="—" style="width:48px;padding:3px 5px;border-radius:4px;border:1px solid #7c3aed;background:#1a1040;color:#a78bfa;font-size:11px;font-weight:700" oninput="updateSessionCardPerc('+i+',parseInt(this.value))"/>'
+      +'<span style="font-size:10px;color:#94a3b8">Offer $</span>'
+      +'<input type="number" step="0.01" min="0" value="'+(e.buyPrice!=null?e.buyPrice:'')+'" placeholder="—" style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#f0c040;font-size:11px;font-weight:600" oninput="updateSessionCard('+i+',\'buyPrice\',parseFloat(this.value)||null);renderOfferTotals()"/>'
+      +'<span style="font-size:10px;color:#a78bfa">× '+e.qty+' = $'+(e.buyPrice!=null?(e.buyPrice*e.qty).toFixed(2):'—')+'</span>'
+      +'</div></div>'
+      +'<button class="remove-btn" onclick="removeFromSession('+e.id+')">×</button>'
+      +'</div>';
+  });
+  el('offer-rows').innerHTML=html;
 }
 
-function removeFromSession(id){st.session=st.session.filter(e=>e.id!==id);renderOfferSheet();}
+function removeFromSession(id){st.session=st.session.filter(function(e){return e.id!==id;});renderOfferSheet();}
 
 function clearSession(){
   if(st.session.length&&!confirm('Start a new offer sheet? Current cards will be cleared.'))return;
-  st.session=[];
-  if(document.getElementById('fee-shipping'))document.getElementById('fee-shipping').value=0;
-  if(document.getElementById('fee-other'))document.getElementById('fee-other').value=0;
-  if(document.getElementById('offer-seller-select'))document.getElementById('offer-seller-select').value='';
-  if(document.getElementById('new-seller-name-wrap'))document.getElementById('new-seller-name-wrap').style.display='none';
-  document.getElementById('offer-panel').style.display='none';
+  st.session=[];st.editingOfferId=null;
+  if(el('fee-shipping'))el('fee-shipping').value=0;
+  if(el('fee-other'))el('fee-other').value=0;
+  if(el('offer-seller-select'))el('offer-seller-select').value='';
+  if(el('new-seller-name-wrap'))el('new-seller-name-wrap').style.display='none';
+  el('offer-panel').style.display='none';
   renderOfferTotals();
-}
-
-function addCardsToExistingOffer(id){
-  const o=st.offers.find(x=>String(x.id)===String(id));
-  if(!o)return;
-  // If there's already an active session, confirm
-  if(st.session.length&&!confirm('You have an unsaved offer in progress. Clear it and load this offer instead?'))return;
-  // Store the offer ID we're editing
-  st.editingOfferId=id;
-  st.session=[];
-  // Pre-fill seller
-  switchTab('buylist');
-  // Wait for DOM then set seller
-  setTimeout(()=>{
-    renderOfferSheet();
-    // Set seller dropdown
-    const sel=document.getElementById('offer-seller-select');
-    if(sel){
-      // rebuild options first
-      sel.innerHTML=`<option value="">— Select Seller —</option><option value="__inperson__">🏪 In Person / Vending</option><option value="__new__">➕ New Seller...</option>`;
-      st.sellers.forEach(s=>{const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.name;sel.appendChild(opt);});
-      sel.value=o.sellerId||'__inperson__';
-    }
-    document.getElementById('fee-shipping').value=o.shipping||0;
-    document.getElementById('fee-other').value=o.otherFees||0;
-    // Show a banner
-    const badge=document.getElementById('session-badge');
-    if(badge){badge.style.display='';badge.textContent=`Adding to: ${o.sellerName} (${o.date})`;}
-    showToast(`📋 Adding cards to ${o.sellerName}'s offer. Search and add, then Save.`);
-  },100);
 }
 
 function acceptOffer(){
   if(!st.session.length)return;
-  const selVal=document.getElementById('offer-seller-select').value;
+  const selVal=el('offer-seller-select').value;
   let sellerName='Unknown',sellerId=null;
   if(selVal==='__inperson__'){sellerName='In Person / Vending';}
   else if(selVal==='__new__'){
-    const nm=document.getElementById('new-seller-name').value.trim();
+    const nm=el('new-seller-name').value.trim();
     if(!nm){showToast('⚠️ Please enter a seller name.');return;}
     const ns={id:uid(),name:nm,fb:'',phone:'',address:'',notes:''};
     st.sellers.push(ns);save('op-sellers',st.sellers);sellerId=ns.id;sellerName=nm;
-  }else if(selVal){const s=st.sellers.find(x=>String(x.id)===String(selVal));if(s){sellerName=s.name;sellerId=s.id;}}
-  const ship=parseFloat(document.getElementById('fee-shipping').value||0)||0;
-  const other=parseFloat(document.getElementById('fee-other').value||0)||0;
-  const cardTotal=st.session.reduce((s,e)=>s+(e.buyPrice||0)*e.qty,0);
+  }else if(selVal){const s=st.sellers.find(function(x){return String(x.id)===String(selVal);});if(s){sellerName=s.name;sellerId=s.id;}}
+  const ship=parseFloat(el('fee-shipping').value||0)||0;
+  const other=parseFloat(el('fee-other').value||0)||0;
+  const cardTotal=st.session.reduce(function(s,e){return s+(e.buyPrice||0)*e.qty;},0);
   const d=today();
 
-  // Check if we're adding to an existing offer
   if(st.editingOfferId){
-    const existing=st.offers.find(o=>String(o.id)===String(st.editingOfferId));
+    const existing=st.offers.find(function(o){return String(o.id)===String(st.editingOfferId);});
     if(existing){
-      // Append new cards to existing offer
-      const newCards=st.session.map(e=>({...e,status:'pending'}));
-      existing.cards.push(...newCards);
-      existing.cardTotal=existing.cards.reduce((s,c)=>s+(c.buyPrice||0)*c.qty,0);
-      existing.shipping=ship;
-      existing.otherFees=other;
+      const newCards=st.session.map(function(e){return Object.assign({},e,{status:'pending'});});
+      existing.cards=existing.cards.concat(newCards);
+      existing.cardTotal=existing.cards.reduce(function(s,c){return s+(c.buyPrice||0)*c.qty;},0);
+      existing.shipping=ship;existing.otherFees=other;
       existing.total=existing.cardTotal+ship+other;
       save('op-offers',st.offers);
-      // Add new cards to inventory linked to same offer
-      st.inventory.push(...st.session.map(e=>({...e,id:uid(),dateAdded:d,offerId:existing.id,sellerName:existing.sellerName,sellerId:existing.sellerId,status:'pending'})));
+      const newInv=st.session.map(function(e){return Object.assign({},e,{id:uid(),dateAdded:d,offerId:existing.id,sellerName:existing.sellerName,sellerId:existing.sellerId,status:'pending'});});
+      st.inventory=st.inventory.concat(newInv);
       save('op-inventory',st.inventory);
-      st.editingOfferId=null;
+      const eid=existing.id;
       clearSession();updateStats();
-      showToast(`✅ ${st.session.length||newCards.length} cards added to offer sheet!`);
+      showToast('✅ Cards added to offer sheet!');
       switchTab('offers');
-      setTimeout(()=>openOfferDetail(existing.id),100);
+      setTimeout(function(){openOfferDetail(eid);},100);
       return;
     }
   }
 
-  // Normal new offer sheet
   const offerId=uid();
-  const offerSheet={id:offerId,sellerName,sellerId,date:d,shipping:ship,otherFees:other,cardTotal,total:cardTotal+ship+other,cards:st.session.map(e=>({...e,status:'pending'}))};
+  const offerSheet={id:offerId,sellerName:sellerName,sellerId:sellerId,date:d,shipping:ship,otherFees:other,cardTotal:cardTotal,total:cardTotal+ship+other,cards:st.session.map(function(e){return Object.assign({},e,{status:'pending'});})};
   st.offers.unshift(offerSheet);save('op-offers',st.offers);
-  st.inventory.push(...st.session.map(e=>({...e,id:uid(),dateAdded:d,offerId,sellerName,sellerId,status:'pending'})));
+  const invCards=st.session.map(function(e){return Object.assign({},e,{id:uid(),dateAdded:d,offerId:offerId,sellerName:sellerName,sellerId:sellerId,status:'pending'});});
+  st.inventory=st.inventory.concat(invCards);
   save('op-inventory',st.inventory);
-  st.editingOfferId=null;
   clearSession();updateStats();
   showToast('✅ Offer sheet saved!');switchTab('offers');
 }
 
-// --- MANUAL ENTRY ---
+// ── MANUAL ENTRY ─────────────────────────────────────────────────────────────
 function toggleManual(){
-  const form=document.getElementById('manual-entry-form');const icon=document.getElementById('manual-toggle-icon');
-  const open=form.style.display==='none';form.style.display=open?'':'none';icon.textContent=open?'▲ collapse':'▼ expand';
+  const form=el('manual-entry-form');const icon=el('manual-toggle-icon');
+  const open=form.style.display==='none';form.style.display=open?'':'none';
+  icon.textContent=open?'▲ collapse':'▼ expand';
 }
 function getManualEntry(){
-  const name=document.getElementById('me-name').value.trim();if(!name){showToast('⚠️ Card name is required.');return null;}
-  return{id:uid(),name,cardNumber:document.getElementById('me-num').value.trim(),set:document.getElementById('me-set').value.trim(),condition:document.getElementById('me-cond').value,qty:Math.max(1,parseInt(document.getElementById('me-qty').value)||1),marketPrice:parseFloat(document.getElementById('me-market').value)||null,buyPrice:parseFloat(document.getElementById('me-cost').value)||0,buyPerc:null,image:document.getElementById('me-image').value.trim()||null,tcgplayerId:null,manual:true};
+  const name=el('me-name').value.trim();if(!name){showToast('⚠️ Card name is required.');return null;}
+  return{id:uid(),name:name,cardNumber:el('me-num').value.trim(),set:el('me-set').value.trim(),condition:el('me-cond').value,qty:Math.max(1,parseInt(el('me-qty').value)||1),marketPrice:parseFloat(el('me-market').value)||null,buyPrice:parseFloat(el('me-cost').value)||0,buyPerc:null,image:el('me-image').value.trim()||null,tcgplayerId:null,manual:true};
 }
-function clearManualForm(){['me-name','me-set','me-num','me-market','me-cost','me-image'].forEach(id=>document.getElementById(id).value='');document.getElementById('me-qty').value=1;document.getElementById('me-cond').value='NM';}
-function addManualToOffer(){const e=getManualEntry();if(!e)return;st.session.push(e);renderOfferSheet();clearManualForm();document.getElementById('offer-panel').style.display='';showToast(`✅ ${e.name} added to offer!`);}
-function addManualToInventory(){const e=getManualEntry();if(!e)return;st.inventory.push({...e,id:uid(),dateAdded:today(),sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null});save('op-inventory',st.inventory);updateStats();clearManualForm();showToast(`✅ ${e.name} added to inventory!`);}
+function clearManualForm(){['me-name','me-set','me-num','me-market','me-cost','me-image'].forEach(function(id){el(id).value='';});el('me-qty').value=1;el('me-cond').value='NM';}
+function addManualToOffer(){const e=getManualEntry();if(!e)return;st.session.push(e);renderOfferSheet();clearManualForm();el('offer-panel').style.display='';showToast('✅ '+e.name+' added to offer!');}
+function addManualToInventory(){const e=getManualEntry();if(!e)return;st.inventory.push(Object.assign({},e,{id:uid(),dateAdded:today(),sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null}));save('op-inventory',st.inventory);updateStats();clearManualForm();showToast('✅ '+e.name+' added to inventory!');}
 
-// --- OFFER SHEETS ---
-function showOffersListView(){document.getElementById('offers-list-view').style.display='';document.getElementById('offers-detail-view').style.display='none';}
+// ── OFFER SHEETS ─────────────────────────────────────────────────────────────
+function showOffersListView(){el('offers-list-view').style.display='';el('offers-detail-view').style.display='none';}
 
 function renderOffersList(){
-  const filter=(document.getElementById('offers-filter')?.value||'').toLowerCase();
-  const sort=document.getElementById('offers-sort')?.value||'date-desc';
-  let list=[...st.offers].filter(o=>o.sellerName.toLowerCase().includes(filter)||o.date.includes(filter));
-  list.sort((a,b)=>{
-    if(sort==='date-desc')return b.id-a.id;
-    if(sort==='date-asc')return a.id-b.id;
-    if(sort==='total-desc')return b.total-a.total;
-    if(sort==='total-asc')return a.total-b.total;
-    if(sort==='seller-asc')return a.sellerName.localeCompare(b.sellerName);
-    return 0;
+  const filter=(el('offers-filter')&&el('offers-filter').value||'').toLowerCase();
+  const sort=el('offers-sort')&&el('offers-sort').value||'date-desc';
+  let list=st.offers.filter(function(o){return o.sellerName.toLowerCase().includes(filter)||o.date.includes(filter);});
+  list.sort(function(a,b){
+    if(sort==='date-desc')return b.id-a.id;if(sort==='date-asc')return a.id-b.id;
+    if(sort==='total-desc')return b.total-a.total;if(sort==='total-asc')return a.total-b.total;
+    if(sort==='seller-asc')return a.sellerName.localeCompare(b.sellerName);return 0;
   });
-  document.getElementById('offers-list').innerHTML=list.length?list.map(o=>{
-    const total=o.cards.length,onhand=o.cards.filter(c=>c.status==='onhand').length,shipped=o.cards.filter(c=>c.status==='shipped').length,missing=o.cards.filter(c=>c.status==='missing').length,received=onhand+shipped,pct=total?Math.round((received/total)*100):0;
+  let html='';
+  list.forEach(function(o){
+    const total=o.cards.length;
+    const received=o.cards.filter(function(c){return c.status==='onhand'||c.status==='shipped';}).length;
+    const missing=o.cards.filter(function(c){return c.status==='missing';}).length;
+    const pct=total?Math.round((received/total)*100):0;
     const statusBadge=received===0?'<span class="badge badge-pending">Pending</span>':received<total?'<span class="badge badge-partial">Partial</span>':'<span class="badge badge-complete">Complete</span>';
-    return`<div class="sheet-card" onclick="openOfferDetail('${o.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-        <div><div class="sheet-seller">🏴‍☠️ ${o.sellerName}</div><div class="sheet-date">${o.date}</div></div>
-        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <button onclick="event.stopPropagation();deleteOffer('${o.id}')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>
-          ${statusBadge}<div style="font-size:13px;color:#34d399;font-weight:700">$${o.total.toFixed(2)}</div>
-        </div>
-      </div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:5px">${total} cards • Cards: $${o.cardTotal.toFixed(2)} • Ship: $${o.shipping.toFixed(2)} • Other: $${o.otherFees.toFixed(2)}${missing?` • <span style="color:#f87171">${missing} missing</span>`:''}</div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:10px;color:#6b7280;margin-top:3px">${received}/${total} received (${pct}%)</div>
-    </div>`;
-  }).join(''):'<div class="empty">No offer sheets yet.</div>';
+    html+='<div class="sheet-card" onclick="openOfferDetail(\''+o.id+'\')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">'
+      +'<div><div class="sheet-seller">🏴‍☠️ '+o.sellerName+'</div><div class="sheet-date">'+o.date+'</div></div>'
+      +'<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
+      +'<button onclick="event.stopPropagation();deleteOffer(\''+o.id+'\')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>'
+      +statusBadge+'<div style="font-size:13px;color:#34d399;font-weight:700">$'+o.total.toFixed(2)+'</div></div></div>'
+      +'<div style="font-size:11px;color:#94a3b8;margin-top:5px">'+total+' cards • $'+o.cardTotal.toFixed(2)+' • Ship: $'+o.shipping.toFixed(2)+(missing?' • <span style="color:#f87171">'+missing+' missing</span>':'')+'</div>'
+      +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+      +'<div style="font-size:10px;color:#6b7280;margin-top:3px">'+received+'/'+total+' received ('+pct+'%)</div>'
+      +'</div>';
+  });
+  el('offers-list').innerHTML=html||'<div class="empty">No offer sheets yet.</div>';
 }
 
 function openOfferDetail(id){
-  const o=st.offers.find(x=>String(x.id)===String(id));if(!o)return;
-  document.getElementById('offers-list-view').style.display='none';
-  document.getElementById('offers-detail-view').style.display='';
+  const o=st.offers.find(function(x){return String(x.id)===String(id);});if(!o)return;
+  el('offers-list-view').style.display='none';el('offers-detail-view').style.display='';
   renderOfferDetail(o);
 }
 
 function renderOfferDetail(o){
-  const total=o.cards.length,received=o.cards.filter(c=>['onhand','shipped'].includes(c.status)).length,missing=o.cards.filter(c=>c.status==='missing').length,pct=total?Math.round((received/total)*100):0;
-  const seller=st.sellers.find(s=>String(s.id)===String(o.sellerId));
-  document.getElementById('offers-detail-content').innerHTML=`
-    <div class="panel">
-      <div class="sheet-detail-header">
-        <button class="back-btn" onclick="showOffersListView();renderOffersList()">← Back</button>
-        <div style="flex:1"><div style="font-weight:700;font-size:16px;color:#f0c040">🏴‍☠️ ${o.sellerName}</div><div style="font-size:12px;color:#94a3b8">${o.date} • ${total} cards • ${o.total.toFixed(2)}</div></div>
-        <button onclick="exportOfferPDF('${o.id}')" style="padding:8px 14px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:12px;cursor:pointer">📄 Export PDF</button>
-      </div>
-      ${seller?`<div style="background:#0d0820;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px">
-        <div style="font-weight:600;color:#a78bfa;margin-bottom:5px">Seller Contact</div>
-        ${seller.fb?`<div class="seller-field">💬 <a href="${seller.fb}" target="_blank" style="color:#60a5fa">Facebook Messenger</a></div>`:''}
-        ${seller.phone?`<div class="seller-field">📞 ${seller.phone}</div>`:''}
-        ${seller.address?`<div class="seller-field">📍 ${seller.address}</div>`:''}
-        ${seller.notes?`<div class="seller-field">📝 ${seller.notes}</div>`:''}
-      </div>`:''}
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:12px">
-        <div>Cards: <span style="color:#34d399">${o.cardTotal.toFixed(2)}</span></div>
-        <div>Shipping: <span style="color:#94a3b8">${o.shipping.toFixed(2)}</span></div>
-        <div>Other: <span style="color:#94a3b8">${o.otherFees.toFixed(2)}</span></div>
-        <div>Total: <span style="color:#f0c040;font-weight:700">${o.total.toFixed(2)}</span></div>
-      </div>
-      <div class="progress-bar" style="margin-bottom:4px"><div class="progress-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:11px;color:#6b7280;margin-bottom:12px">${received}/${total} received • ${missing} missing</div>
-      ${o.cards.map((card,i)=>`
-        <div class="checklist-row">
-          ${card.image?`<img class="checklist-thumb" src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="checklist-thumb-blank"></div>'}
-          <div style="flex:1">
-            <div style="font-weight:600;font-size:12px">${card.name}</div>
-            <div style="font-size:10px;color:#94a3b8">${card.cardNumber} • ${COND_FULL[card.condition]||card.condition} × ${card.qty}</div>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">
-              <div style="font-size:11px;color:#f0c040">${card.buyPrice!=null?(card.buyPrice*card.qty).toFixed(2):'—'}</div>
-              ${card.tcgplayerId?`<a href="https://www.tcgplayer.com/product/${card.tcgplayerId}" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 6px">TCGPlayer ↗</a>`:''}
-            </div>
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:3px">
-            ${STATUS_CYCLE.map(s=>`<button class="status-btn ${STATUS_CLASS[s]}" style="opacity:${card.status===s?1:0.3}" onclick="setCardStatus('${o.id}',${i},'${s}')">${STATUS_LABELS[s]}</button>`).join('')}
-          </div>
-        </div>`).join('')}
-    </div>`;
+  const total=o.cards.length;
+  const received=o.cards.filter(function(c){return c.status==='onhand'||c.status==='shipped';}).length;
+  const missing=o.cards.filter(function(c){return c.status==='missing';}).length;
+  const pct=total?Math.round((received/total)*100):0;
+  const seller=st.sellers.find(function(s){return String(s.id)===String(o.sellerId);});
+  let sellerHtml='';
+  if(seller){
+    sellerHtml='<div style="background:#0d0820;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px">'
+      +'<div style="font-weight:600;color:#a78bfa;margin-bottom:5px">Seller Contact</div>'
+      +(seller.fb?'<div class="seller-field">💬 <a href="'+seller.fb+'" target="_blank" style="color:#60a5fa">Facebook Messenger</a></div>':'')
+      +(seller.phone?'<div class="seller-field">📞 '+seller.phone+'</div>':'')
+      +(seller.address?'<div class="seller-field">📍 '+seller.address+'</div>':'')
+      +(seller.notes?'<div class="seller-field">📝 '+seller.notes+'</div>':'')
+      +'</div>';
+  }
+  let cardsHtml='';
+  o.cards.forEach(function(card,i){
+    let statusBtns='';
+    STATUS_CYCLE.forEach(function(s){
+      statusBtns+='<button class="status-btn '+STATUS_CLASS[s]+'" style="opacity:'+(card.status===s?1:0.3)+'" onclick="setCardStatus(\''+o.id+'\','+i+',\''+s+'\')">'+STATUS_LABELS[s]+'</button>';
+    });
+    cardsHtml+='<div class="checklist-row">'
+      +(card.image?'<img class="checklist-thumb" src="'+card.image+'" onerror="this.style.display=\'none\'"/>':'<div class="checklist-thumb-blank"></div>')
+      +'<div style="flex:1">'
+      +'<div style="font-weight:600;font-size:13px">'+card.name+'</div>'
+      +'<div style="font-size:10px;color:#94a3b8">'+card.cardNumber+' • '+(COND_FULL[card.condition]||card.condition)+' × '+card.qty+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap;align-items:center">'
+      +'<span style="font-size:10px;color:#94a3b8">Buy%</span>'
+      +'<input type="number" min="1" max="100" value="'+(card.buyPerc||'')+'" placeholder="—" style="width:50px;padding:3px 5px;border-radius:4px;border:1px solid #7c3aed;background:#1a1040;color:#a78bfa;font-size:11px;font-weight:700" oninput="editOfferCard(\''+o.id+'\','+i+',\'perc\',parseFloat(this.value))"/>'
+      +'<span style="font-size:10px;color:#94a3b8">Offer $</span>'
+      +'<input type="number" step="0.01" min="0" value="'+(card.buyPrice!=null?card.buyPrice:'')+'" placeholder="—" style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#f0c040;font-size:11px;font-weight:600" oninput="editOfferCard(\''+o.id+'\','+i+',\'price\',parseFloat(this.value))"/>'
+      +'<span style="font-size:10px;color:#a78bfa">× '+card.qty+' = $'+(card.buyPrice!=null?(card.buyPrice*card.qty).toFixed(2):'—')+'</span>'
+      +(card.tcgplayerId?'<a href="https://www.tcgplayer.com/product/'+card.tcgplayerId+'" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 6px">TCGPlayer ↗</a>':'')
+      +'</div></div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">'
+      +'<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end">'+statusBtns+'</div>'
+      +'<button onclick="removeCardFromOffer(\''+o.id+'\','+i+')" style="padding:3px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer;margin-top:2px">✕ Remove</button>'
+      +'</div></div>';
+  });
+  el('offers-detail-content').innerHTML='<div class="panel">'
+    +'<div class="sheet-detail-header">'
+    +'<button class="back-btn" onclick="showOffersListView();renderOffersList()">← Back</button>'
+    +'<div style="flex:1"><div style="font-weight:700;font-size:16px;color:#f0c040">🏴‍☠️ '+o.sellerName+'</div><div style="font-size:12px;color:#94a3b8">'+o.date+' • '+total+' cards • $'+o.total.toFixed(2)+'</div></div>'
+    +'<button onclick="addCardsToExistingOffer(\''+o.id+'\')" style="padding:8px 14px;border-radius:6px;background:#059669;color:#fff;border:none;font-weight:600;font-size:12px;cursor:pointer">+ Add Cards</button>'
+    +'<button onclick="exportOfferPDF(\''+o.id+'\')" style="padding:8px 14px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:12px;cursor:pointer">📄 Export PDF</button>'
+    +'</div>'
+    +sellerHtml
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:13px">'
+    +'<div>Cards: <span style="color:#34d399">$'+o.cardTotal.toFixed(2)+'</span></div>'
+    +'<div>Shipping: <span style="color:#94a3b8">$'+o.shipping.toFixed(2)+'</span></div>'
+    +'<div>Other: <span style="color:#94a3b8">$'+o.otherFees.toFixed(2)+'</span></div>'
+    +'<div>Total: <span style="color:#f0c040;font-weight:700">$'+o.total.toFixed(2)+'</span></div>'
+    +'</div>'
+    +'<div class="progress-bar" style="margin-bottom:4px"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+    +'<div style="font-size:11px;color:#6b7280;margin-bottom:12px">'+received+'/'+total+' received • '+missing+' missing</div>'
+    +cardsHtml
+    +'</div>';
 }
 
 function editOfferCard(offerId,cardIdx,field,val){
-  const o=st.offers.find(x=>String(x.id)===String(offerId));
+  const o=st.offers.find(function(x){return String(x.id)===String(offerId);});
   if(!o||!o.cards[cardIdx])return;
   const card=o.cards[cardIdx];
-  if(field==='perc'){
-    card.buyPerc=val;
-    if(card.marketPrice!=null)card.buyPrice=parseFloat(((card.marketPrice*val)/100).toFixed(2));
-  } else if(field==='price'){
-    card.buyPrice=val;
-  }
-  // Recalc offer totals
-  o.cardTotal=o.cards.reduce((s,c)=>s+(c.buyPrice||0)*c.qty,0);
+  if(field==='perc'){card.buyPerc=val;if(card.marketPrice!=null)card.buyPrice=parseFloat(((card.marketPrice*val)/100).toFixed(2));}
+  else if(field==='price'){card.buyPrice=val;}
+  o.cardTotal=o.cards.reduce(function(s,c){return s+(c.buyPrice||0)*c.qty;},0);
   o.total=o.cardTotal+o.shipping+o.otherFees;
   save('op-offers',st.offers);
-  // Sync to inventory
-  const inv=st.inventory.find(i=>String(i.offerId)===String(offerId)&&i.name===card.name&&i.condition===card.condition);
+  const inv=st.inventory.find(function(i){return String(i.offerId)===String(offerId)&&i.name===card.name&&i.condition===card.condition;});
   if(inv){inv.buyPrice=card.buyPrice;inv.buyPerc=card.buyPerc;save('op-inventory',st.inventory);}
   renderOfferDetail(o);
 }
 
 function removeCardFromOffer(offerId,cardIdx){
-  const o=st.offers.find(x=>String(x.id)===String(offerId));
-  if(!o)return;
-  if(!confirm(`Remove "${o.cards[cardIdx].name}" from this offer sheet?`))return;
+  const o=st.offers.find(function(x){return String(x.id)===String(offerId);});if(!o)return;
+  if(!confirm('Remove "'+o.cards[cardIdx].name+'" from this offer sheet?'))return;
   const removed=o.cards.splice(cardIdx,1)[0];
-  o.cardTotal=o.cards.reduce((s,c)=>s+(c.buyPrice||0)*c.qty,0);
+  o.cardTotal=o.cards.reduce(function(s,c){return s+(c.buyPrice||0)*c.qty;},0);
   o.total=o.cardTotal+o.shipping+o.otherFees;
   save('op-offers',st.offers);
-  // Remove from inventory too
-  st.inventory=st.inventory.filter(i=>!(String(i.offerId)===String(offerId)&&i.name===removed.name&&i.condition===removed.condition));
+  st.inventory=st.inventory.filter(function(i){return!(String(i.offerId)===String(offerId)&&i.name===removed.name&&i.condition===removed.condition);});
   save('op-inventory',st.inventory);
-  updateStats();
-  renderOfferDetail(o);
-  showToast(`🗑 ${removed.name} removed from offer.`);
+  updateStats();renderOfferDetail(o);
+  showToast('🗑 '+removed.name+' removed from offer.');
 }
 
 function setCardStatus(offerId,cardIdx,status){
-  const o=st.offers.find(x=>String(x.id)===String(offerId));if(!o)return;
+  const o=st.offers.find(function(x){return String(x.id)===String(offerId);});if(!o)return;
   o.cards[cardIdx].status=status;save('op-offers',st.offers);
   const card=o.cards[cardIdx];
-  const inv=st.inventory.find(i=>String(i.offerId)===String(offerId)&&i.name===card.name&&i.condition===card.condition);
+  const inv=st.inventory.find(function(i){return String(i.offerId)===String(offerId)&&i.name===card.name&&i.condition===card.condition;});
   if(inv){inv.status=status;save('op-inventory',st.inventory);}
   updateStats();renderOfferDetail(o);
 }
 
-function exportOfferPDF(id){
-  const o=st.offers.find(x=>String(x.id)===String(id));
-  if(!o)return;
-  const seller=st.sellers.find(s=>String(s.id)===String(o.sellerId));
-  const cardRows=o.cards.map((c,i)=>`
-    <tr style="border-bottom:1px solid #ddd;${i%2===0?'background:#f9f9f9':''}">
-      <td style="padding:8px 6px;font-size:12px">${i+1}</td>
-      <td style="padding:8px 6px;font-size:12px;font-weight:600">${c.name}</td>
-      <td style="padding:8px 6px;font-size:12px">${c.cardNumber}</td>
-      <td style="padding:8px 6px;font-size:12px">${COND_FULL[c.condition]||c.condition}</td>
-      <td style="padding:8px 6px;font-size:12px;text-align:center">${c.qty}</td>
-      <td style="padding:8px 6px;font-size:12px;text-align:right">${c.marketPrice!=null?c.marketPrice.toFixed(2):'—'}</td>
-      <td style="padding:8px 6px;font-size:12px;text-align:right;font-weight:700">${c.buyPrice!=null?c.buyPrice.toFixed(2):'—'}</td>
-      <td style="padding:8px 6px;font-size:12px;text-align:right;color:#059669;font-weight:700">${c.buyPrice!=null?(c.buyPrice*c.qty).toFixed(2):'—'}</td>
-    </tr>`).join('');
-
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offer Sheet — ${o.sellerName} — ${o.date}</title>
-  <style>
-    body{font-family:Arial,sans-serif;margin:0;padding:30px;color:#111;font-size:13px}
-    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #111}
-    .brand{font-size:22px;font-weight:900;letter-spacing:-0.5px}
-    .brand span{color:#7c3aed}
-    .doc-title{font-size:13px;color:#555;margin-top:4px}
-    .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-    .meta-box{background:#f5f5f5;border-radius:6px;padding:12px}
-    .meta-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:4px}
-    .meta-val{font-size:13px;font-weight:600}
-    table{width:100%;border-collapse:collapse;margin-bottom:20px}
-    thead tr{background:#111;color:#fff}
-    thead td{padding:9px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
-    .totals{background:#f5f5f5;border-radius:6px;padding:14px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-bottom:20px}
-    .totals-row{display:flex;gap:40px;font-size:13px}
-    .totals-row.grand{font-weight:900;font-size:16px;border-top:2px solid #111;padding-top:8px;margin-top:4px}
-    .footer{margin-top:30px;padding-top:16px;border-top:1px solid #ddd;font-size:11px;color:#888;text-align:center}
-    .sig-box{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px}
-    .sig-line{border-top:1px solid #aaa;padding-top:6px;font-size:11px;color:#888}
-    @media print{body{padding:20px}}
-  </style></head><body>
-  <div class="header">
-    <div><div class="brand">🏴‍☠️ One Piece TCG <span>Reseller</span></div><div class="doc-title">Official Buy Offer Sheet</div></div>
-    <div style="text-align:right"><div style="font-size:11px;color:#888">Date</div><div style="font-size:15px;font-weight:700">${o.date}</div><div style="font-size:11px;color:#888;margin-top:6px">Offer #${String(o.id).slice(-6)}</div></div>
-  </div>
-  <div class="meta-grid">
-    <div class="meta-box">
-      <div class="meta-label">Seller</div>
-      <div class="meta-val">${o.sellerName}</div>
-      ${seller?.phone?`<div style="font-size:12px;color:#555;margin-top:3px">📞 ${seller.phone}</div>`:''}
-      ${seller?.address?`<div style="font-size:12px;color:#555;margin-top:3px">📍 ${seller.address}</div>`:''}
-    </div>
-    <div class="meta-box">
-      <div class="meta-label">Offer Summary</div>
-      <div class="meta-val">${o.cards.length} card${o.cards.length!==1?'s':''} • ${o.cards.reduce((s,c)=>s+c.qty,0)} total qty</div>
-      <div style="font-size:12px;color:#555;margin-top:3px">All prices in USD</div>
-    </div>
-  </div>
-  <table>
-    <thead><tr>
-      <td>#</td><td>Card Name</td><td>Card #</td><td>Condition</td><td style="text-align:center">Qty</td>
-      <td style="text-align:right">Market Price</td><td style="text-align:right">Buy Price/ea</td><td style="text-align:right">Subtotal</td>
-    </tr></thead>
-    <tbody>${cardRows}</tbody>
-  </table>
-  <div class="totals">
-    <div class="totals-row"><span style="color:#555">Cards Subtotal:</span><span>${o.cardTotal.toFixed(2)}</span></div>
-    ${o.shipping>0?`<div class="totals-row"><span style="color:#555">Shipping:</span><span>${o.shipping.toFixed(2)}</span></div>`:''}
-    ${o.otherFees>0?`<div class="totals-row"><span style="color:#555">Other Fees:</span><span>${o.otherFees.toFixed(2)}</span></div>`:''}
-    <div class="totals-row grand"><span>Total Offer:</span><span style="color:#059669">${o.total.toFixed(2)}</span></div>
-  </div>
-  <div class="sig-box">
-    <div><div class="sig-line">Seller Signature & Date</div></div>
-    <div><div class="sig-line">Buyer Signature & Date</div></div>
-  </div>
-  <div class="footer">This document serves as an official buy offer. Prices are valid for 7 days from the date above. All cards are subject to condition verification upon receipt.</div>
-  </body></html>`;
-
-  const win=window.open('','_blank');
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  setTimeout(()=>{win.print();},500);
-}
-
 function deleteOffer(id){
   if(!confirm('Delete this offer sheet? Linked inventory cards will also be removed.'))return;
-  st.offers=st.offers.filter(o=>String(o.id)!==String(id));
-  st.inventory=st.inventory.filter(i=>String(i.offerId)!==String(id));
+  st.offers=st.offers.filter(function(o){return String(o.id)!==String(id);});
+  st.inventory=st.inventory.filter(function(i){return String(i.offerId)!==String(id);});
   save('op-offers',st.offers);save('op-inventory',st.inventory);
   updateStats();renderOffersList();showToast('🗑 Offer sheet deleted.');
 }
 
-// --- INVENTORY ---
+function addCardsToExistingOffer(id){
+  const o=st.offers.find(function(x){return String(x.id)===String(id);});if(!o)return;
+  if(st.session.length&&!confirm('You have an unsaved offer in progress. Clear it and load this offer instead?'))return;
+  st.editingOfferId=id;st.session=[];
+  switchTab('buylist');
+  setTimeout(function(){
+    renderOfferSheet();
+    const sel=el('offer-seller-select');
+    if(sel){
+      sel.innerHTML='<option value="">— Select Seller —</option><option value="__inperson__">🏪 In Person / Vending</option><option value="__new__">➕ New Seller...</option>';
+      st.sellers.forEach(function(s){const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.name;sel.appendChild(opt);});
+      sel.value=o.sellerId||'__inperson__';
+    }
+    el('fee-shipping').value=o.shipping||0;
+    el('fee-other').value=o.otherFees||0;
+    const badge=el('session-badge');
+    if(badge){badge.style.display='';badge.textContent='Adding to: '+o.sellerName+' ('+o.date+')';}
+    showToast('📋 Adding cards to '+o.sellerName+'\'s offer. Search and add, then Save.');
+  },100);
+}
+
+function exportOfferPDF(id){
+  const o=st.offers.find(function(x){return String(x.id)===String(id);});if(!o)return;
+  let cardRows='';
+  o.cards.forEach(function(c,i){
+    cardRows+='<tr style="border-bottom:1px solid #ddd;'+(i%2===0?'background:#f9f9f9':'')+'">'
+      +'<td style="padding:8px 6px;text-align:center">'+(c.image?'<img src="'+c.image+'" style="width:38px;border-radius:3px;display:block;margin:auto" onerror="this.style.display=\'none\'"/>':'')+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;font-weight:600">'+c.name+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px">'+c.cardNumber+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:center">'+c.qty+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:right">$'+(c.marketPrice!=null?c.marketPrice.toFixed(2):'—')+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:right;font-weight:700">$'+(c.buyPrice!=null?c.buyPrice.toFixed(2):'—')+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:right;color:#059669;font-weight:700">$'+(c.buyPrice!=null?(c.buyPrice*c.qty).toFixed(2):'—')+'</td>'
+      +'</tr>';
+  });
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offer Sheet</title>'
+    +'<style>body{font-family:Arial,sans-serif;margin:0;padding:30px;color:#111;font-size:13px}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #111}table{width:100%;border-collapse:collapse;margin-bottom:16px}thead tr{background:#111;color:#fff}thead td{padding:8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}tbody tr{border-bottom:1px solid #ddd}tbody tr:nth-child(even){background:#f9f9f9}tbody td{padding:7px 6px;font-size:12px;vertical-align:middle}.totals{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.totals-row{display:flex;gap:40px;font-size:13px}.totals-row.grand{font-weight:900;font-size:15px;border-top:2px solid #111;padding-top:6px;margin-top:3px}@media print{body{padding:20px}}</style>'
+    +'</head><body>'
+    +'<div class="header"><div style="font-size:22px;font-weight:900">Offer Sheet</div><div style="font-size:13px;color:#555">'+o.date+'</div></div>'
+    +'<table><thead><tr><td style="width:50px">Photo</td><td>Card Name</td><td>Card #</td><td style="text-align:center">Qty</td><td style="text-align:right">Market</td><td style="text-align:right">Buy/ea</td><td style="text-align:right">Subtotal</td></tr></thead>'
+    +'<tbody>'+cardRows+'</tbody></table>'
+    +'<div class="totals">'
+    +'<div class="totals-row"><span style="color:#555">Cards Subtotal:</span><span>$'+o.cardTotal.toFixed(2)+'</span></div>'
+    +(o.shipping>0?'<div class="totals-row"><span style="color:#555">Shipping:</span><span>$'+o.shipping.toFixed(2)+'</span></div>':'')
+    +(o.otherFees>0?'<div class="totals-row"><span style="color:#555">Other Fees:</span><span>$'+o.otherFees.toFixed(2)+'</span></div>':'')
+    +'<div class="totals-row grand"><span>Total:</span><span style="color:#059669">$'+o.total.toFixed(2)+'</span></div>'
+    +'</div></body></html>';
+  const win=window.open('','_blank');win.document.write(html);win.document.close();win.focus();
+  setTimeout(function(){win.print();},500);
+}
+
+// ── INVENTORY ────────────────────────────────────────────────────────────────
 function renderInventory(){
-  const filter=(document.getElementById('inv-filter')?.value||'').toLowerCase();
-  const statusF=document.getElementById('inv-status-filter')?.value||'';
-  const sort=document.getElementById('inv-sort')?.value||'name-asc';
-
-  const filtered=st.inventory.filter(i=>
-    ((i.name||'').toLowerCase().includes(filter)||(i.set||'').toLowerCase().includes(filter)||(i.sellerName||'').toLowerCase().includes(filter))
-    &&(!statusF||i.status===statusF)
-  );
-
-  // Group by name
+  const filter=(el('inv-filter')&&el('inv-filter').value||'').toLowerCase();
+  const statusF=el('inv-status-filter')&&el('inv-status-filter').value||'';
+  const sort=el('inv-sort')&&el('inv-sort').value||'name-asc';
+  const filtered=st.inventory.filter(function(i){
+    return((i.name||'').toLowerCase().includes(filter)||(i.set||'').toLowerCase().includes(filter)||(i.sellerName||'').toLowerCase().includes(filter))
+      &&(!statusF||i.status===statusF);
+  });
   const groups={};
-  filtered.forEach(i=>{
+  filtered.forEach(function(i){
     const k=i.name;
     if(!groups[k])groups[k]={name:i.name,cardNumber:i.cardNumber,set:i.set,image:i.image,entries:[]};
     groups[k].entries.push(i);
   });
-
   let groupArr=Object.values(groups);
-  groupArr.forEach(g=>{
-    g.totalQty=g.entries.reduce((s,e)=>s+e.qty,0);
-    g.totalCost=g.entries.reduce((s,e)=>s+(e.buyPrice||0)*e.qty,0);
-    g.totalVal=g.entries.reduce((s,e)=>s+(e.marketPrice||0)*e.qty,0);
-    g.avgPerc=g.entries.filter(e=>e.buyPerc).length?g.entries.reduce((s,e)=>s+(e.buyPerc||0),0)/g.entries.filter(e=>e.buyPerc).length:0;
-    g.latestDate=g.entries.map(e=>e.dateAdded||'').sort().reverse()[0]||'';
+  groupArr.forEach(function(g){
+    g.totalQty=g.entries.reduce(function(s,e){return s+e.qty;},0);
+    g.totalCost=g.entries.reduce(function(s,e){return s+(e.buyPrice||0)*e.qty;},0);
+    g.totalVal=g.entries.reduce(function(s,e){return s+(e.marketPrice||0)*e.qty;},0);
+    g.avgPerc=g.entries.filter(function(e){return e.buyPerc;}).length?g.entries.reduce(function(s,e){return s+(e.buyPerc||0);},0)/g.entries.filter(function(e){return e.buyPerc;}).length:0;
+    g.latestDate=g.entries.map(function(e){return e.dateAdded||'';}).sort().reverse()[0]||'';
   });
-
-  groupArr.sort((a,b)=>{
+  groupArr.sort(function(a,b){
     if(sort==='name-asc')return a.name.localeCompare(b.name);
     if(sort==='name-desc')return b.name.localeCompare(a.name);
     if(sort==='cost-desc')return b.totalCost-a.totalCost;
@@ -1092,1282 +982,361 @@ function renderInventory(){
     if(sort==='perc-asc')return a.avgPerc-b.avgPerc;
     return 0;
   });
-
-  const totalCost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const totalVal=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const byStatus=s=>st.inventory.filter(i=>i.status===s).length;
-
-  document.getElementById('inv-stats-bar').innerHTML=`
-    <span>${groupArr.length} unique • ${filtered.length} entries</span>
-    <span style="color:#34d399">Cost: $${totalCost.toFixed(2)}</span>
-    <span style="color:#f0c040">Value: $${totalVal.toFixed(2)}</span>
-    <span class="badge badge-pending">Pending: ${byStatus('pending')}</span>
-    <span class="badge badge-onhand">On Hand: ${byStatus('onhand')}</span>
-    <span class="badge badge-shipped">Shipped: ${byStatus('shipped')}</span>
-    <span class="badge badge-missing">Missing: ${byStatus('missing')}</span>
-    <span class="badge badge-whatnot">Whatnot: ${byStatus('whatnot')}</span>
-  `;
-
-  if(!groupArr.length){document.getElementById('inv-list').innerHTML='<div class="empty">No inventory matches.</div>';return;}
-
-  document.getElementById('inv-list').innerHTML=`<div class="inv-list">${groupArr.map(g=>{
-    // Condition summary chips
-    const condGroups={};g.entries.forEach(e=>{if(!condGroups[e.condition])condGroups[e.condition]=[];condGroups[e.condition].push(e);});
-    const condChips=CONDITIONS.filter(c=>condGroups[c]).map(c=>{
-      const qty=condGroups[c].reduce((s,e)=>s+e.qty,0);
-      const statuses=[...new Set(condGroups[c].map(e=>e.status))];
-      return`<span style="background:#0d0820;border:1px solid #2d2060;border-radius:4px;padding:2px 5px;font-size:9px;display:inline-flex;gap:3px;align-items:center">
-        <span style="color:#a78bfa;font-weight:700">${c}</span><span style="color:#e2e8f0">×${qty}</span>
-        <span class="badge ${STATUS_CLASS[statuses[0]]||'badge-pending'}" style="padding:1px 4px;font-size:8px;margin:0">${statuses.length>1?'Mix':STATUS_LABELS[statuses[0]]?.slice(0,4)||statuses[0]}</span>
-      </span>`;
-    }).join('');
+  const totalCost=st.inventory.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const totalVal=st.inventory.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  function byStatus(s){return st.inventory.filter(function(i){return i.status===s;}).length;}
+  el('inv-stats-bar').innerHTML='<span>'+groupArr.length+' unique • '+filtered.length+' entries</span>'
+    +'<span style="color:#34d399">Cost: $'+totalCost.toFixed(2)+'</span>'
+    +'<span style="color:#f0c040">Value: $'+totalVal.toFixed(2)+'</span>'
+    +'<span class="badge badge-pending">Pending: '+byStatus('pending')+'</span>'
+    +'<span class="badge badge-onhand">On Hand: '+byStatus('onhand')+'</span>'
+    +'<span class="badge badge-shipped">Shipped: '+byStatus('shipped')+'</span>'
+    +'<span class="badge badge-missing">Missing: '+byStatus('missing')+'</span>'
+    +'<span class="badge badge-whatnot">Whatnot: '+byStatus('whatnot')+'</span>';
+  if(!groupArr.length){el('inv-list').innerHTML='<div class="empty">No inventory matches.</div>';return;}
+  let html='<div class="inv-list">';
+  groupArr.forEach(function(g){
+    const condGroups={};
+    g.entries.forEach(function(e){if(!condGroups[e.condition])condGroups[e.condition]=[];condGroups[e.condition].push(e);});
+    let condChips='';
+    CONDITIONS.forEach(function(c){
+      if(!condGroups[c])return;
+      const qty=condGroups[c].reduce(function(s,e){return s+e.qty;},0);
+      const statuses=[...new Set(condGroups[c].map(function(e){return e.status;}))];
+      condChips+='<span style="background:#0d0820;border:1px solid #2d2060;border-radius:4px;padding:2px 5px;font-size:9px;display:inline-flex;gap:3px;align-items:center">'
+        +'<span style="color:#a78bfa;font-weight:700">'+c+'</span><span style="color:#e2e8f0">×'+qty+'</span>'
+        +'<span class="badge '+(STATUS_BADGE[statuses[0]]||'badge-pending')+'" style="padding:1px 4px;font-size:8px;margin:0">'+(statuses.length>1?'Mix':(STATUS_LABELS[statuses[0]]||statuses[0]).slice(0,4))+'</span>'
+        +'</span>';
+    });
+    const hasWhatnot=g.entries.some(function(e){return e.status==='whatnot';});
     const encodedKey=encodeURIComponent(g.name);
-    return`<div class="inv-row" onclick="openInvDetail('${encodedKey}')">
-      ${g.image?`<img class="inv-row-thumb" src="${g.image}" onerror="this.style.display='none'"/>`:'<div class="inv-row-no-img">?</div>'}
-      <div class="inv-row-name">
-        <div class="inv-row-name-main">${g.name}</div>
-        <div class="inv-row-name-sub">${g.cardNumber} • ${g.set}</div>
-        ${g.entries[0]?.tcgplayerId?`<a href="https://www.tcgplayer.com/product/${g.entries[0].tcgplayerId}" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block">TCGPlayer ↗</a>`:''}
-      </div>
-      <div class="inv-row-conds">${condChips}</div>
-      <div class="inv-row-cost">${g.totalCost.toFixed(2)}</div>
-      <div class="inv-row-val">${g.totalVal.toFixed(2)}</div>
-      ${g.entries.some(e=>e.status==='whatnot')?`<div style="font-size:10px;color:#d946ef;font-weight:700;white-space:nowrap">📺 In Show</div>`:''}
-    </div>`;
-  }).join('')}</div>`;
-}
-
-function moveToWhatnot(encodedKey){
-  const name=decodeURIComponent(encodedKey);
-  st.inventory.filter(i=>i.name===name&&i.status!=='whatnot').forEach(i=>i.status='whatnot');
-  save('op-inventory',st.inventory);updateStats();renderInventory();showToast('📺 Moved to Whatnot show!');
+    html+='<div class="inv-row" onclick="openInvDetail(\''+encodedKey+'\')">'
+      +(g.image?'<img class="inv-row-thumb" src="'+g.image+'" onerror="this.style.display=\'none\'"/>':'<div class="inv-row-no-img">?</div>')
+      +'<div class="inv-row-name">'
+      +'<div class="inv-row-name-main">'+g.name+'</div>'
+      +'<div class="inv-row-name-sub">'+g.cardNumber+' • '+g.set+'</div>'
+      +(g.entries[0]&&g.entries[0].tcgplayerId?'<a href="https://www.tcgplayer.com/product/'+g.entries[0].tcgplayerId+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block">TCGPlayer ↗</a>':'')
+      +'</div>'
+      +'<div class="inv-row-conds">'+condChips+'</div>'
+      +'<div class="inv-row-cost">$'+g.totalCost.toFixed(2)+'</div>'
+      +'<div class="inv-row-val">$'+g.totalVal.toFixed(2)+'</div>'
+      +(hasWhatnot?'<div style="font-size:10px;color:#d946ef;font-weight:700;white-space:nowrap">📺 In Show</div>':'')
+      +'</div>';
+  });
+  html+='</div>';
+  el('inv-list').innerHTML=html;
 }
 
 function openInvDetail(encodedKey){
   const name=decodeURIComponent(encodedKey);
-  const entries=st.inventory.filter(i=>i.name===name);if(!entries.length)return;
+  const entries=st.inventory.filter(function(i){return i.name===name;});if(!entries.length)return;
   const g=entries[0];
-  const totalQty=entries.reduce((s,e)=>s+e.qty,0);
-  const totalCost=entries.reduce((s,e)=>s+(e.buyPrice||0)*e.qty,0);
-  const condGroups={};entries.forEach(e=>{if(!condGroups[e.condition])condGroups[e.condition]=[];condGroups[e.condition].push(e);});
-
-  document.getElementById('inv-detail-title').innerHTML=`
-    <div>${g.name}</div>
-    <div style="font-size:11px;color:#a78bfa;font-weight:400">${g.cardNumber} • ×${totalQty} total • ${totalCost.toFixed(2)} cost</div>`;
-
-  const tableRows=entries.map(e=>{
-    const offer=st.offers.find(o=>String(o.id)===String(e.offerId));
+  const totalQty=entries.reduce(function(s,e){return s+e.qty;},0);
+  const totalCost=entries.reduce(function(s,e){return s+(e.buyPrice||0)*e.qty;},0);
+  el('inv-detail-title').innerHTML='<div>'+g.name+'</div><div style="font-size:11px;color:#a78bfa;font-weight:400">'+g.cardNumber+' • ×'+totalQty+' total • $'+totalCost.toFixed(2)+' cost</div>';
+  let tableRows='';
+  entries.forEach(function(e){
+    const offer=st.offers.find(function(o){return String(o.id)===String(e.offerId);});
     const inWhatnot=e.status==='whatnot';
-    return`<tr style="border-bottom:1px solid #1a1640">
-      <td style="padding:8px 6px;font-size:11px;color:#a78bfa;font-weight:700">${e.condition}</td>
-      <td style="padding:8px 6px;font-size:11px;text-align:center">${e.qty}</td>
-      <td style="padding:8px 6px;font-size:11px;color:#34d399">${e.buyPrice!=null?(e.buyPrice*e.qty).toFixed(2):'—'}<br><span style="font-size:10px;color:#6b7280">${e.buyPrice||0}/ea</span></td>
-      <td style="padding:8px 6px;font-size:11px">
-        <span class="badge ${STATUS_CLASS[e.status]||'badge-pending'}">${STATUS_LABELS[e.status]||e.status}</span>
-      </td>
-      <td style="padding:8px 6px;font-size:11px">
-        ${offer?`<button onclick="closeInvDetail();switchTab('offers');openOfferDetail('${offer.id}')" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:10px;cursor:pointer;white-space:nowrap">📋 ${offer.sellerName}</button>`:`<span style="color:#6b7280;font-size:10px">No sheet</span>`}
-      </td>
-      <td style="padding:8px 6px">
-        <button onclick="toggleWhatnot(${e.id},'${encodedKey}')"
-          style="padding:3px 10px;border-radius:4px;border:none;font-size:10px;font-weight:700;cursor:${inWhatnot?'default':'pointer'};white-space:nowrap;background:${inWhatnot?'#1a1640':'#2d0d2d'};color:${inWhatnot?'#4b5563':'#d946ef'};opacity:${inWhatnot?0.6:1}">
-          ${inWhatnot?'📺 In Show':'📺 Add to Show'}
-        </button>
-      </td>
-      <td style="padding:8px 6px">
-        <button onclick="removeFromInventory(${e.id});openInvDetail('${encodedKey}')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button>
-      </td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('inv-detail-content').innerHTML=`
-    <div style="display:flex;gap:12px;margin-bottom:14px;align-items:flex-start">
-      ${g.image?`<img src="${g.image}" style="width:80px;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'"/>`:''}
-      <div style="font-size:12px">
-        <div style="color:#94a3b8;margin-bottom:3px">${g.set}</div>
-        <div style="color:#34d399">Total Cost: ${totalCost.toFixed(2)}</div>
-        <div style="color:#f0c040">Total Qty: ×${totalQty}</div>
-        <div style="color:#94a3b8;font-size:11px;margin-top:3px">${entries.length} purchase${entries.length!==1?'s':''}</div>
-      </div>
-    </div>
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr style="border-bottom:1px solid #2d2060">
-            <th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Cond</th>
-            <th style="padding:6px;text-align:center;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Qty</th>
-            <th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Price Paid</th>
-            <th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Status</th>
-            <th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Offer Sheet</th>
-            <th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Whatnot</th>
-            <th style="padding:6px"></th>
-          </tr>
-        </thead>
-        <tbody>${tableRows}</tbody>
-      </table>
-    </div>`;
-
-  document.getElementById('inv-detail-modal').style.display='';
+    tableRows+='<tr style="border-bottom:1px solid #1a1640">'
+      +'<td style="padding:8px 6px;font-size:11px;color:#a78bfa;font-weight:700">'+e.condition+'</td>'
+      +'<td style="padding:8px 6px;font-size:11px;text-align:center">'+e.qty+'</td>'
+      +'<td style="padding:8px 6px;font-size:11px;color:#34d399">$'+(e.buyPrice!=null?(e.buyPrice*e.qty).toFixed(2):'—')+'<br><span style="font-size:10px;color:#6b7280">$'+(e.buyPrice||0)+'/ea</span></td>'
+      +'<td style="padding:8px 6px;font-size:11px"><span class="badge '+(STATUS_BADGE[e.status]||'badge-pending')+'">'+(STATUS_LABELS[e.status]||e.status)+'</span></td>'
+      +'<td style="padding:8px 6px;font-size:11px">'+(offer?'<button onclick="closeInvDetail();switchTab(\'offers\');openOfferDetail(\''+offer.id+'\')" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:10px;cursor:pointer;white-space:nowrap">📋 '+offer.sellerName+'</button>':'<span style="color:#6b7280;font-size:10px">No sheet</span>')+'</td>'
+      +'<td style="padding:8px 6px">'
+      +'<button onclick="toggleWhatnot('+e.id+',\''+encodedKey+'\')" style="padding:3px 10px;border-radius:4px;border:none;font-size:10px;font-weight:700;cursor:'+(inWhatnot?'default':'pointer')+';white-space:nowrap;background:'+(inWhatnot?'#1a1640':'#2d0d2d')+';color:'+(inWhatnot?'#4b5563':'#d946ef')+';opacity:'+(inWhatnot?0.6:1)+'">'+(inWhatnot?'📺 In Show':'📺 Add to Show')+'</button>'
+      +'</td>'
+      +'<td style="padding:8px 6px"><button onclick="removeFromInventory('+e.id+');openInvDetail(\''+encodedKey+'\')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button></td>'
+      +'</tr>';
+  });
+  el('inv-detail-content').innerHTML=
+    '<div style="display:flex;gap:12px;margin-bottom:14px;align-items:flex-start">'
+    +(g.image?'<img src="'+g.image+'" style="width:80px;border-radius:6px;flex-shrink:0" onerror="this.style.display=\'none\'"/>':'')
+    +'<div style="font-size:13px"><div style="color:#94a3b8;margin-bottom:3px">'+g.set+'</div><div style="color:#34d399">Total Cost: $'+totalCost.toFixed(2)+'</div><div style="color:#f0c040">Total Qty: ×'+totalQty+'</div><div style="color:#94a3b8;font-size:11px;margin-top:3px">'+entries.length+' purchase'+(entries.length!==1?'s':'')+'</div></div>'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr style="border-bottom:1px solid #2d2060">'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Cond</th>'
+    +'<th style="padding:6px;text-align:center;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Qty</th>'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Price Paid</th>'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Status</th>'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Offer Sheet</th>'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Whatnot</th>'
+    +'<th style="padding:6px"></th>'
+    +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+  el('inv-detail-modal').style.display='';
 }
 
+function closeInvDetail(){el('inv-detail-modal').style.display='none';}
+
 function toggleWhatnot(id,encodedKey){
-  const item=st.inventory.find(i=>i.id===id);
+  const item=st.inventory.find(function(i){return i.id===id;});
   if(!item||item.status==='whatnot')return;
-  item.status='whatnot';
-  save('op-inventory',st.inventory);
-  updateStats();
-  renderInventory();
-  openInvDetail(encodedKey);
-  showToast('📺 Added to Whatnot show!');
+  item.status='whatnot';save('op-inventory',st.inventory);
+  updateStats();renderInventory();openInvDetail(encodedKey);showToast('📺 Added to Whatnot show!');
 }
 
 function removeFromInventory(id){
-  st.inventory=st.inventory.filter(i=>i.id!==id);
+  st.inventory=st.inventory.filter(function(i){return i.id!==id;});
   save('op-inventory',st.inventory);updateStats();renderInventory();
 }
 
-// --- WHATNOT ---
+// ── WHATNOT ──────────────────────────────────────────────────────────────────
 function renderWhatnot(){
-  const items=st.inventory.filter(i=>i.status==='whatnot');
-  const filter=(document.getElementById('wn-filter')?.value||'').toLowerCase();
-  const sort=document.getElementById('wn-sort')?.value||'name-asc';
-
-  const totalCost=items.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const totalVal=items.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
+  const items=st.inventory.filter(function(i){return i.status==='whatnot';});
+  const filter=(el('wn-filter')&&el('wn-filter').value||'').toLowerCase();
+  const sort=el('wn-sort')&&el('wn-sort').value||'name-asc';
+  const totalCost=items.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const totalVal=items.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
   const profit=totalVal-totalCost;
-
-  document.getElementById('whatnot-summary').innerHTML=`
-    <div class="whatnot-stat"><div class="whatnot-stat-label">Cards in Show</div><div class="whatnot-stat-val" style="color:#d946ef">${items.length}</div></div>
-    <div class="whatnot-stat"><div class="whatnot-stat-label">Total Cost Paid</div><div class="whatnot-stat-val" style="color:#34d399">$${totalCost.toFixed(2)}</div></div>
-    <div class="whatnot-stat"><div class="whatnot-stat-label">Total Market Value</div><div class="whatnot-stat-val" style="color:#f0c040">$${totalVal.toFixed(2)}</div></div>
-    <div class="whatnot-stat"><div class="whatnot-stat-label">Potential Profit</div><div class="whatnot-stat-val" style="color:${profit>=0?'#34d399':'#f87171'}">$${profit.toFixed(2)}</div></div>
-  `;
-
-  const filtered=items.filter(i=>(i.name||'').toLowerCase().includes(filter));
-  filtered.sort((a,b)=>{
+  el('whatnot-summary').innerHTML=
+    '<div class="whatnot-stat"><div class="whatnot-stat-label">Cards in Show</div><div class="whatnot-stat-val" style="color:#d946ef">'+items.length+'</div></div>'
+    +'<div class="whatnot-stat"><div class="whatnot-stat-label">Total Cost Paid</div><div class="whatnot-stat-val" style="color:#34d399">$'+totalCost.toFixed(2)+'</div></div>'
+    +'<div class="whatnot-stat"><div class="whatnot-stat-label">Total Market Value</div><div class="whatnot-stat-val" style="color:#f0c040">$'+totalVal.toFixed(2)+'</div></div>'
+    +'<div class="whatnot-stat"><div class="whatnot-stat-label">Potential Profit</div><div class="whatnot-stat-val" style="color:'+(profit>=0?'#34d399':'#f87171')+'">$'+profit.toFixed(2)+'</div></div>';
+  const filtered=items.filter(function(i){return(i.name||'').toLowerCase().includes(filter);});
+  filtered.sort(function(a,b){
     if(sort==='name-asc')return(a.name||'').localeCompare(b.name||'');
     if(sort==='cost-desc')return(b.buyPrice||0)*b.qty-(a.buyPrice||0)*a.qty;
     if(sort==='value-desc')return(b.marketPrice||0)*b.qty-(a.marketPrice||0)*a.qty;
     return 0;
   });
-
-  document.getElementById('whatnot-list').innerHTML=filtered.length?`<div class="inv-list">${filtered.map(i=>`
-    <div class="inv-row">
-      ${i.image?`<img class="inv-row-thumb" src="${i.image}" onerror="this.style.display='none'"/>`:'<div class="inv-row-no-img">?</div>'}
-      <div class="inv-row-name">
-        <div class="inv-row-name-main">${i.name}</div>
-        <div class="inv-row-name-sub">${i.cardNumber} • ${COND_FULL[i.condition]||i.condition} × ${i.qty}</div>
-      </div>
-      <div style="flex:1;font-size:11px;color:#94a3b8">👤 ${i.sellerName||'Unknown'}</div>
-      <div class="inv-row-cost">Cost: $${((i.buyPrice||0)*i.qty).toFixed(2)}</div>
-      <div class="inv-row-val">Value: $${((i.marketPrice||0)*i.qty).toFixed(2)}</div>
-      <div class="inv-row-actions">
-        <button onclick="restoreFromWhatnot(${i.id})" style="padding:4px 8px;border-radius:4px;background:#0d2010;border:none;color:#34d399;font-size:10px">↩ Restore</button>
-        <button onclick="removeFromInventory(${i.id})" style="padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px">✕</button>
-      </div>
-    </div>`).join('')}</div>`:'<div class="empty">No cards in Whatnot show yet. Move cards here from 📦 Inventory.</div>';
+  if(!filtered.length){el('whatnot-list').innerHTML='<div class="empty">No cards in Whatnot show yet.</div>';return;}
+  let html='<div class="inv-list">';
+  filtered.forEach(function(i){
+    html+='<div class="inv-row">'
+      +(i.image?'<img class="inv-row-thumb" src="'+i.image+'" onerror="this.style.display=\'none\'"/>':'<div class="inv-row-no-img">?</div>')
+      +'<div class="inv-row-name"><div class="inv-row-name-main">'+i.name+'</div><div class="inv-row-name-sub">'+i.cardNumber+' • '+(COND_FULL[i.condition]||i.condition)+' × '+i.qty+'</div></div>'
+      +'<div style="flex:1;font-size:11px;color:#94a3b8">👤 '+(i.sellerName||'Unknown')+'</div>'
+      +'<div class="inv-row-cost">Cost: $'+((i.buyPrice||0)*i.qty).toFixed(2)+'</div>'
+      +'<div class="inv-row-val">Value: $'+((i.marketPrice||0)*i.qty).toFixed(2)+'</div>'
+      +'<div style="display:flex;gap:4px">'
+      +'<button onclick="restoreFromWhatnot('+i.id+')" style="padding:4px 8px;border-radius:4px;background:#0d2010;border:none;color:#34d399;font-size:10px;cursor:pointer">↩ Restore</button>'
+      +'<button onclick="removeFromInventory('+i.id+')" style="padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button>'
+      +'</div></div>';
+  });
+  el('whatnot-list').innerHTML=html+'</div>';
 }
 
 function restoreFromWhatnot(id){
-  const i=st.inventory.find(x=>x.id===id);if(i){i.status='onhand';save('op-inventory',st.inventory);updateStats();renderWhatnot();showToast('↩ Restored to On Hand.');}
+  const i=st.inventory.find(function(x){return x.id===id;});
+  if(i){i.status='onhand';save('op-inventory',st.inventory);updateStats();renderWhatnot();showToast('↩ Restored to On Hand.');}
 }
 
 function clearWhatnot(){
   if(!confirm('Remove all Whatnot cards from the show list? They will be marked Shipped.'))return;
-  st.inventory.filter(i=>i.status==='whatnot').forEach(i=>i.status='shipped');
-  save('op-inventory',st.inventory);updateStats();renderWhatnot();showToast('✅ Whatnot show cleared — cards marked Shipped.');
+  st.inventory.filter(function(i){return i.status==='whatnot';}).forEach(function(i){i.status='shipped';});
+  save('op-inventory',st.inventory);updateStats();renderWhatnot();showToast('✅ Whatnot show cleared.');
 }
 
-// --- SELLERS ---
+// ── SELLERS ──────────────────────────────────────────────────────────────────
 function renderSellers(){
-  const list=document.getElementById('sellers-list');
+  const list=el('sellers-list');
   if(!st.sellers.length){list.innerHTML='<div class="empty">No sellers yet.</div>';return;}
-  list.innerHTML=st.sellers.map(s=>`
-    <div class="seller-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div class="seller-card-name">👤 ${s.name}</div>
-        <div style="display:flex;gap:6px">
-          <button style="padding:4px 10px;border-radius:5px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer" onclick="openSellerModal('${s.id}')">Edit</button>
-          <button style="padding:4px 10px;border-radius:5px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer" onclick="deleteSeller('${s.id}')">Delete</button>
-        </div>
-      </div>
-      ${s.fb?`<div class="seller-field">💬 <a href="${s.fb}" target="_blank">Facebook Messenger</a></div>`:''}
-      ${s.phone?`<div class="seller-field">📞 ${s.phone}</div>`:''}
-      ${s.address?`<div class="seller-field">📍 ${s.address}</div>`:''}
-      ${s.notes?`<div class="seller-field">📝 ${s.notes}</div>`:''}
-      <div style="font-size:10px;color:#6b7280;margin-top:6px">${st.inventory.filter(i=>String(i.sellerId)===String(s.id)).length} cards in inventory</div>
-    </div>`).join('');
+  let html='';
+  st.sellers.forEach(function(s){
+    html+='<div class="seller-card">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      +'<div class="seller-card-name">👤 '+s.name+'</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button style="padding:4px 10px;border-radius:5px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer" onclick="openSellerModal(\''+s.id+'\')">Edit</button>'
+      +'<button style="padding:4px 10px;border-radius:5px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer" onclick="deleteSeller(\''+s.id+'\')">Delete</button>'
+      +'</div></div>'
+      +(s.fb?'<div class="seller-field">💬 <a href="'+s.fb+'" target="_blank">Facebook Messenger</a></div>':'')
+      +(s.phone?'<div class="seller-field">📞 '+s.phone+'</div>':'')
+      +(s.address?'<div class="seller-field">📍 '+s.address+'</div>':'')
+      +(s.notes?'<div class="seller-field">📝 '+s.notes+'</div>':'')
+      +'<div style="font-size:10px;color:#6b7280;margin-top:6px">'+st.inventory.filter(function(i){return String(i.sellerId)===String(s.id);}).length+' cards in inventory</div>'
+      +'</div>';
+  });
+  list.innerHTML=html;
 }
 
 function openSellerModal(id){
   st.editingSellerId=id||null;
-  document.getElementById('seller-modal-title').textContent=id?'Edit Seller':'Add Seller';
-  if(id){const s=st.sellers.find(x=>String(x.id)===String(id));if(s){document.getElementById('sm-name').value=s.name||'';document.getElementById('sm-fb').value=s.fb||'';document.getElementById('sm-phone').value=s.phone||'';document.getElementById('sm-address').value=s.address||'';document.getElementById('sm-notes').value=s.notes||'';}}
-  else{['sm-name','sm-fb','sm-phone','sm-address','sm-notes'].forEach(f=>document.getElementById(f).value='');}
-  document.getElementById('seller-modal').style.display='';
+  el('seller-modal-title').textContent=id?'Edit Seller':'Add Seller';
+  if(id){const s=st.sellers.find(function(x){return String(x.id)===String(id);});if(s){el('sm-name').value=s.name||'';el('sm-fb').value=s.fb||'';el('sm-phone').value=s.phone||'';el('sm-address').value=s.address||'';el('sm-notes').value=s.notes||'';}}
+  else{['sm-name','sm-fb','sm-phone','sm-address','sm-notes'].forEach(function(f){el(f).value='';});}
+  el('seller-modal').style.display='';
 }
-function closeSellerModal(){document.getElementById('seller-modal').style.display='none';}
+function closeSellerModal(){el('seller-modal').style.display='none';}
 function saveSeller(){
-  const name=document.getElementById('sm-name').value.trim();if(!name){showToast('⚠️ Seller name is required.');return;}
-  const data={name,fb:document.getElementById('sm-fb').value.trim(),phone:document.getElementById('sm-phone').value.trim(),address:document.getElementById('sm-address').value.trim(),notes:document.getElementById('sm-notes').value.trim()};
-  if(st.editingSellerId){const idx=st.sellers.findIndex(x=>String(x.id)===String(st.editingSellerId));if(idx>-1)st.sellers[idx]={...st.sellers[idx],...data};}
-  else{st.sellers.push({id:uid(),...data});}
+  const name=el('sm-name').value.trim();if(!name){showToast('⚠️ Seller name is required.');return;}
+  const data={name:name,fb:el('sm-fb').value.trim(),phone:el('sm-phone').value.trim(),address:el('sm-address').value.trim(),notes:el('sm-notes').value.trim()};
+  if(st.editingSellerId){const idx=st.sellers.findIndex(function(x){return String(x.id)===String(st.editingSellerId);});if(idx>-1)st.sellers[idx]=Object.assign({},st.sellers[idx],data);}
+  else{st.sellers.push(Object.assign({id:uid()},data));}
   save('op-sellers',st.sellers);closeSellerModal();renderSellers();showToast('✅ Seller saved!');
 }
-function deleteSeller(id){if(!confirm('Delete this seller?'))return;st.sellers=st.sellers.filter(s=>String(s.id)!==String(id));save('op-sellers',st.sellers);renderSellers();}
+function deleteSeller(id){
+  if(!confirm('Delete this seller?'))return;
+  st.sellers=st.sellers.filter(function(s){return String(s.id)!==String(id);});
+  save('op-sellers',st.sellers);renderSellers();
+}
 
-// --- FINANCES ---
+// ── FINANCES ─────────────────────────────────────────────────────────────────
 function saveFinances(){
-  finances={
-    paypal:parseFloat(document.getElementById('fin-paypal').value)||0,
-    bank:parseFloat(document.getElementById('fin-bank').value)||0,
-    cash:parseFloat(document.getElementById('fin-cash').value)||0,
-    history:finances.history||[],
-    whatnotShows:finances.whatnotShows||[]
-  };
+  finances={paypal:parseFloat(el('fin-paypal').value)||0,bank:parseFloat(el('fin-bank').value)||0,cash:parseFloat(el('fin-cash').value)||0,history:finances.history||[],whatnotShows:finances.whatnotShows||[]};
   save('op-finances',finances);
 }
 
 function updateFinances(){
-  const invVal=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const invCost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const paypal=parseFloat(document.getElementById('fin-paypal').value)||0;
-  const bank=parseFloat(document.getElementById('fin-bank').value)||0;
-  const cash=parseFloat(document.getElementById('fin-cash').value)||0;
+  const invVal=st.inventory.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  const invCost=st.inventory.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const paypal=parseFloat(el('fin-paypal').value)||0;
+  const bank=parseFloat(el('fin-bank').value)||0;
+  const cash=parseFloat(el('fin-cash').value)||0;
   const net=invVal+paypal+bank+cash;
-  document.getElementById('finance-net-worth').textContent='
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+net.toFixed(2);
-  document.getElementById('fin-inv-val').textContent='
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+invVal.toFixed(2);
-  document.getElementById('fin-inv-cost').textContent=`Cost basis: ${invCost.toFixed(2)} • Unrealized gain: ${(invVal-invCost).toFixed(2)}`;
-  document.getElementById('finance-breakdown').textContent=`Inventory ${invVal.toFixed(2)} + PayPal ${paypal.toFixed(2)} + Bank ${bank.toFixed(2)} + Cash ${cash.toFixed(2)}`;
-  const byStatus=s=>st.inventory.filter(i=>i.status===s);
+  el('finance-net-worth').textContent='$'+net.toFixed(2);
+  el('fin-inv-val').textContent='$'+invVal.toFixed(2);
+  el('fin-inv-cost').textContent='Cost basis: $'+invCost.toFixed(2)+' • Unrealized gain: $'+(invVal-invCost).toFixed(2);
+  el('finance-breakdown').textContent='Inventory $'+invVal.toFixed(2)+' + PayPal $'+paypal.toFixed(2)+' + Bank $'+bank.toFixed(2)+' + Cash $'+cash.toFixed(2);
+  function byStatus(s){return st.inventory.filter(function(i){return i.status===s;});}
   const onhand=byStatus('onhand'),pending=byStatus('pending'),whatnot=byStatus('whatnot');
-  document.getElementById('fin-inv-detail').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#34d399;font-weight:700;font-size:13px">On Hand: ${onhand.length}</div><div>Value: ${onhand.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${onhand.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#f0a040;font-weight:700;font-size:13px">Pending: ${pending.length}</div><div>Value: ${pending.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${pending.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#d946ef;font-weight:700;font-size:13px">Whatnot: ${whatnot.length}</div><div>Value: ${whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-    </div>`;
+  el('fin-inv-detail').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">'
+    +'<div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#34d399;font-weight:700;font-size:13px">On Hand: '+onhand.length+'</div><div>Value: $'+onhand.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0).toFixed(2)+'</div><div>Cost: $'+onhand.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0).toFixed(2)+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#f0a040;font-weight:700;font-size:13px">Pending: '+pending.length+'</div><div>Value: $'+pending.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0).toFixed(2)+'</div><div>Cost: $'+pending.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0).toFixed(2)+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#d946ef;font-weight:700;font-size:13px">Whatnot: '+whatnot.length+'</div><div>Value: $'+whatnot.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0).toFixed(2)+'</div><div>Cost: $'+whatnot.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0).toFixed(2)+'</div></div>'
+    +'</div>';
   renderFinanceChart();
   renderWhatnotHistory();
 }
 
 function snapshotNetWorth(){
-  const invVal=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const paypal=parseFloat(document.getElementById('fin-paypal').value)||0;
-  const bank=parseFloat(document.getElementById('fin-bank').value)||0;
-  const cash=parseFloat(document.getElementById('fin-cash').value)||0;
+  const invVal=st.inventory.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  const paypal=parseFloat(el('fin-paypal').value)||0;
+  const bank=parseFloat(el('fin-bank').value)||0;
+  const cash=parseFloat(el('fin-cash').value)||0;
   const net=invVal+paypal+bank+cash;
   if(!finances.history)finances.history=[];
-  finances.history.push({date:today(),ts:Date.now(),net,invVal,paypal,bank,cash});
-  save('op-finances',finances);
-  renderFinanceChart();
-  showToast('📸 Net worth snapshot saved!');
+  finances.history.push({date:today(),ts:Date.now(),net:net,invVal:invVal,paypal:paypal,bank:bank,cash:cash});
+  save('op-finances',finances);renderFinanceChart();showToast('📸 Net worth snapshot saved!');
 }
 
 function renderFinanceChart(){
-  const canvas=document.getElementById('networth-chart');
-  const empty=document.getElementById('chart-empty');
-  if(!canvas)return;
+  const canvas=el('networth-chart');const empty=el('chart-empty');if(!canvas)return;
   const hist=finances.history||[];
-  const range=document.getElementById('chart-range')?.value||'all';
-  let data=[...hist];
-  if(range!=='all'){
-    const cutoff=Date.now()-parseInt(range)*24*60*60*1000;
-    data=data.filter(d=>d.ts>=cutoff);
-  }
+  const range=el('chart-range')&&el('chart-range').value||'all';
+  let data=hist.slice();
+  if(range!=='all'){const cutoff=Date.now()-parseInt(range)*86400000;data=data.filter(function(d){return d.ts>=cutoff;});}
   if(!data.length){canvas.style.display='none';empty.style.display='';return;}
   canvas.style.display='';empty.style.display='none';
   const dpr=window.devicePixelRatio||1;
-  const W=canvas.parentElement.clientWidth-36;
-  const H=220;
-  canvas.width=W*dpr;canvas.height=H*dpr;
-  canvas.style.width=W+'px';canvas.style.height=H+'px';
-  const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  ctx.clearRect(0,0,W,H);
+  const W=canvas.parentElement.clientWidth-36,H=220;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
   const pad={t:20,r:20,b:40,l:70};
   const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const vals=data.map(d=>d.net);
-  const minV=Math.min(...vals)*0.97,maxV=Math.max(...vals)*1.03;
-  const range2=maxV-minV||1;
+  const vals=data.map(function(d){return d.net;});
+  const minV=Math.min.apply(null,vals)*0.97,maxV=Math.max.apply(null,vals)*1.03;
+  const rng=maxV-minV||1;
   function px(i){return pad.l+i*(cw/(data.length-1||1));}
-  function py(v){return pad.t+ch-(((v-minV)/range2)*ch);}
-  // Grid lines
+  function py(v){return pad.t+ch-((v-minV)/rng)*ch;}
   ctx.strokeStyle='#2d2060';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=pad.t+(ch/4)*i;
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
-    const val=maxV-((range2/4)*i);
+  for(var gi=0;gi<=4;gi++){
+    const gy=pad.t+(ch/4)*gi;
+    ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke();
+    const gv=maxV-((rng/4)*gi);
     ctx.fillStyle='#94a3b8';ctx.font='11px system-ui';ctx.textAlign='right';
-    ctx.fillText('
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+val.toFixed(0),pad.l-6,y+4);
+    ctx.fillText('$'+gv.toFixed(0),pad.l-6,gy+4);
   }
-  // Fill gradient
   const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
-  grad.addColorStop(0,'rgba(124,58,237,0.4)');
-  grad.addColorStop(1,'rgba(124,58,237,0.02)');
-  ctx.beginPath();
-  ctx.moveTo(px(0),py(data[0].net));
-  data.forEach((d,i)=>{if(i>0)ctx.lineTo(px(i),py(d.net));});
-  ctx.lineTo(px(data.length-1),pad.t+ch);
-  ctx.lineTo(px(0),pad.t+ch);
-  ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-  // Line
+  grad.addColorStop(0,'rgba(124,58,237,0.4)');grad.addColorStop(1,'rgba(124,58,237,0.02)');
   ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));
-  data.forEach((d,i)=>{if(i>0)ctx.lineTo(px(i),py(d.net));});
+  data.forEach(function(d,i){if(i>0)ctx.lineTo(px(i),py(d.net));});
+  ctx.lineTo(px(data.length-1),pad.t+ch);ctx.lineTo(px(0),pad.t+ch);
+  ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));
+  data.forEach(function(d,i){if(i>0)ctx.lineTo(px(i),py(d.net));});
   ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
-  // Dots + labels
-  data.forEach((d,i)=>{
+  data.forEach(function(d,i){
     const x=px(i),y=py(d.net);
-    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
-    ctx.fillStyle='#f0c040';ctx.fill();
-    // X axis date label (show every nth)
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#f0c040';ctx.fill();
     const nth=Math.ceil(data.length/8);
-    if(i%nth===0||i===data.length-1){
-      ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';
-      ctx.fillText(d.date,x,H-pad.b+14);
-    }
+    if(i%nth===0||i===data.length-1){ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText(d.date,x,H-pad.b+14);}
   });
-  // Change indicator
   if(data.length>1){
     const first=data[0].net,last=data[data.length-1].net,change=last-first,pct=((change/first)*100).toFixed(1);
-    const color=change>=0?'#34d399':'#f87171';
-    const arrow=change>=0?'▲':'▼';
-    ctx.fillStyle=color;ctx.font='bold 13px system-ui';ctx.textAlign='left';
-    ctx.fillText(`${arrow} ${change>=0?'+':''}${change.toFixed(2)} (${change>=0?'+':''}${pct}%)`,pad.l,pad.t-4);
+    ctx.fillStyle=change>=0?'#34d399':'#f87171';ctx.font='bold 13px system-ui';ctx.textAlign='left';
+    ctx.fillText((change>=0?'▲ +':'▼ ')+'$'+change.toFixed(2)+' ('+(change>=0?'+':'')+pct+'%)',pad.l,pad.t-4);
   }
 }
 
 function recordWhatnotShow(){
-  const whatnot=st.inventory.filter(i=>i.status==='whatnot');
+  const whatnot=st.inventory.filter(function(i){return i.status==='whatnot';});
   if(!whatnot.length){showToast('⚠️ No cards in Whatnot tab to record.');return;}
-  const totalCost=whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const totalVal=whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const revenue=parseFloat(prompt(`Enter total revenue earned from this Whatnot show ($):`)||'0')||0;
+  const totalCost=whatnot.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const totalVal=whatnot.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  const revenue=parseFloat(prompt('Enter total revenue earned from this Whatnot show ($):')||'0')||0;
   if(!finances.whatnotShows)finances.whatnotShows=[];
-  finances.whatnotShows.unshift({
-    id:uid(),date:today(),ts:Date.now(),
-    cardCount:whatnot.length,totalCost,totalVal,revenue,
-    profit:revenue-totalCost
-  });
-  save('op-finances',finances);
-  renderWhatnotHistory();
-  showToast('📺 Whatnot show recorded!');
+  finances.whatnotShows.unshift({id:uid(),date:today(),ts:Date.now(),cardCount:whatnot.length,totalCost:totalCost,totalVal:totalVal,revenue:revenue,profit:revenue-totalCost});
+  save('op-finances',finances);renderWhatnotHistory();showToast('📺 Whatnot show recorded!');
 }
 
 function renderWhatnotHistory(){
-  const el=document.getElementById('whatnot-history-list');if(!el)return;
+  const el2=el('whatnot-history-list');if(!el2)return;
   const shows=finances.whatnotShows||[];
-  if(!shows.length){el.innerHTML='<div style="color:#6b7280;font-size:13px;padding:10px 0">No shows recorded yet. Run a Whatnot show and click "+ Record Show" to log it.</div>';return;}
-  const totalRevenue=shows.reduce((s,w)=>s+w.revenue,0);
-  const totalProfit=shows.reduce((s,w)=>s+w.profit,0);
-  el.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px">
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Shows</div><div style="font-size:20px;font-weight:700;color:#d946ef">${shows.length}</div></div>
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Revenue</div><div style="font-size:20px;font-weight:700;color:#34d399">${totalRevenue.toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Profit</div><div style="font-size:20px;font-weight:700;color:${totalProfit>=0?'#34d399':'#f87171'}">${totalProfit.toFixed(2)}</div></div>
-    </div>
-    ${shows.map(w=>`
-      <div style="background:#0d0820;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #2d0d2d;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-weight:700;font-size:13px;color:#d946ef">📺 ${w.date}</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w.cardCount} cards • Cost: ${w.totalCost.toFixed(2)} • Market: ${w.totalVal.toFixed(2)}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:14px;font-weight:700;color:#34d399">Revenue: ${w.revenue.toFixed(2)}</div>
-          <div style="font-size:12px;color:${w.profit>=0?'#34d399':'#f87171'}">Profit: ${w.profit>=0?'+':''}${w.profit.toFixed(2)}</div>
-        </div>
-        <button onclick="deleteWhatnotShow('${w.id}')" style="padding:4px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>
-      </div>`).join('')}`;
+  if(!shows.length){el2.innerHTML='<div style="color:#6b7280;font-size:13px;padding:10px 0">No shows recorded yet.</div>';return;}
+  const totalRevenue=shows.reduce(function(s,w){return s+w.revenue;},0);
+  const totalProfit=shows.reduce(function(s,w){return s+w.profit;},0);
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px">'
+    +'<div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Shows</div><div style="font-size:20px;font-weight:700;color:#d946ef">'+shows.length+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Revenue</div><div style="font-size:20px;font-weight:700;color:#34d399">$'+totalRevenue.toFixed(2)+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Profit</div><div style="font-size:20px;font-weight:700;color:'+(totalProfit>=0?'#34d399':'#f87171')+'">$'+totalProfit.toFixed(2)+'</div></div>'
+    +'</div>';
+  shows.forEach(function(w){
+    html+='<div style="background:#0d0820;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #2d0d2d;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+      +'<div><div style="font-weight:700;font-size:13px;color:#d946ef">📺 '+w.date+'</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">'+w.cardCount+' cards • Cost: $'+w.totalCost.toFixed(2)+' • Market: $'+w.totalVal.toFixed(2)+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#34d399">Revenue: $'+w.revenue.toFixed(2)+'</div><div style="font-size:12px;color:'+(w.profit>=0?'#34d399':'#f87171')+'">Profit: '+(w.profit>=0?'+':'')+'$'+w.profit.toFixed(2)+'</div></div>'
+      +'<button onclick="deleteWhatnotShow(\''+w.id+'\')" style="padding:4px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>'
+      +'</div>';
+  });
+  el2.innerHTML=html;
 }
 
 function deleteWhatnotShow(id){
   if(!confirm('Delete this show record?'))return;
-  finances.whatnotShows=(finances.whatnotShows||[]).filter(w=>String(w.id)!==String(id));
-  save('op-finances',finances);
-  renderWhatnotHistory();
+  finances.whatnotShows=(finances.whatnotShows||[]).filter(function(w){return String(w.id)!==String(id);});
+  save('op-finances',finances);renderWhatnotHistory();
 }
 
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
+// ── SETTINGS ─────────────────────────────────────────────────────────────────
+function saveKey(){
+  const k=el('key-input').value.trim();if(!k)return;
+  st.apiKey=k;save('op-apikey',k);
+  el('key-ok').style.display='';el('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);
+  updateBanner();showToast('✅ API key saved!');
+}
 
 function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+net.toFixed(2);
-  document.getElementById('fin-inv-val').textContent='
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+invVal.toFixed(2);
-  document.getElementById('fin-inv-cost').textContent=`Cost basis: ${invCost.toFixed(2)} • Unrealized gain: ${(invVal-invCost).toFixed(2)}`;
-  document.getElementById('finance-breakdown').textContent=`Inventory ${invVal.toFixed(2)} + PayPal ${paypal.toFixed(2)} + Bank ${bank.toFixed(2)} + Cash ${cash.toFixed(2)}`;
-  const byStatus=s=>st.inventory.filter(i=>i.status===s);
-  const onhand=byStatus('onhand'),pending=byStatus('pending'),whatnot=byStatus('whatnot');
-  document.getElementById('fin-inv-detail').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#34d399;font-weight:700;font-size:13px">On Hand: ${onhand.length}</div><div>Value: ${onhand.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${onhand.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#f0a040;font-weight:700;font-size:13px">Pending: ${pending.length}</div><div>Value: ${pending.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${pending.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#d946ef;font-weight:700;font-size:13px">Whatnot: ${whatnot.length}</div><div>Value: ${whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-    </div>`;
-  renderFinanceChart();
-  renderWhatnotHistory();
-}
-
-function snapshotNetWorth(){
-  const invVal=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const paypal=parseFloat(document.getElementById('fin-paypal').value)||0;
-  const bank=parseFloat(document.getElementById('fin-bank').value)||0;
-  const cash=parseFloat(document.getElementById('fin-cash').value)||0;
-  const net=invVal+paypal+bank+cash;
-  if(!finances.history)finances.history=[];
-  finances.history.push({date:today(),ts:Date.now(),net,invVal,paypal,bank,cash});
-  save('op-finances',finances);
-  renderFinanceChart();
-  showToast('📸 Net worth snapshot saved!');
-}
-
-function renderFinanceChart(){
-  const canvas=document.getElementById('networth-chart');
-  const empty=document.getElementById('chart-empty');
-  if(!canvas)return;
-  const hist=finances.history||[];
-  const range=document.getElementById('chart-range')?.value||'all';
-  let data=[...hist];
-  if(range!=='all'){
-    const cutoff=Date.now()-parseInt(range)*24*60*60*1000;
-    data=data.filter(d=>d.ts>=cutoff);
-  }
-  if(!data.length){canvas.style.display='none';empty.style.display='';return;}
-  canvas.style.display='';empty.style.display='none';
-  const dpr=window.devicePixelRatio||1;
-  const W=canvas.parentElement.clientWidth-36;
-  const H=220;
-  canvas.width=W*dpr;canvas.height=H*dpr;
-  canvas.style.width=W+'px';canvas.style.height=H+'px';
-  const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  ctx.clearRect(0,0,W,H);
-  const pad={t:20,r:20,b:40,l:70};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const vals=data.map(d=>d.net);
-  const minV=Math.min(...vals)*0.97,maxV=Math.max(...vals)*1.03;
-  const range2=maxV-minV||1;
-  function px(i){return pad.l+i*(cw/(data.length-1||1));}
-  function py(v){return pad.t+ch-(((v-minV)/range2)*ch);}
-  // Grid lines
-  ctx.strokeStyle='#2d2060';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=pad.t+(ch/4)*i;
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
-    const val=maxV-((range2/4)*i);
-    ctx.fillStyle='#94a3b8';ctx.font='11px system-ui';ctx.textAlign='right';
-    ctx.fillText('
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+val.toFixed(0),pad.l-6,y+4);
-  }
-  // Fill gradient
-  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
-  grad.addColorStop(0,'rgba(124,58,237,0.4)');
-  grad.addColorStop(1,'rgba(124,58,237,0.02)');
-  ctx.beginPath();
-  ctx.moveTo(px(0),py(data[0].net));
-  data.forEach((d,i)=>{if(i>0)ctx.lineTo(px(i),py(d.net));});
-  ctx.lineTo(px(data.length-1),pad.t+ch);
-  ctx.lineTo(px(0),pad.t+ch);
-  ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-  // Line
-  ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));
-  data.forEach((d,i)=>{if(i>0)ctx.lineTo(px(i),py(d.net));});
-  ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
-  // Dots + labels
-  data.forEach((d,i)=>{
-    const x=px(i),y=py(d.net);
-    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
-    ctx.fillStyle='#f0c040';ctx.fill();
-    // X axis date label (show every nth)
-    const nth=Math.ceil(data.length/8);
-    if(i%nth===0||i===data.length-1){
-      ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';
-      ctx.fillText(d.date,x,H-pad.b+14);
-    }
+  let html='';
+  st.tiers.forEach(function(t,i){
+    html+='<div class="tier-row">'
+      +'<input type="number" class="tier-input" value="'+t.min+'" step="0.01" onchange="updateTier('+i+',\'min\',parseFloat(this.value))"/>'
+      +'<input type="number" class="tier-input" value="'+t.max+'" step="0.01" onchange="updateTier('+i+',\'max\',parseFloat(this.value))"/>'
+      +'<input type="number" class="tier-input" value="'+t.nm+'" min="1" max="100" onchange="updateTier('+i+',\'nm\',parseInt(this.value))"/>'
+      +'<input type="number" class="tier-input" value="'+t.lp+'" min="1" max="100" onchange="updateTier('+i+',\'lp\',parseInt(this.value))"/>'
+      +'<button class="remove-tier-btn" onclick="removeTier('+i+')">✕</button>'
+      +'</div>';
   });
-  // Change indicator
-  if(data.length>1){
-    const first=data[0].net,last=data[data.length-1].net,change=last-first,pct=((change/first)*100).toFixed(1);
-    const color=change>=0?'#34d399':'#f87171';
-    const arrow=change>=0?'▲':'▼';
-    ctx.fillStyle=color;ctx.font='bold 13px system-ui';ctx.textAlign='left';
-    ctx.fillText(`${arrow} ${change>=0?'+':''}${change.toFixed(2)} (${change>=0?'+':''}${pct}%)`,pad.l,pad.t-4);
-  }
-}
-
-function recordWhatnotShow(){
-  const whatnot=st.inventory.filter(i=>i.status==='whatnot');
-  if(!whatnot.length){showToast('⚠️ No cards in Whatnot tab to record.');return;}
-  const totalCost=whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const totalVal=whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const revenue=parseFloat(prompt(`Enter total revenue earned from this Whatnot show ($):`)||'0')||0;
-  if(!finances.whatnotShows)finances.whatnotShows=[];
-  finances.whatnotShows.unshift({
-    id:uid(),date:today(),ts:Date.now(),
-    cardCount:whatnot.length,totalCost,totalVal,revenue,
-    profit:revenue-totalCost
-  });
-  save('op-finances',finances);
-  renderWhatnotHistory();
-  showToast('📺 Whatnot show recorded!');
-}
-
-function renderWhatnotHistory(){
-  const el=document.getElementById('whatnot-history-list');if(!el)return;
-  const shows=finances.whatnotShows||[];
-  if(!shows.length){el.innerHTML='<div style="color:#6b7280;font-size:13px;padding:10px 0">No shows recorded yet. Run a Whatnot show and click "+ Record Show" to log it.</div>';return;}
-  const totalRevenue=shows.reduce((s,w)=>s+w.revenue,0);
-  const totalProfit=shows.reduce((s,w)=>s+w.profit,0);
-  el.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px">
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Shows</div><div style="font-size:20px;font-weight:700;color:#d946ef">${shows.length}</div></div>
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Revenue</div><div style="font-size:20px;font-weight:700;color:#34d399">${totalRevenue.toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Profit</div><div style="font-size:20px;font-weight:700;color:${totalProfit>=0?'#34d399':'#f87171'}">${totalProfit.toFixed(2)}</div></div>
-    </div>
-    ${shows.map(w=>`
-      <div style="background:#0d0820;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #2d0d2d;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-weight:700;font-size:13px;color:#d946ef">📺 ${w.date}</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w.cardCount} cards • Cost: ${w.totalCost.toFixed(2)} • Market: ${w.totalVal.toFixed(2)}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:14px;font-weight:700;color:#34d399">Revenue: ${w.revenue.toFixed(2)}</div>
-          <div style="font-size:12px;color:${w.profit>=0?'#34d399':'#f87171'}">Profit: ${w.profit>=0?'+':''}${w.profit.toFixed(2)}</div>
-        </div>
-        <button onclick="deleteWhatnotShow('${w.id}')" style="padding:4px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>
-      </div>`).join('')}`;
-}
-
-function deleteWhatnotShow(id){
-  if(!confirm('Delete this show record?'))return;
-  finances.whatnotShows=(finances.whatnotShows||[]).filter(w=>String(w.id)!==String(id));
-  save('op-finances',finances);
-  renderWhatnotHistory();
-}
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
+  el('tier-rows').innerHTML=html;
 }
 function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
 function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
 function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
 
-// --- STATS ---
+// ── STATS ────────────────────────────────────────────────────────────────────
 function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
+  el('stat-cards').textContent=st.inventory.length;
+  const cost=st.inventory.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const val=st.inventory.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  el('stat-cost').textContent='$'+cost.toFixed(2);
+  el('stat-value').textContent='$'+val.toFixed(2);
+  const net=val+(finances.paypal||0)+(finances.bank||0)+(finances.cash||0);
+  el('stat-networth').textContent='$'+net.toFixed(2);
 }
 
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+val.toFixed(2);
-  const paypal=finances.paypal||0,bank=finances.bank||0,cash=finances.cash||0;
-  const net=val+paypal+bank+cash;
-  document.getElementById('stat-networth').textContent='
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+net.toFixed(2);
-  document.getElementById('fin-inv-val').textContent='
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+invVal.toFixed(2);
-  document.getElementById('fin-inv-cost').textContent=`Cost basis: ${invCost.toFixed(2)} • Unrealized gain: ${(invVal-invCost).toFixed(2)}`;
-  document.getElementById('finance-breakdown').textContent=`Inventory ${invVal.toFixed(2)} + PayPal ${paypal.toFixed(2)} + Bank ${bank.toFixed(2)} + Cash ${cash.toFixed(2)}`;
-  const byStatus=s=>st.inventory.filter(i=>i.status===s);
-  const onhand=byStatus('onhand'),pending=byStatus('pending'),whatnot=byStatus('whatnot');
-  document.getElementById('fin-inv-detail').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#34d399;font-weight:700;font-size:13px">On Hand: ${onhand.length}</div><div>Value: ${onhand.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${onhand.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#f0a040;font-weight:700;font-size:13px">Pending: ${pending.length}</div><div>Value: ${pending.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${pending.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#d946ef;font-weight:700;font-size:13px">Whatnot: ${whatnot.length}</div><div>Value: ${whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-    </div>`;
-  renderFinanceChart();
-  renderWhatnotHistory();
-}
-
-function snapshotNetWorth(){
-  const invVal=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const paypal=parseFloat(document.getElementById('fin-paypal').value)||0;
-  const bank=parseFloat(document.getElementById('fin-bank').value)||0;
-  const cash=parseFloat(document.getElementById('fin-cash').value)||0;
-  const net=invVal+paypal+bank+cash;
-  if(!finances.history)finances.history=[];
-  finances.history.push({date:today(),ts:Date.now(),net,invVal,paypal,bank,cash});
-  save('op-finances',finances);
-  renderFinanceChart();
-  showToast('📸 Net worth snapshot saved!');
-}
-
-function renderFinanceChart(){
-  const canvas=document.getElementById('networth-chart');
-  const empty=document.getElementById('chart-empty');
-  if(!canvas)return;
-  const hist=finances.history||[];
-  const range=document.getElementById('chart-range')?.value||'all';
-  let data=[...hist];
-  if(range!=='all'){
-    const cutoff=Date.now()-parseInt(range)*24*60*60*1000;
-    data=data.filter(d=>d.ts>=cutoff);
-  }
-  if(!data.length){canvas.style.display='none';empty.style.display='';return;}
-  canvas.style.display='';empty.style.display='none';
-  const dpr=window.devicePixelRatio||1;
-  const W=canvas.parentElement.clientWidth-36;
-  const H=220;
-  canvas.width=W*dpr;canvas.height=H*dpr;
-  canvas.style.width=W+'px';canvas.style.height=H+'px';
-  const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  ctx.clearRect(0,0,W,H);
-  const pad={t:20,r:20,b:40,l:70};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const vals=data.map(d=>d.net);
-  const minV=Math.min(...vals)*0.97,maxV=Math.max(...vals)*1.03;
-  const range2=maxV-minV||1;
-  function px(i){return pad.l+i*(cw/(data.length-1||1));}
-  function py(v){return pad.t+ch-(((v-minV)/range2)*ch);}
-  // Grid lines
-  ctx.strokeStyle='#2d2060';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=pad.t+(ch/4)*i;
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
-    const val=maxV-((range2/4)*i);
-    ctx.fillStyle='#94a3b8';ctx.font='11px system-ui';ctx.textAlign='right';
-    ctx.fillText('
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+val.toFixed(0),pad.l-6,y+4);
-  }
-  // Fill gradient
-  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
-  grad.addColorStop(0,'rgba(124,58,237,0.4)');
-  grad.addColorStop(1,'rgba(124,58,237,0.02)');
-  ctx.beginPath();
-  ctx.moveTo(px(0),py(data[0].net));
-  data.forEach((d,i)=>{if(i>0)ctx.lineTo(px(i),py(d.net));});
-  ctx.lineTo(px(data.length-1),pad.t+ch);
-  ctx.lineTo(px(0),pad.t+ch);
-  ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-  // Line
-  ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));
-  data.forEach((d,i)=>{if(i>0)ctx.lineTo(px(i),py(d.net));});
-  ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
-  // Dots + labels
-  data.forEach((d,i)=>{
-    const x=px(i),y=py(d.net);
-    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
-    ctx.fillStyle='#f0c040';ctx.fill();
-    // X axis date label (show every nth)
-    const nth=Math.ceil(data.length/8);
-    if(i%nth===0||i===data.length-1){
-      ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';
-      ctx.fillText(d.date,x,H-pad.b+14);
-    }
-  });
-  // Change indicator
-  if(data.length>1){
-    const first=data[0].net,last=data[data.length-1].net,change=last-first,pct=((change/first)*100).toFixed(1);
-    const color=change>=0?'#34d399':'#f87171';
-    const arrow=change>=0?'▲':'▼';
-    ctx.fillStyle=color;ctx.font='bold 13px system-ui';ctx.textAlign='left';
-    ctx.fillText(`${arrow} ${change>=0?'+':''}${change.toFixed(2)} (${change>=0?'+':''}${pct}%)`,pad.l,pad.t-4);
-  }
-}
-
-function recordWhatnotShow(){
-  const whatnot=st.inventory.filter(i=>i.status==='whatnot');
-  if(!whatnot.length){showToast('⚠️ No cards in Whatnot tab to record.');return;}
-  const totalCost=whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const totalVal=whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const revenue=parseFloat(prompt(`Enter total revenue earned from this Whatnot show ($):`)||'0')||0;
-  if(!finances.whatnotShows)finances.whatnotShows=[];
-  finances.whatnotShows.unshift({
-    id:uid(),date:today(),ts:Date.now(),
-    cardCount:whatnot.length,totalCost,totalVal,revenue,
-    profit:revenue-totalCost
-  });
-  save('op-finances',finances);
-  renderWhatnotHistory();
-  showToast('📺 Whatnot show recorded!');
-}
-
-function renderWhatnotHistory(){
-  const el=document.getElementById('whatnot-history-list');if(!el)return;
-  const shows=finances.whatnotShows||[];
-  if(!shows.length){el.innerHTML='<div style="color:#6b7280;font-size:13px;padding:10px 0">No shows recorded yet. Run a Whatnot show and click "+ Record Show" to log it.</div>';return;}
-  const totalRevenue=shows.reduce((s,w)=>s+w.revenue,0);
-  const totalProfit=shows.reduce((s,w)=>s+w.profit,0);
-  el.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px">
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Shows</div><div style="font-size:20px;font-weight:700;color:#d946ef">${shows.length}</div></div>
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Revenue</div><div style="font-size:20px;font-weight:700;color:#34d399">${totalRevenue.toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Profit</div><div style="font-size:20px;font-weight:700;color:${totalProfit>=0?'#34d399':'#f87171'}">${totalProfit.toFixed(2)}</div></div>
-    </div>
-    ${shows.map(w=>`
-      <div style="background:#0d0820;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #2d0d2d;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-weight:700;font-size:13px;color:#d946ef">📺 ${w.date}</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w.cardCount} cards • Cost: ${w.totalCost.toFixed(2)} • Market: ${w.totalVal.toFixed(2)}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:14px;font-weight:700;color:#34d399">Revenue: ${w.revenue.toFixed(2)}</div>
-          <div style="font-size:12px;color:${w.profit>=0?'#34d399':'#f87171'}">Profit: ${w.profit>=0?'+':''}${w.profit.toFixed(2)}</div>
-        </div>
-        <button onclick="deleteWhatnotShow('${w.id}')" style="padding:4px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>
-      </div>`).join('')}`;
-}
-
-function deleteWhatnotShow(id){
-  if(!confirm('Delete this show record?'))return;
-  finances.whatnotShows=(finances.whatnotShows||[]).filter(w=>String(w.id)!==String(id));
-  save('op-finances',finances);
-  renderWhatnotHistory();
-}
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+net.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+net.toFixed(2);
-  document.getElementById('fin-inv-val').textContent='
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+invVal.toFixed(2);
-  document.getElementById('fin-inv-cost').textContent=`Cost basis: ${invCost.toFixed(2)} • Unrealized gain: ${(invVal-invCost).toFixed(2)}`;
-  document.getElementById('finance-breakdown').textContent=`Inventory ${invVal.toFixed(2)} + PayPal ${paypal.toFixed(2)} + Bank ${bank.toFixed(2)} + Cash ${cash.toFixed(2)}`;
-  const byStatus=s=>st.inventory.filter(i=>i.status===s);
-  const onhand=byStatus('onhand'),pending=byStatus('pending'),whatnot=byStatus('whatnot');
-  document.getElementById('fin-inv-detail').innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#34d399;font-weight:700;font-size:13px">On Hand: ${onhand.length}</div><div>Value: ${onhand.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${onhand.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#f0a040;font-weight:700;font-size:13px">Pending: ${pending.length}</div><div>Value: ${pending.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${pending.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#d946ef;font-weight:700;font-size:13px">Whatnot: ${whatnot.length}</div><div>Value: ${whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: ${whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
-    </div>`;
-  renderFinanceChart();
-  renderWhatnotHistory();
-}
-
-function snapshotNetWorth(){
-  const invVal=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const paypal=parseFloat(document.getElementById('fin-paypal').value)||0;
-  const bank=parseFloat(document.getElementById('fin-bank').value)||0;
-  const cash=parseFloat(document.getElementById('fin-cash').value)||0;
-  const net=invVal+paypal+bank+cash;
-  if(!finances.history)finances.history=[];
-  finances.history.push({date:today(),ts:Date.now(),net,invVal,paypal,bank,cash});
-  save('op-finances',finances);
-  renderFinanceChart();
-  showToast('📸 Net worth snapshot saved!');
-}
-
-function renderFinanceChart(){
-  const canvas=document.getElementById('networth-chart');
-  const empty=document.getElementById('chart-empty');
-  if(!canvas)return;
-  const hist=finances.history||[];
-  const range=document.getElementById('chart-range')?.value||'all';
-  let data=[...hist];
-  if(range!=='all'){
-    const cutoff=Date.now()-parseInt(range)*24*60*60*1000;
-    data=data.filter(d=>d.ts>=cutoff);
-  }
-  if(!data.length){canvas.style.display='none';empty.style.display='';return;}
-  canvas.style.display='';empty.style.display='none';
-  const dpr=window.devicePixelRatio||1;
-  const W=canvas.parentElement.clientWidth-36;
-  const H=220;
-  canvas.width=W*dpr;canvas.height=H*dpr;
-  canvas.style.width=W+'px';canvas.style.height=H+'px';
-  const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  ctx.clearRect(0,0,W,H);
-  const pad={t:20,r:20,b:40,l:70};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const vals=data.map(d=>d.net);
-  const minV=Math.min(...vals)*0.97,maxV=Math.max(...vals)*1.03;
-  const range2=maxV-minV||1;
-  function px(i){return pad.l+i*(cw/(data.length-1||1));}
-  function py(v){return pad.t+ch-(((v-minV)/range2)*ch);}
-  // Grid lines
-  ctx.strokeStyle='#2d2060';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=pad.t+(ch/4)*i;
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
-    const val=maxV-((range2/4)*i);
-    ctx.fillStyle='#94a3b8';ctx.font='11px system-ui';ctx.textAlign='right';
-    ctx.fillText('
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
-loadAll();updateStats();updateBanner();
-</script>
-</body>
-</html>
-+val.toFixed(0),pad.l-6,y+4);
-  }
-  // Fill gradient
-  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
-  grad.addColorStop(0,'rgba(124,58,237,0.4)');
-  grad.addColorStop(1,'rgba(124,58,237,0.02)');
-  ctx.beginPath();
-  ctx.moveTo(px(0),py(data[0].net));
-  data.forEach((d,i)=>{if(i>0)ctx.lineTo(px(i),py(d.net));});
-  ctx.lineTo(px(data.length-1),pad.t+ch);
-  ctx.lineTo(px(0),pad.t+ch);
-  ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-  // Line
-  ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));
-  data.forEach((d,i)=>{if(i>0)ctx.lineTo(px(i),py(d.net));});
-  ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
-  // Dots + labels
-  data.forEach((d,i)=>{
-    const x=px(i),y=py(d.net);
-    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
-    ctx.fillStyle='#f0c040';ctx.fill();
-    // X axis date label (show every nth)
-    const nth=Math.ceil(data.length/8);
-    if(i%nth===0||i===data.length-1){
-      ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';
-      ctx.fillText(d.date,x,H-pad.b+14);
-    }
-  });
-  // Change indicator
-  if(data.length>1){
-    const first=data[0].net,last=data[data.length-1].net,change=last-first,pct=((change/first)*100).toFixed(1);
-    const color=change>=0?'#34d399':'#f87171';
-    const arrow=change>=0?'▲':'▼';
-    ctx.fillStyle=color;ctx.font='bold 13px system-ui';ctx.textAlign='left';
-    ctx.fillText(`${arrow} ${change>=0?'+':''}${change.toFixed(2)} (${change>=0?'+':''}${pct}%)`,pad.l,pad.t-4);
-  }
-}
-
-function recordWhatnotShow(){
-  const whatnot=st.inventory.filter(i=>i.status==='whatnot');
-  if(!whatnot.length){showToast('⚠️ No cards in Whatnot tab to record.');return;}
-  const totalCost=whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const totalVal=whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  const revenue=parseFloat(prompt(`Enter total revenue earned from this Whatnot show ($):`)||'0')||0;
-  if(!finances.whatnotShows)finances.whatnotShows=[];
-  finances.whatnotShows.unshift({
-    id:uid(),date:today(),ts:Date.now(),
-    cardCount:whatnot.length,totalCost,totalVal,revenue,
-    profit:revenue-totalCost
-  });
-  save('op-finances',finances);
-  renderWhatnotHistory();
-  showToast('📺 Whatnot show recorded!');
-}
-
-function renderWhatnotHistory(){
-  const el=document.getElementById('whatnot-history-list');if(!el)return;
-  const shows=finances.whatnotShows||[];
-  if(!shows.length){el.innerHTML='<div style="color:#6b7280;font-size:13px;padding:10px 0">No shows recorded yet. Run a Whatnot show and click "+ Record Show" to log it.</div>';return;}
-  const totalRevenue=shows.reduce((s,w)=>s+w.revenue,0);
-  const totalProfit=shows.reduce((s,w)=>s+w.profit,0);
-  el.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px">
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Shows</div><div style="font-size:20px;font-weight:700;color:#d946ef">${shows.length}</div></div>
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Revenue</div><div style="font-size:20px;font-weight:700;color:#34d399">${totalRevenue.toFixed(2)}</div></div>
-      <div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Profit</div><div style="font-size:20px;font-weight:700;color:${totalProfit>=0?'#34d399':'#f87171'}">${totalProfit.toFixed(2)}</div></div>
-    </div>
-    ${shows.map(w=>`
-      <div style="background:#0d0820;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #2d0d2d;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-weight:700;font-size:13px;color:#d946ef">📺 ${w.date}</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${w.cardCount} cards • Cost: ${w.totalCost.toFixed(2)} • Market: ${w.totalVal.toFixed(2)}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:14px;font-weight:700;color:#34d399">Revenue: ${w.revenue.toFixed(2)}</div>
-          <div style="font-size:12px;color:${w.profit>=0?'#34d399':'#f87171'}">Profit: ${w.profit>=0?'+':''}${w.profit.toFixed(2)}</div>
-        </div>
-        <button onclick="deleteWhatnotShow('${w.id}')" style="padding:4px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>
-      </div>`).join('')}`;
-}
-
-function deleteWhatnotShow(id){
-  if(!confirm('Delete this show record?'))return;
-  finances.whatnotShows=(finances.whatnotShows||[]).filter(w=>String(w.id)!==String(id));
-  save('op-finances',finances);
-  renderWhatnotHistory();
-}
-
-// --- SETTINGS ---
-function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
-
-function renderTiers(){
-  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
-    <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
-      <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>`).join('');
-}
-function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
-function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
-
-// --- STATS ---
-function updateStats(){
-  document.getElementById('stat-cards').textContent=st.inventory.length;
-  const cost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
-  const val=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
-  document.getElementById('stat-cost').textContent='$'+cost.toFixed(2);
-  document.getElementById('stat-value').textContent='$'+val.toFixed(2);
-}
-
+// ── INIT ─────────────────────────────────────────────────────────────────────
 loadAll();updateStats();updateBanner();
 </script>
 </body>
