@@ -7,195 +7,197 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#0a0a12;color:#e2e8f0;min-height:100vh}
-button{cursor:pointer}
+button{cursor:pointer;font-family:inherit}
 input,select,textarea{outline:none;font-family:inherit}
 a{text-decoration:none}
 
-.header{background:linear-gradient(135deg,#1a1040,#0d0820);border-bottom:1px solid #2d2060;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.header-title{font-weight:700;font-size:18px;color:#f0c040}
-.header-sub{font-size:12px;color:#a78bfa}
-.stats{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-.stat{background:#1a1040;border-radius:8px;padding:6px 12px;text-align:center;min-width:75px}
+.header{background:linear-gradient(135deg,#1a1040,#0d0820);border-bottom:1px solid #2d2060;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-title{font-weight:700;font-size:17px;color:#f0c040}
+.header-sub{font-size:11px;color:#a78bfa}
+.stats{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.stat{background:#1a1040;border-radius:8px;padding:5px 10px;text-align:center;min-width:70px}
 .stat-label{font-size:10px;color:#94a3b8}
-.stat-val{font-weight:700;font-size:14px}
+.stat-val{font-weight:700;font-size:13px}
 
 .tabs{display:flex;border-bottom:1px solid #2d2060;background:#0d0820;overflow-x:auto}
-.tab{padding:12px 18px;background:none;border:none;font-size:13px;border-bottom:2px solid transparent;color:#94a3b8;white-space:nowrap}
+.tab{padding:10px 14px;background:none;border:none;font-size:12px;border-bottom:2px solid transparent;color:#94a3b8;white-space:nowrap}
 .tab.active{color:#f0c040;border-bottom-color:#f0c040;font-weight:700}
 
-.banner{background:#2d1500;border-bottom:1px solid #f0a040;padding:10px 20px;font-size:13px;color:#fbbf24;text-align:center}
-.banner button{background:none;border:none;color:#f0c040;font-weight:700;text-decoration:underline;font-size:13px;cursor:pointer}
+.banner{background:#2d1500;border-bottom:1px solid #f0a040;padding:8px 16px;font-size:12px;color:#fbbf24;text-align:center}
+.banner button{background:none;border:none;color:#f0c040;font-weight:700;text-decoration:underline;font-size:12px;cursor:pointer}
 
-.content{padding:20px;max-width:960px;margin:0 auto}
-.panel{background:#13102a;border-radius:12px;padding:20px;border:1px solid #2d2060;margin-bottom:16px}
-.panel-title{font-weight:700;color:#a78bfa;margin-bottom:10px;font-size:15px}
+.content{padding:16px;max-width:980px;margin:0 auto}
+.panel{background:#13102a;border-radius:10px;padding:16px;border:1px solid #2d2060;margin-bottom:14px}
+.panel-title{font-weight:700;color:#a78bfa;margin-bottom:10px;font-size:14px}
 
+/* Search */
 .search-row{display:flex;gap:8px}
-.search-input{flex:1;padding:10px 14px;border-radius:8px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:14px}
-.search-btn{padding:10px 20px;border-radius:8px;background:#7c3aed;color:#fff;border:none;font-weight:600;min-width:90px;font-size:14px}
+.search-input{flex:1;padding:9px 13px;border-radius:8px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
+.search-btn{padding:9px 18px;border-radius:8px;background:#7c3aed;color:#fff;border:none;font-weight:600;min-width:80px;font-size:13px}
 .search-btn:disabled{background:#4a2090}
-.hint{font-size:12px;color:#6b7280;margin-bottom:10px}
+.hint{font-size:11px;color:#6b7280;margin-bottom:8px}
 .hint span{color:#a78bfa}
-.err{color:#f87171;font-size:13px;margin-top:8px}
-.searching-msg{color:#a78bfa;font-size:13px;margin-top:8px}
+.err{color:#f87171;font-size:12px;margin-top:6px}
+.searching-msg{color:#a78bfa;font-size:12px;margin-top:6px}
 
-.results-grid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
-.result-card{background:#1a1040;border:1px solid #3d2080;border-radius:8px;padding:8px;cursor:pointer;text-align:center;transition:border-color .15s}
+/* Results grid */
+.results-grid{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.result-card{background:#1a1040;border:1px solid #3d2080;border-radius:8px;padding:6px;cursor:pointer;text-align:center;transition:border-color .15s}
 .result-card:hover{border-color:#a78bfa}
-.result-card img{width:100%;border-radius:4px;margin-bottom:4px}
-.no-img-sm{height:80px;background:#2d2060;border-radius:4px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:10px}
-.result-name{font-size:11px;color:#e2e8f0;line-height:1.3;font-weight:600}
-.result-num{font-size:10px;color:#7c6fcd;margin-top:2px}
-.result-price{font-size:11px;color:#34d399;margin-top:3px;font-weight:700}
+.result-card img{width:100%;border-radius:4px;margin-bottom:3px}
+.no-img-sm{height:70px;background:#2d2060;border-radius:4px;margin-bottom:3px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:9px}
+.result-name{font-size:10px;color:#e2e8f0;line-height:1.3;font-weight:600}
+.result-num{font-size:9px;color:#7c6fcd;margin-top:1px}
+.result-price{font-size:10px;color:#34d399;margin-top:2px;font-weight:700}
 
-.selected-wrap{display:flex;gap:20px;flex-wrap:wrap}
-.selected-img{width:150px;border-radius:8px;box-shadow:0 4px 20px rgba(124,58,237,.5);flex-shrink:0}
-.selected-no-img{width:150px;height:210px;background:#2d2060;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:12px;flex-shrink:0}
-.selected-info{flex:1;min-width:240px}
-.selected-name{font-weight:700;font-size:18px;color:#f0c040;margin-bottom:2px}
-.selected-set{color:#a78bfa;font-size:13px}
-.selected-meta{color:#6b7280;font-size:12px;margin-bottom:14px}
+/* Selected card */
+.selected-wrap{display:flex;gap:16px;flex-wrap:wrap}
+.selected-img{width:120px;border-radius:8px;box-shadow:0 4px 20px rgba(124,58,237,.5);flex-shrink:0}
+.selected-no-img{width:120px;height:170px;background:#2d2060;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:11px;flex-shrink:0}
+.selected-info{flex:1;min-width:220px}
+.selected-name{font-weight:700;font-size:16px;color:#f0c040;margin-bottom:2px}
+.selected-set{color:#a78bfa;font-size:12px}
+.selected-meta{color:#6b7280;font-size:11px;margin-bottom:12px}
 
-.price-table{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2px;font-size:12px;margin-bottom:14px}
-.th{padding:4px 8px;background:#1a1040;color:#94a3b8;font-weight:600}
-.td{padding:5px 8px;background:#1a1640}
+.price-table{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2px;font-size:11px;margin-bottom:12px}
+.th{padding:4px 6px;background:#1a1040;color:#94a3b8;font-weight:600}
+.td{padding:4px 6px;background:#1a1640}
 .td.active-row{color:#f0c040;font-weight:700}
 .td.green{color:#34d399}
 .td.purple{color:#a78bfa}
 .td.yellow{color:#f0c040;font-weight:600}
 
-.add-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.cond-select,.qty-input{padding:8px 12px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:13px}
-.qty-input{width:65px}
-.add-btn{padding:8px 18px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:13px}
-.ext-link{padding:8px 12px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;font-size:12px}
+.add-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cond-select,.qty-input{padding:7px 10px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:12px}
+.qty-input{width:60px}
+.add-btn{padding:7px 14px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:12px}
+.ext-link{padding:7px 10px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;font-size:11px}
 
-.offer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.offer-title{font-weight:700;color:#f0c040}
-.offer-total{color:#34d399;font-weight:700;font-size:16px}
-.offer-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a1640}
-.offer-thumb{width:42px;border-radius:4px;flex-shrink:0}
-.offer-thumb-blank{width:42px;height:58px;background:#2d2060;border-radius:4px;flex-shrink:0}
-.offer-card-name{font-weight:600;font-size:13px}
-.offer-card-sub{font-size:11px;color:#94a3b8}
-.offer-prices{text-align:right}
-.offer-market{color:#34d399;font-size:12px}
-.offer-price{color:#f0c040;font-weight:700}
-.offer-perc{color:#a78bfa;font-size:11px}
-.remove-btn{background:none;border:none;color:#f87171;font-size:22px;line-height:1;padding:0 4px}
-.offer-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.accept-btn{flex:1;padding:12px;border-radius:8px;background:#059669;color:#fff;border:none;font-weight:700;font-size:14px;min-width:200px}
-.clear-btn{padding:12px 18px;border-radius:8px;background:#7f1d1d;color:#fca5a5;border:none;font-size:13px}
+/* Offer sheet */
+.offer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.offer-title{font-weight:700;color:#f0c040;font-size:14px}
+.offer-total{color:#34d399;font-weight:700;font-size:15px}
+.offer-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1640}
+.offer-thumb{width:36px;border-radius:3px;flex-shrink:0}
+.offer-thumb-blank{width:36px;height:50px;background:#2d2060;border-radius:3px;flex-shrink:0}
+.offer-card-name{font-weight:600;font-size:12px}
+.offer-card-sub{font-size:10px;color:#94a3b8}
+.remove-btn{background:none;border:none;color:#f87171;font-size:20px;line-height:1;padding:0 3px}
+.offer-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.accept-btn{flex:1;padding:11px;border-radius:8px;background:#059669;color:#fff;border:none;font-weight:700;font-size:13px;min-width:180px}
+.clear-btn{padding:11px 16px;border-radius:8px;background:#7f1d1d;color:#fca5a5;border:none;font-size:12px}
+.fee-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.fee-input{padding:7px 10px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:12px;width:120px}
+.fee-label{font-size:12px;color:#94a3b8;width:90px}
+.seller-select{padding:7px 10px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:12px;flex:1;min-width:150px}
 
-.fee-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
-.fee-input{padding:8px 12px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:13px;width:140px}
-.fee-label{font-size:13px;color:#94a3b8;width:100px}
+/* Toolbar */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.toolbar-input{padding:7px 12px;border-radius:7px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:12px;flex:1;min-width:140px}
+.toolbar-select{padding:7px 10px;border-radius:7px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:12px}
 
-.seller-select{padding:8px 12px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#e2e8f0;font-size:13px;flex:1;min-width:160px}
+/* Inventory list view */
+.inv-list{display:flex;flex-direction:column;gap:4px}
+.inv-row{display:flex;align-items:center;gap:10px;background:#13102a;border:1px solid #2d2060;border-radius:8px;padding:8px 12px;cursor:pointer;transition:border-color .15s}
+.inv-row:hover{border-color:#a78bfa}
+.inv-row-thumb{width:32px;height:44px;border-radius:3px;object-fit:cover;flex-shrink:0}
+.inv-row-no-img{width:32px;height:44px;background:#2d2060;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#6b7280}
+.inv-row-name{flex:2;min-width:120px}
+.inv-row-name-main{font-weight:600;font-size:12px;color:#e2e8f0}
+.inv-row-name-sub{font-size:10px;color:#7c6fcd}
+.inv-row-conds{flex:2;display:flex;flex-wrap:wrap;gap:3px}
+.inv-row-cost{flex:1;font-size:12px;color:#34d399;text-align:right;white-space:nowrap}
+.inv-row-val{flex:1;font-size:12px;color:#f0c040;text-align:right;white-space:nowrap}
+.inv-row-actions{display:flex;gap:4px;flex-shrink:0}
 
-/* Offer Sheets */
-.sheet-card{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color .15s}
+/* Offer sheets */
+.sheet-card{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
 .sheet-card:hover{border-color:#a78bfa}
-.sheet-card-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px}
-.sheet-seller{font-weight:700;font-size:15px;color:#f0c040}
-.sheet-date{font-size:12px;color:#94a3b8}
-.sheet-meta{font-size:12px;color:#94a3b8;margin-top:6px}
-.progress-bar{background:#1a1040;border-radius:4px;height:6px;margin-top:8px;overflow:hidden}
-.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#34d399);transition:width .3s}
-.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;margin-right:4px}
+.sheet-seller{font-weight:700;font-size:14px;color:#f0c040}
+.sheet-date{font-size:11px;color:#94a3b8}
+.progress-bar{background:#1a1040;border-radius:4px;height:5px;margin-top:7px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#34d399)}
+
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;margin-right:3px}
 .badge-pending{background:#2d1a00;color:#f0a040}
 .badge-partial{background:#1a2d00;color:#a0d040}
 .badge-complete{background:#00261a;color:#34d399}
 .badge-onhand{background:#0d2010;color:#34d399}
 .badge-shipped{background:#0d1a2d;color:#60a5fa}
 .badge-missing{background:#2d0d0d;color:#f87171}
+.badge-whatnot{background:#2d0d2d;color:#d946ef}
 
-/* Sheet detail */
-.sheet-detail-header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
-.back-btn{padding:8px 14px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:13px}
-.sheet-detail-title{font-weight:700;font-size:18px;color:#f0c040}
-.sheet-detail-sub{font-size:13px;color:#94a3b8}
-.checklist-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1a1640}
-.checklist-thumb{width:40px;border-radius:4px;flex-shrink:0}
-.checklist-thumb-blank{width:40px;height:55px;background:#2d2060;border-radius:4px;flex-shrink:0}
-.checklist-info{flex:1}
-.checklist-name{font-weight:600;font-size:13px}
-.checklist-sub{font-size:11px;color:#94a3b8}
-.checklist-price{font-size:12px;color:#f0c040;font-weight:600}
-.status-btn{padding:5px 10px;border-radius:5px;font-size:11px;font-weight:700;border:none;cursor:pointer}
+/* Checklist */
+.sheet-detail-header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.back-btn{padding:7px 12px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:12px}
+.checklist-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1a1640}
+.checklist-thumb{width:36px;border-radius:3px;flex-shrink:0}
+.checklist-thumb-blank{width:36px;height:50px;background:#2d2060;border-radius:3px;flex-shrink:0}
+.status-btn{padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;border:none;cursor:pointer}
 .status-pending{background:#2d1a00;color:#f0a040}
 .status-onhand{background:#0d2010;color:#34d399}
 .status-shipped{background:#0d1a2d;color:#60a5fa}
 .status-missing{background:#2d0d0d;color:#f87171}
-.status-cycle{display:flex;gap:4px;flex-wrap:wrap}
-
-/* Inventory */
-.inv-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
-.inv-filter{padding:8px 14px;border-radius:8px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px;flex:1;min-width:160px}
-.inv-status-filter{padding:8px 12px;border-radius:8px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
-.inv-stats-bar{color:#94a3b8;font-size:13px}
-.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
-.inv-card{background:#13102a;border-radius:10px;border:1px solid #2d2060;overflow:hidden}
-.inv-card img{width:100%}
-.inv-card .no-img{height:100px;background:#1a1040;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:11px}
-.inv-card-body{padding:8px 10px}
-.inv-name{font-weight:600;font-size:12px;line-height:1.3;margin-bottom:1px}
-.inv-sub{font-size:10px;color:#7c6fcd;margin-bottom:3px}
-.inv-detail{font-size:11px;color:#94a3b8}
-.inv-cost{font-size:11px;color:#34d399}
-.inv-val{font-size:11px;color:#f0c040}
-.inv-seller{font-size:10px;color:#a78bfa;margin-top:2px}
-.inv-date{font-size:10px;color:#6b7280;margin-top:1px}
-.inv-remove{margin-top:6px;width:100%;padding:4px;border-radius:4px;background:#3f0f0f;color:#f87171;border:none;font-size:11px;cursor:pointer}
+.status-whatnot{background:#2d0d2d;color:#d946ef}
 
 /* Sellers */
-.seller-card{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:16px;margin-bottom:12px}
-.seller-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.seller-card-name{font-weight:700;font-size:15px;color:#f0c040}
-.seller-card-actions{display:flex;gap:8px}
-.edit-btn{padding:5px 12px;border-radius:5px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:12px}
-.delete-btn{padding:5px 12px;border-radius:5px;background:#3f0f0f;border:none;color:#f87171;font-size:12px}
-.seller-field{font-size:12px;color:#94a3b8;margin-bottom:4px}
+.seller-card{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:14px;margin-bottom:10px}
+.seller-card-name{font-weight:700;font-size:14px;color:#f0c040}
+.seller-field{font-size:11px;color:#94a3b8;margin-bottom:3px}
 .seller-field a{color:#60a5fa}
-.add-seller-btn{padding:10px 20px;border-radius:8px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:14px;margin-bottom:16px}
+.add-seller-btn{padding:9px 18px;border-radius:8px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:13px;margin-bottom:14px}
+
+/* Whatnot tab */
+.whatnot-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+.whatnot-stat{background:#1a1040;border:1px solid #2d2060;border-radius:10px;padding:14px;text-align:center}
+.whatnot-stat-label{font-size:11px;color:#94a3b8;margin-bottom:4px}
+.whatnot-stat-val{font-weight:700;font-size:20px}
+
+/* Finance tab */
+.finance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.finance-card{background:#13102a;border:1px solid #2d2060;border-radius:10px;padding:16px}
+.finance-card-title{font-size:12px;color:#94a3b8;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.finance-val{font-size:28px;font-weight:700;margin-bottom:4px}
+.finance-input{width:100%;padding:9px 12px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:16px;font-weight:700;text-align:right;margin-top:6px}
+.finance-total{background:linear-gradient(135deg,#1a1040,#0d0820);border:1px solid #7c3aed;border-radius:10px;padding:16px;text-align:center;margin-bottom:20px}
+.finance-total-label{font-size:12px;color:#a78bfa;margin-bottom:6px}
+.finance-total-val{font-size:36px;font-weight:700;color:#f0c040}
 
 /* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:#13102a;border-radius:12px;border:1px solid #2d2060;padding:24px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
-.modal-title{font-weight:700;font-size:16px;color:#f0c040;margin-bottom:16px}
-.modal-field{margin-bottom:12px}
-.modal-label{font-size:12px;color:#94a3b8;margin-bottom:4px}
-.modal-input{width:100%;padding:9px 12px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
-.modal-actions{display:flex;gap:10px;margin-top:16px}
-.modal-save{flex:1;padding:10px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:14px}
-.modal-cancel{padding:10px 16px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#94a3b8;font-size:14px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#13102a;border-radius:12px;border:1px solid #2d2060;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-weight:700;font-size:15px;color:#f0c040;margin-bottom:14px}
+.modal-field{margin-bottom:10px}
+.modal-label{font-size:11px;color:#94a3b8;margin-bottom:3px}
+.modal-input{width:100%;padding:8px 11px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:12px}
+.modal-actions{display:flex;gap:8px;margin-top:14px}
+.modal-save{flex:1;padding:9px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:13px}
+.modal-cancel{padding:9px 14px;border-radius:6px;background:#1a1640;border:1px solid #3d2080;color:#94a3b8;font-size:13px}
 
 /* Settings */
-.settings-wrap{display:flex;flex-direction:column;gap:16px;max-width:500px}
-.key-hint{font-size:12px;color:#94a3b8;margin-bottom:12px}
+.settings-wrap{display:flex;flex-direction:column;gap:14px;max-width:500px}
+.key-hint{font-size:11px;color:#94a3b8;margin-bottom:10px}
 .key-hint a{color:#a78bfa}
 .key-row{display:flex;gap:8px}
-.key-input{flex:1;padding:10px 12px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
-.key-save{padding:10px 16px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:13px}
-.key-ok{margin-top:8px;font-size:12px;color:#34d399}
-.tier-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.tier-input{width:80px;padding:6px 8px;border-radius:5px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px;text-align:center}
-.tier-label{font-size:12px;color:#94a3b8;width:60px}
-.add-tier-btn{padding:7px 14px;border-radius:5px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:12px;margin-top:4px}
-.remove-tier-btn{padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:12px}
+.key-input{flex:1;padding:9px 11px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:12px}
+.key-save{padding:9px 14px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:12px}
+.key-ok{margin-top:6px;font-size:11px;color:#34d399}
+.tier-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.tier-input{width:72px;padding:5px 7px;border-radius:5px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:12px;text-align:center}
+.add-tier-btn{padding:6px 12px;border-radius:5px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;margin-top:4px}
+.remove-tier-btn{padding:3px 7px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px}
 
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #7c3aed;border-radius:8px;padding:10px 22px;color:#e2e8f0;font-size:14px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.6);white-space:nowrap;display:none}
-.empty{text-align:center;color:#6b7280;padding:60px;font-size:14px}
-.divider{border:none;border-top:1px solid #2d2060;margin:14px 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #7c3aed;border-radius:8px;padding:9px 20px;color:#e2e8f0;font-size:13px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.6);white-space:nowrap;display:none}
+.empty{text-align:center;color:#6b7280;padding:50px;font-size:13px}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div style="font-size:28px">🏴‍☠️</div>
+  <div style="font-size:24px">🏴‍☠️</div>
   <div>
-    <div class="header-title">One Piece TCG</div>
-    <div class="header-sub">Reseller Buylist & Inventory</div>
+    <div class="header-title">One Piece TCG Reseller</div>
+    <div class="header-sub">Buylist & Inventory Manager</div>
   </div>
   <div class="stats">
     <div class="stat"><div class="stat-label">Cards</div><div class="stat-val" id="stat-cards" style="color:#a78bfa">0</div></div>
@@ -206,9 +208,11 @@ a{text-decoration:none}
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('buylist')">💰 Buylist</button>
-  <button class="tab" onclick="switchTab('offers')">📋 Offer Sheets</button>
+  <button class="tab" onclick="switchTab('offers')">📋 Offers</button>
   <button class="tab" onclick="switchTab('inventory')">📦 Inventory</button>
+  <button class="tab" onclick="switchTab('whatnot')">📺 Whatnot</button>
   <button class="tab" onclick="switchTab('sellers')">👥 Sellers</button>
+  <button class="tab" onclick="switchTab('finance')">💵 Finances</button>
   <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
 </div>
 
@@ -219,8 +223,11 @@ a{text-decoration:none}
 <!-- BUYLIST -->
 <div id="tab-buylist" class="content">
   <div class="panel">
-    <div class="panel-title">🔍 Card Search</div>
-    <div class="hint">Search by card name — e.g. <span>"Rayleigh"</span>, <span>"Luffy"</span>, <span>"Nami"</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div class="panel-title" style="margin-bottom:0">🔍 Card Search</div>
+      <div id="session-badge" style="display:none;background:#1a1040;border:1px solid #7c3aed;border-radius:20px;padding:3px 10px;font-size:11px;color:#a78bfa"></div>
+    </div>
+    <div class="hint">Search a card → add it → search another. Build the full offer before saving. <span>You can add as many cards as needed.</span></div>
     <div class="search-row">
       <input id="search-input" class="search-input" placeholder="e.g. Rayleigh or Monkey D. Luffy..." onkeydown="if(event.key==='Enter')doSearch()"/>
       <button class="search-btn" id="search-btn" onclick="doSearch()">Search</button>
@@ -229,85 +236,167 @@ a{text-decoration:none}
     <div id="results-grid" class="results-grid"></div>
   </div>
 
-  <div id="selected-panel" class="panel" style="display:none">
-    <div id="selected-content"></div>
-  </div>
+  <div id="selected-panel" class="panel" style="display:none"><div id="selected-content"></div></div>
 
   <div id="offer-panel" class="panel" style="display:none">
     <div class="offer-header">
-      <div class="offer-title">📋 Current Offer Sheet</div>
-      <div class="offer-total" id="offer-total">Total: $0.00</div>
+      <div class="offer-title">📋 Current Offer <span id="offer-card-count" style="font-size:11px;color:#6b7280"></span></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="offer-total" id="offer-total">$0.00</div>
+        <button onclick="clearSession()" style="padding:4px 10px;border-radius:5px;background:#3f0f0f;border:none;color:#f87171;font-size:11px">🗑 New Sheet</button>
+      </div>
     </div>
-
-    <!-- Seller selector -->
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
-      <div style="font-size:13px;color:#94a3b8;width:60px">Seller:</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+      <div style="font-size:12px;color:#94a3b8;width:52px">Seller:</div>
       <select class="seller-select" id="offer-seller-select" onchange="onSellerSelectChange()">
         <option value="">— Select Seller —</option>
         <option value="__inperson__">🏪 In Person / Vending</option>
         <option value="__new__">➕ New Seller...</option>
       </select>
-      <div id="new-seller-name-wrap" style="display:none">
-        <input id="new-seller-name" class="fee-input" placeholder="Seller name..." />
-      </div>
+      <div id="new-seller-name-wrap" style="display:none"><input id="new-seller-name" class="fee-input" placeholder="Seller name..."/></div>
     </div>
-
-    <!-- Fees -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:13px;color:#94a3b8;margin-bottom:8px">Extra Fees:</div>
-      <div class="fee-row">
-        <div class="fee-label">Shipping ($)</div>
-        <input type="number" min="0" step="0.01" class="fee-input" id="fee-shipping" value="0" oninput="renderOfferTotals()"/>
-      </div>
-      <div class="fee-row">
-        <div class="fee-label">Other Fees ($)</div>
-        <input type="number" min="0" step="0.01" class="fee-input" id="fee-other" value="0" oninput="renderOfferTotals()"/>
-      </div>
-      <div id="fee-note" style="font-size:12px;color:#94a3b8;margin-top:4px"></div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">Extra Fees:</div>
+      <div class="fee-row"><div class="fee-label">Shipping ($)</div><input type="number" min="0" step="0.01" class="fee-input" id="fee-shipping" value="0" oninput="renderOfferTotals()"/></div>
+      <div class="fee-row"><div class="fee-label">Other Fees ($)</div><input type="number" min="0" step="0.01" class="fee-input" id="fee-other" value="0" oninput="renderOfferTotals()"/></div>
+      <div id="fee-note" style="font-size:11px;color:#94a3b8;margin-top:3px"></div>
     </div>
-
     <div id="offer-rows"></div>
     <div class="offer-actions">
       <button class="accept-btn" onclick="acceptOffer()">✅ Save Offer Sheet & Add to Inventory</button>
       <button class="clear-btn" onclick="clearSession()">Clear</button>
     </div>
   </div>
+
+  <!-- Manual Entry -->
+  <div class="panel">
+    <div class="panel-title" style="cursor:pointer" onclick="toggleManual()">✏️ Manual Card Entry <span id="manual-toggle-icon" style="font-size:11px;color:#6b7280">▼ expand</span></div>
+    <div id="manual-entry-form" style="display:none;margin-top:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div class="modal-label">Card Name *</div><input class="modal-input" id="me-name" placeholder="e.g. Nami Bundle"/></div>
+        <div><div class="modal-label">Set / Notes</div><input class="modal-input" id="me-set" placeholder="e.g. OP04 Bundle"/></div>
+        <div><div class="modal-label">Card Number</div><input class="modal-input" id="me-num" placeholder="e.g. OP04-041"/></div>
+        <div><div class="modal-label">Condition</div><select class="modal-input" id="me-cond"><option value="NM">Near Mint</option><option value="LP">Lightly Played</option><option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DMG">Damaged</option></select></div>
+        <div><div class="modal-label">Quantity</div><input type="number" class="modal-input" id="me-qty" value="1" min="1"/></div>
+        <div><div class="modal-label">Market Price ($)</div><input type="number" class="modal-input" id="me-market" placeholder="0.00" step="0.01" min="0"/></div>
+        <div><div class="modal-label">Your Offer / Cost ($)</div><input type="number" class="modal-input" id="me-cost" placeholder="0.00" step="0.01" min="0"/></div>
+        <div><div class="modal-label">Image URL (optional)</div><input class="modal-input" id="me-image" placeholder="https://..."/></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="add-btn" onclick="addManualToOffer()">+ Add to Offer</button>
+        <button class="add-btn" style="background:#0d6640" onclick="addManualToInventory()">+ Add to Inventory</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- OFFER SHEETS -->
+<!-- OFFERS -->
 <div id="tab-offers" class="content" style="display:none">
   <div id="offers-list-view">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-weight:700;font-size:16px;color:#a78bfa">📋 Saved Offer Sheets</div>
-      <div id="offers-count" style="font-size:13px;color:#94a3b8"></div>
+    <div class="toolbar">
+      <input class="toolbar-input" id="offers-filter" placeholder="Filter by seller or date..." oninput="renderOffersList()"/>
+      <select class="toolbar-select" id="offers-sort" onchange="renderOffersList()">
+        <option value="date-desc">Newest First</option>
+        <option value="date-asc">Oldest First</option>
+        <option value="total-desc">Highest Total</option>
+        <option value="total-asc">Lowest Total</option>
+        <option value="seller-asc">Seller A→Z</option>
+      </select>
     </div>
     <div id="offers-list"></div>
   </div>
-  <div id="offers-detail-view" style="display:none">
-    <div id="offers-detail-content"></div>
-  </div>
+  <div id="offers-detail-view" style="display:none"><div id="offers-detail-content"></div></div>
+
+  <!-- Hidden PDF print area -->
+  <div id="pdf-area" style="display:none"></div>
 </div>
 
 <!-- INVENTORY -->
 <div id="tab-inventory" class="content" style="display:none">
-  <div class="inv-toolbar">
-    <input class="inv-filter" id="inv-filter" placeholder="Filter by name, set, or seller..." oninput="renderInventory()"/>
-    <select class="inv-status-filter" id="inv-status-filter" onchange="renderInventory()">
+  <div class="toolbar">
+    <input class="toolbar-input" id="inv-filter" placeholder="Filter by name, set, seller..." oninput="renderInventory()"/>
+    <select class="toolbar-select" id="inv-status-filter" onchange="renderInventory()">
       <option value="">All Statuses</option>
       <option value="pending">Pending</option>
       <option value="onhand">On Hand</option>
       <option value="shipped">Shipped</option>
       <option value="missing">Missing</option>
+      <option value="whatnot">Whatnot</option>
+    </select>
+    <select class="toolbar-select" id="inv-sort" onchange="renderInventory()">
+      <option value="name-asc">Name A→Z</option>
+      <option value="name-desc">Name Z→A</option>
+      <option value="cost-desc">Cost High→Low</option>
+      <option value="cost-asc">Cost Low→High</option>
+      <option value="value-desc">Value High→Low</option>
+      <option value="value-asc">Value Low→High</option>
+      <option value="date-desc">Newest First</option>
+      <option value="date-asc">Oldest First</option>
+      <option value="perc-desc">Buy % High→Low</option>
+      <option value="perc-asc">Buy % Low→High</option>
     </select>
   </div>
-  <div class="inv-stats-bar" id="inv-stats" style="margin-bottom:14px"></div>
-  <div id="inv-grid"></div>
+  <div id="inv-stats-bar" style="font-size:12px;color:#94a3b8;margin-bottom:10px;flex-wrap:wrap;display:flex;gap:6px"></div>
+  <div id="inv-list"></div>
+</div>
+
+<!-- WHATNOT -->
+<div id="tab-whatnot" class="content" style="display:none">
+  <div class="whatnot-summary" id="whatnot-summary"></div>
+  <div class="toolbar">
+    <input class="toolbar-input" id="wn-filter" placeholder="Filter..." oninput="renderWhatnot()"/>
+    <select class="toolbar-select" id="wn-sort" onchange="renderWhatnot()">
+      <option value="name-asc">Name A→Z</option>
+      <option value="cost-desc">Cost High→Low</option>
+      <option value="value-desc">Value High→Low</option>
+    </select>
+    <button onclick="clearWhatnot()" style="padding:7px 14px;border-radius:7px;background:#3f0f0f;border:none;color:#f87171;font-size:12px">🗑 Clear Show</button>
+  </div>
+  <div id="whatnot-list"></div>
 </div>
 
 <!-- SELLERS -->
 <div id="tab-sellers" class="content" style="display:none">
   <button class="add-seller-btn" onclick="openSellerModal()">➕ Add Seller</button>
   <div id="sellers-list"></div>
+</div>
+
+<!-- FINANCES -->
+<div id="tab-finance" class="content" style="display:none">
+  <div class="finance-total" id="finance-total-box">
+    <div class="finance-total-label">💰 Total Business Net Worth</div>
+    <div class="finance-total-val" id="finance-net-worth">$0.00</div>
+    <div id="finance-breakdown" style="font-size:12px;color:#94a3b8;margin-top:6px"></div>
+  </div>
+  <div class="finance-grid">
+    <div class="finance-card">
+      <div class="finance-card-title">📦 Inventory Value</div>
+      <div class="finance-val" id="fin-inv-val" style="color:#f0c040">$0.00</div>
+      <div style="font-size:11px;color:#94a3b8" id="fin-inv-cost"></div>
+    </div>
+    <div class="finance-card">
+      <div class="finance-card-title">💳 PayPal Balance</div>
+      <div class="finance-val" style="color:#34d399">
+        <span style="font-size:16px">$</span><input type="number" class="finance-input" id="fin-paypal" value="0" step="0.01" min="0" oninput="saveFinances();updateFinances()"/>
+      </div>
+    </div>
+    <div class="finance-card">
+      <div class="finance-card-title">🏦 Business Bank Account</div>
+      <div class="finance-val" style="color:#60a5fa">
+        <span style="font-size:16px">$</span><input type="number" class="finance-input" id="fin-bank" value="0" step="0.01" min="0" oninput="saveFinances();updateFinances()"/>
+      </div>
+    </div>
+    <div class="finance-card">
+      <div class="finance-card-title">💵 Cash On Hand</div>
+      <div class="finance-val" style="color:#a78bfa">
+        <span style="font-size:16px">$</span><input type="number" class="finance-input" id="fin-cash" value="0" step="0.01" min="0" oninput="saveFinances();updateFinances()"/>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">📊 Inventory Breakdown</div>
+    <div id="fin-inv-detail" style="font-size:12px;color:#94a3b8"></div>
+  </div>
 </div>
 
 <!-- SETTINGS -->
@@ -322,23 +411,19 @@ a{text-decoration:none}
       </div>
       <div id="key-ok" class="key-ok" style="display:none"></div>
     </div>
-
     <div class="panel">
       <div class="panel-title">⚙️ Tiered Buy Percentages</div>
-      <p style="font-size:12px;color:#94a3b8;margin-bottom:14px">Set buy % based on card market price. Tiers are evaluated from lowest to highest — the first matching tier wins.</p>
-      <div style="display:grid;grid-template-columns:90px 90px 80px 80px auto;gap:4px;font-size:12px;color:#94a3b8;margin-bottom:6px;align-items:center">
-        <div>Min Price ($)</div><div>Max Price ($)</div><div>NM %</div><div>LP %</div><div></div>
+      <p style="font-size:11px;color:#94a3b8;margin-bottom:12px">Set buy % based on card market price. First matching tier wins.</p>
+      <div style="display:grid;grid-template-columns:70px 70px 60px 60px auto;gap:4px;font-size:11px;color:#94a3b8;margin-bottom:5px">
+        <div>Min ($)</div><div>Max ($)</div><div>NM %</div><div>LP %</div><div></div>
       </div>
       <div id="tier-rows"></div>
       <button class="add-tier-btn" onclick="addTier()">+ Add Tier</button>
-      <div style="margin-top:14px;padding:12px;background:#0d0820;border-radius:8px;font-size:12px;color:#94a3b8">
-        💡 Example: a $25 NM card matches the first tier where min ≤ 25 ≤ max. If no tier matches, defaults to 50% NM / 40% LP.
-      </div>
     </div>
   </div>
 </div>
 
-<!-- Seller Modal -->
+<!-- Modals -->
 <div class="modal-overlay" id="seller-modal" style="display:none" onclick="if(event.target===this)closeSellerModal()">
   <div class="modal">
     <div class="modal-title" id="seller-modal-title">Add Seller</div>
@@ -346,7 +431,7 @@ a{text-decoration:none}
     <div class="modal-field"><div class="modal-label">Facebook Messenger Link</div><input class="modal-input" id="sm-fb" placeholder="https://m.me/username"/></div>
     <div class="modal-field"><div class="modal-label">Phone / Text</div><input class="modal-input" id="sm-phone" placeholder="+1 (555) 000-0000"/></div>
     <div class="modal-field"><div class="modal-label">Address</div><input class="modal-input" id="sm-address" placeholder="Street, City, State"/></div>
-    <div class="modal-field"><div class="modal-label">Notes</div><textarea class="modal-input" id="sm-notes" rows="3" placeholder="Any notes about this seller..."></textarea></div>
+    <div class="modal-field"><div class="modal-label">Notes</div><textarea class="modal-input" id="sm-notes" rows="3" placeholder="Notes..."></textarea></div>
     <div class="modal-actions">
       <button class="modal-save" onclick="saveSeller()">Save</button>
       <button class="modal-cancel" onclick="closeSellerModal()">Cancel</button>
@@ -354,28 +439,33 @@ a{text-decoration:none}
   </div>
 </div>
 
+<div class="modal-overlay" id="inv-detail-modal" style="display:none" onclick="if(event.target===this)closeInvDetail()">
+  <div class="modal" style="max-width:520px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div id="inv-detail-title" class="modal-title" style="margin-bottom:0"></div>
+      <button onclick="closeInvDetail()" style="background:none;border:none;color:#f87171;font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div id="inv-detail-content"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const PROXY = 'https://op-tcg-proxy-production.up.railway.app';
-const EUR_USD = 1.08;
-const CONDITIONS = ['NM','LP','MP','HP','DMG'];
-const COND_FULL = {NM:'Near Mint',LP:'Lightly Played',MP:'Moderately Played',HP:'Heavily Played',DMG:'Damaged'};
-const COND_MULT = {NM:1.0,LP:0.80,MP:0.64,HP:0.40,DMG:0.25};
-const STATUS_LABELS = {pending:'Pending',onhand:'On Hand',shipped:'Shipped',missing:'Missing'};
-const STATUS_CLASS = {pending:'status-pending',onhand:'status-onhand',shipped:'status-shipped',missing:'status-missing'};
-const STATUS_CYCLE = ['pending','onhand','shipped','missing'];
+const PROXY='https://op-tcg-proxy-production.up.railway.app';
+const EUR_USD=1.08;
+const CONDITIONS=['NM','LP','MP','HP','DMG'];
+const COND_FULL={NM:'Near Mint',LP:'Lightly Played',MP:'Moderately Played',HP:'Heavily Played',DMG:'Damaged'};
+const COND_MULT={NM:1.0,LP:0.80,MP:0.64,HP:0.40,DMG:0.25};
+const STATUS_LABELS={pending:'Pending',onhand:'On Hand',shipped:'Shipped',missing:'Missing',whatnot:'Whatnot'};
+const STATUS_CLASS={pending:'status-pending',onhand:'status-onhand',shipped:'status-shipped',missing:'status-missing',whatnot:'status-whatnot'};
+const STATUS_CYCLE=['pending','onhand','shipped','missing','whatnot'];
 
-let st = {
-  apiKey:'', tiers:[], inventory:[], offers:[], sellers:[],
-  session:[], selectedCard:null, selectedCond:'NM', selectedQty:1,
-  editingSellerId:null, currentTab:'buylist'
-};
+let st={apiKey:'',tiers:[],inventory:[],offers:[],sellers:[],session:[],selectedCard:null,selectedCond:'NM',selectedQty:1,editingSellerId:null,currentTab:'buylist'};
+let finances={paypal:0,bank:0,cash:0};
 
-function fmt(d){const[y,m,day]=new Date(d).toISOString().split('T')[0].split('-');return`${m}/${day}/${y.slice(2)}`}
-function today(){const n=new Date();const m=String(n.getMonth()+1).padStart(2,'0');const d=String(n.getDate()).padStart(2,'0');const y=String(n.getFullYear()).slice(2);return`${m}/${d}/${y}`}
+function today(){const n=new Date();return`${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}/${String(n.getFullYear()).slice(2)}`}
 function uid(){return Date.now()+Math.random()}
-
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
 
@@ -389,16 +479,15 @@ function loadAll(){
   st.inventory=load('op-inventory',[]);
   st.offers=load('op-offers',[]);
   st.sellers=load('op-sellers',[]);
-  if(st.apiKey){
-    document.getElementById('key-input').value=st.apiKey;
-    document.getElementById('key-ok').style.display='';
-    document.getElementById('key-ok').textContent='✅ Key saved: ...'+st.apiKey.slice(-8);
-  }
+  finances=load('op-finances',{paypal:0,bank:0,cash:0});
+  if(st.apiKey){document.getElementById('key-input').value=st.apiKey;document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+st.apiKey.slice(-8);}
+  document.getElementById('fin-paypal').value=finances.paypal||0;
+  document.getElementById('fin-bank').value=finances.bank||0;
+  document.getElementById('fin-cash').value=finances.cash||0;
 }
 
-// --- TABS ---
 function switchTab(tab){
-  ['buylist','offers','inventory','sellers','settings'].forEach((t,i)=>{
+  ['buylist','offers','inventory','whatnot','sellers','finance','settings'].forEach((t,i)=>{
     document.getElementById('tab-'+t).style.display=t===tab?'':'none';
     document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
   });
@@ -406,19 +495,14 @@ function switchTab(tab){
   updateBanner();
   if(tab==='offers'){renderOffersList();showOffersListView();}
   if(tab==='inventory')renderInventory();
+  if(tab==='whatnot')renderWhatnot();
   if(tab==='sellers')renderSellers();
+  if(tab==='finance')updateFinances();
   if(tab==='settings')renderTiers();
 }
 
-function updateBanner(){
-  document.getElementById('no-key-banner').style.display=(!st.apiKey&&st.currentTab!=='settings')?'':'none';
-}
-
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.style.display='';
-  setTimeout(()=>t.style.display='none',2800);
-}
+function updateBanner(){document.getElementById('no-key-banner').style.display=(!st.apiKey&&st.currentTab!=='settings')?'':'none';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='';setTimeout(()=>t.style.display='none',2800);}
 
 // --- SEARCH ---
 async function doSearch(){
@@ -430,14 +514,21 @@ async function doSearch(){
   btn.disabled=true;btn.textContent='⏳...';
   setStatus('<div class="searching-msg">⏳ Searching...</div>');
   document.getElementById('results-grid').innerHTML='';
+  st.selectedCard=null;document.getElementById('selected-panel').style.display='none';
   try{
-    const res=await fetch(`${PROXY}/cards?search=${encodeURIComponent(cardName)}`);
-    if(!res.ok)throw new Error('API error '+res.status);
-    const data=await res.json();
-    const cards=Array.isArray(data)?data:(data.data||[]);
-    cards.forEach(c=>{if(c.prices?.tcg_player)c.prices.tcgplayer=c.prices.tcg_player;});
-    if(!cards.length)setStatus(`<div class="err">No cards found for "${cardName}".</div>`);
-    else{setStatus('');renderResults(cards.slice(0,12));}
+    let allCards=[],page=1,totalPages=1;
+    do{
+      setStatus(`<div class="searching-msg">⏳ Loading page ${page}${totalPages>1?' of '+totalPages:''}...</div>`);
+      const res=await fetch(`${PROXY}/cards?search=${encodeURIComponent(cardName)}&page=${page}&per_page=20`);
+      if(!res.ok)throw new Error('API error '+res.status);
+      const data=await res.json();
+      const cards=Array.isArray(data)?data:(data.data||[]);
+      cards.forEach(c=>{if(c.prices?.tcg_player)c.prices.tcgplayer=c.prices.tcg_player;});
+      allCards=allCards.concat(cards);
+      if(data.paging){totalPages=data.paging.total||1;page++;}else break;
+    }while(page<=totalPages);
+    if(!allCards.length)setStatus(`<div class="err">No cards found for "${cardName}".</div>`);
+    else{setStatus(`<div style="font-size:11px;color:#6b7280;margin-top:5px">${allCards.length} cards found</div>`);renderResults(allCards);}
   }catch(e){setStatus(`<div class="err">Search failed: ${e.message}</div>`);}
   btn.disabled=false;btn.textContent='Search';
 }
@@ -445,26 +536,20 @@ async function doSearch(){
 function setStatus(h){document.getElementById('search-status').innerHTML=h;}
 
 function renderResults(cards){
-  const grid=document.getElementById('results-grid');
-  grid.innerHTML='';
+  const grid=document.getElementById('results-grid');grid.innerHTML='';
   cards.forEach(card=>{
     const nmEur=card.prices?.tcgplayer?.market_price;
     const nmUsd=nmEur!=null?(nmEur*EUR_USD).toFixed(2):null;
-    const d=document.createElement('div');
-    d.className='result-card';
-    d.innerHTML=`
-      ${card.image?`<img src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="no-img-sm">No image</div>'}
+    const d=document.createElement('div');d.className='result-card';
+    d.innerHTML=`${card.image?`<img src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="no-img-sm">No image</div>'}
       <div class="result-name">${card.name||card.name_numbered}</div>
       <div class="result-num">${card.card_number||''}</div>
       <div class="result-num">${card.episode?.name||''}</div>
-      ${nmUsd?`<div class="result-price">$${nmUsd} NM</div>`:''}
-    `;
-    d.onclick=()=>selectCard(card);
-    grid.appendChild(d);
+      ${nmUsd?`<div class="result-price">$${nmUsd} NM</div>`:''}`;
+    d.onclick=()=>selectCard(card);grid.appendChild(d);
   });
 }
 
-// --- SELECTED CARD ---
 function selectCard(card){
   st.selectedCard=card;
   document.getElementById('results-grid').innerHTML='';
@@ -473,7 +558,6 @@ function selectCard(card){
 }
 
 function getTieredPerc(nmPrice,cond){
-  if(!nmPrice)return 50;
   const tier=st.tiers.find(t=>nmPrice>=t.min&&nmPrice<=t.max);
   if(!tier)return 50;
   const map={NM:'nm',LP:'lp',MP:'mp',HP:'hp',DMG:'dmg'};
@@ -483,445 +567,620 @@ function getTieredPerc(nmPrice,cond){
 function getPrice(card,cond){
   const nmEur=card?.prices?.tcgplayer?.market_price;
   if(nmEur==null)return null;
-  const nmUsd=nmEur*EUR_USD;
-  return parseFloat((nmUsd*COND_MULT[cond]).toFixed(2));
-}
-
-function getBuyPrice(mp,cond){
-  if(mp==null)return null;
-  const nmEur=st.selectedCard?.prices?.tcgplayer?.market_price;
-  const nmUsd=nmEur!=null?nmEur*EUR_USD:mp;
-  const perc=getTieredPerc(nmUsd,cond);
-  return((mp*perc)/100).toFixed(2);
+  return parseFloat((nmEur*EUR_USD*COND_MULT[cond]).toFixed(2));
 }
 
 function renderSelectedCard(){
-  const card=st.selectedCard;
-  if(!card)return;
+  const card=st.selectedCard;if(!card)return;
   document.getElementById('selected-panel').style.display='';
   const nmEur=card.prices?.tcgplayer?.market_price;
-  const nmUsd=nmEur!=null?(nmEur*EUR_USD).toFixed(2):null;
-
-  let tableRows=CONDITIONS.map(cond=>{
+  const nmUsd=nmEur!=null?nmEur*EUR_USD:null;
+  const condOpts=CONDITIONS.map(c=>`<option value="${c}" ${c===st.selectedCond?'selected':''}>${COND_FULL[c]}</option>`).join('');
+  const closeBtn=`<button onclick="st.selectedCard=null;document.getElementById('selected-panel').style.display='none'" style="float:right;background:none;border:none;color:#f87171;font-size:20px;cursor:pointer;margin-top:-2px">×</button>`;
+  const rows=CONDITIONS.map(cond=>{
     const mp=getPrice(card,cond);
-    const bp=getBuyPrice(mp,cond);
-    const nmP=nmEur!=null?nmEur*EUR_USD:null;
-    const perc=nmP!=null?getTieredPerc(nmP,cond):'—';
-    return`
-      <div class="td ${st.selectedCond===cond?'active-row':''}">${COND_FULL[cond]}</div>
+    const perc=nmUsd!=null?getTieredPerc(nmUsd,cond):'—';
+    const bp=mp!=null?((mp*perc)/100).toFixed(2):null;
+    return`<div class="td ${st.selectedCond===cond?'active-row':''}">${COND_FULL[cond]}</div>
       <div class="td green">${mp!=null?'$'+mp:'—'}</div>
       <div class="td purple">${perc}%</div>
-      <div class="td yellow">${bp!=null?'$'+bp:'—'}</div>
-    `;
+      <div class="td yellow">${bp!=null?'$'+bp:'—'}</div>`;
   }).join('');
-
-  const condOpts=CONDITIONS.map(c=>`<option value="${c}" ${c===st.selectedCond?'selected':''}>${COND_FULL[c]}</option>`).join('');
-
-  document.getElementById('selected-content').innerHTML=`
+  document.getElementById('selected-content').innerHTML=`${closeBtn}
     <div class="selected-wrap">
-      <div>
-        ${card.image?`<img class="selected-img" src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="selected-no-img">No Image</div>'}
-      </div>
+      <div>${card.image?`<img class="selected-img" src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="selected-no-img">No Image</div>'}</div>
       <div class="selected-info">
         <div class="selected-name">${card.name||card.name_numbered}</div>
         <div class="selected-set">${card.episode?.name||''} • ${card.card_number||''}</div>
-        <div class="selected-meta" style="margin-top:2px">${card.rarity||''} • ${card.color||''}</div>
-        <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">TCGPlayer Prices & Buy Offers <span style="color:#6b7280">(LP+ estimated from NM • % based on price tier)</span></div>
+        <div class="selected-meta">${card.rarity||''} • ${card.color||''}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">TCGPlayer Prices • % by price tier</div>
         <div class="price-table">
           <div class="th">Condition</div><div class="th">TCGPlayer</div><div class="th">Buy %</div><div class="th">Offer</div>
-          ${tableRows}
+          ${rows}
         </div>
         <div class="add-row">
           <select class="cond-select" onchange="st.selectedCond=this.value;renderSelectedCard()">${condOpts}</select>
           <input type="number" class="qty-input" min="1" value="${st.selectedQty}" onchange="st.selectedQty=Math.max(1,parseInt(this.value)||1)"/>
           <button class="add-btn" onclick="addToSession()">+ Add to Offer</button>
+          <button class="add-btn" style="background:#0d6640" onclick="addDirectToInventory()">+ Direct to Inventory</button>
           ${card.tcggo_url?`<a class="ext-link" style="color:#a78bfa;border:1px solid #3d2080" href="${card.tcggo_url}" target="_blank">TCGgo ↗</a>`:''}
           ${card.tcgplayer_id?`<a class="ext-link" style="color:#34d399;border:1px solid #1a4030" href="https://www.tcgplayer.com/product/${card.tcgplayer_id}" target="_blank">TCGPlayer ↗</a>`:''}
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 // --- SESSION ---
 function addToSession(){
-  const card=st.selectedCard;
-  if(!card)return;
+  const card=st.selectedCard;if(!card)return;
   const mp=getPrice(card,st.selectedCond);
   const nmEur=card.prices?.tcgplayer?.market_price;
   const nmUsd=nmEur!=null?nmEur*EUR_USD:null;
   const perc=nmUsd!=null?getTieredPerc(nmUsd,st.selectedCond):50;
   const bp=mp!=null?parseFloat(((mp*perc)/100).toFixed(2)):null;
-  st.session.push({
-    id:uid(),name:card.name||card.name_numbered,
-    cardNumber:card.card_number||'',set:card.episode?.name||'',
-    image:card.image||null,tcggoUrl:card.tcggo_url||null,
-    tcgplayerId:card.tcgplayer_id||null,
-    condition:st.selectedCond,qty:st.selectedQty,
-    marketPrice:mp,buyPrice:bp,buyPerc:perc
-  });
-  renderOfferSheet();
-  showToast(`Added ${card.name} (${st.selectedCond}) to offer`);
+  st.session.push({id:uid(),name:card.name||card.name_numbered,cardNumber:card.card_number||'',set:card.episode?.name||'',image:card.image||null,tcggoUrl:card.tcggo_url||null,tcgplayerId:card.tcgplayer_id||null,condition:st.selectedCond,qty:st.selectedQty,marketPrice:mp,buyPrice:bp,buyPerc:perc});
+  renderOfferSheet();showToast(`Added ${card.name} (${st.selectedCond}) to offer`);
+}
+
+function addDirectToInventory(){
+  const card=st.selectedCard;if(!card)return;
+  const mp=getPrice(card,st.selectedCond);
+  st.inventory.push({id:uid(),name:card.name||card.name_numbered,cardNumber:card.card_number||'',set:card.episode?.name||'',image:card.image||null,condition:st.selectedCond,qty:st.selectedQty,marketPrice:mp,buyPrice:0,buyPerc:0,sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null,dateAdded:today()});
+  save('op-inventory',st.inventory);updateStats();showToast(`✅ Added directly to inventory!`);
 }
 
 function onSellerSelectChange(){
-  const v=document.getElementById('offer-seller-select').value;
-  document.getElementById('new-seller-name-wrap').style.display=v==='__new__'?'':'none';
+  document.getElementById('new-seller-name-wrap').style.display=document.getElementById('offer-seller-select').value==='__new__'?'':'none';
 }
+
+function updateSessionCard(idx,field,val){if(st.session[idx])st.session[idx][field]=val;}
 
 function renderOfferTotals(){
   const cardTotal=st.session.reduce((s,e)=>s+(e.buyPrice||0)*e.qty,0);
   const ship=parseFloat(document.getElementById('fee-shipping')?.value||0)||0;
   const other=parseFloat(document.getElementById('fee-other')?.value||0)||0;
   const grand=cardTotal+ship+other;
-  document.getElementById('offer-total').textContent=`Total: $${grand.toFixed(2)}`;
-  document.getElementById('fee-note').textContent=
-    `Cards: $${cardTotal.toFixed(2)} + Shipping: $${ship.toFixed(2)} + Other: $${other.toFixed(2)} = $${grand.toFixed(2)}`;
+  document.getElementById('offer-total').textContent='$'+grand.toFixed(2);
+  document.getElementById('fee-note').textContent=`Cards: $${cardTotal.toFixed(2)} + Ship: $${ship.toFixed(2)} + Other: $${other.toFixed(2)} = $${grand.toFixed(2)}`;
+  const count=st.session.length;
+  const badge=document.getElementById('session-badge');
+  if(badge){badge.style.display=count?'':'none';badge.textContent=`${count} card${count!==1?'s':''} in offer`;}
+  const ce=document.getElementById('offer-card-count');if(ce)ce.textContent=`(${count} card${count!==1?'s':''})`;
 }
 
 function renderOfferSheet(){
   const panel=document.getElementById('offer-panel');
   if(!st.session.length){panel.style.display='none';return;}
   panel.style.display='';
-  // Populate seller dropdown
   const sel=document.getElementById('offer-seller-select');
   const curVal=sel.value;
   sel.innerHTML=`<option value="">— Select Seller —</option><option value="__inperson__">🏪 In Person / Vending</option><option value="__new__">➕ New Seller...</option>`;
-  st.sellers.forEach(s=>{
-    const opt=document.createElement('option');
-    opt.value=s.id;opt.textContent=s.name;
-    sel.appendChild(opt);
-  });
+  st.sellers.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
   sel.value=curVal||'';
   renderOfferTotals();
-  document.getElementById('offer-rows').innerHTML=st.session.map(e=>`
+  document.getElementById('offer-rows').innerHTML=st.session.map((e,i)=>`
     <div class="offer-row">
       ${e.image?`<img class="offer-thumb" src="${e.image}" onerror="this.style.display='none'"/>`:'<div class="offer-thumb-blank"></div>'}
       <div style="flex:1">
         <div class="offer-card-name">${e.name}</div>
-        <div class="offer-card-sub">${e.cardNumber} • ${e.set} • ${COND_FULL[e.condition]} × ${e.qty}</div>
-      </div>
-      <div class="offer-prices">
-        <div class="offer-market">Market: ${e.marketPrice!=null?'$'+e.marketPrice:'—'}</div>
-        <div class="offer-price">Offer: ${e.buyPrice!=null?'$'+(e.buyPrice*e.qty).toFixed(2):'—'}</div>
-        <div class="offer-perc">${e.buyPerc}% × ${e.qty}</div>
+        <div class="offer-card-sub">${e.cardNumber} • ${e.set} • ${COND_FULL[e.condition]||e.condition} × ${e.qty}</div>
+        <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:10px;color:#94a3b8">Mkt $</span>
+          <input type="number" step="0.01" min="0" value="${e.marketPrice!=null?e.marketPrice:''}" placeholder="—"
+            style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#34d399;font-size:11px"
+            oninput="updateSessionCard(${i},'marketPrice',parseFloat(this.value)||null);renderOfferTotals()"/>
+          <span style="font-size:10px;color:#94a3b8">Offer $</span>
+          <input type="number" step="0.01" min="0" value="${e.buyPrice!=null?e.buyPrice:''}" placeholder="—"
+            style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#f0c040;font-size:11px;font-weight:600"
+            oninput="updateSessionCard(${i},'buyPrice',parseFloat(this.value)||null);renderOfferTotals()"/>
+          <span style="font-size:10px;color:#a78bfa">× ${e.qty} = $${e.buyPrice!=null?(e.buyPrice*e.qty).toFixed(2):'—'}</span>
+        </div>
       </div>
       <button class="remove-btn" onclick="removeFromSession(${e.id})">×</button>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 function removeFromSession(id){st.session=st.session.filter(e=>e.id!==id);renderOfferSheet();}
-function clearSession(){st.session=[];document.getElementById('offer-panel').style.display='none';}
+
+function clearSession(){
+  if(st.session.length&&!confirm('Start a new offer sheet? Current cards will be cleared.'))return;
+  st.session=[];
+  if(document.getElementById('fee-shipping'))document.getElementById('fee-shipping').value=0;
+  if(document.getElementById('fee-other'))document.getElementById('fee-other').value=0;
+  if(document.getElementById('offer-seller-select'))document.getElementById('offer-seller-select').value='';
+  if(document.getElementById('new-seller-name-wrap'))document.getElementById('new-seller-name-wrap').style.display='none';
+  document.getElementById('offer-panel').style.display='none';
+  renderOfferTotals();
+}
 
 function acceptOffer(){
   if(!st.session.length)return;
   const selVal=document.getElementById('offer-seller-select').value;
-  let sellerName='Unknown';
-  let sellerId=null;
+  let sellerName='Unknown',sellerId=null;
   if(selVal==='__inperson__'){sellerName='In Person / Vending';}
   else if(selVal==='__new__'){
     const nm=document.getElementById('new-seller-name').value.trim();
     if(!nm){showToast('⚠️ Please enter a seller name.');return;}
     const ns={id:uid(),name:nm,fb:'',phone:'',address:'',notes:''};
-    st.sellers.push(ns);save('op-sellers',st.sellers);
-    sellerId=ns.id;sellerName=nm;
-  } else if(selVal){
-    const s=st.sellers.find(x=>String(x.id)===String(selVal));
-    if(s){sellerName=s.name;sellerId=s.id;}
-  }
+    st.sellers.push(ns);save('op-sellers',st.sellers);sellerId=ns.id;sellerName=nm;
+  }else if(selVal){const s=st.sellers.find(x=>String(x.id)===String(selVal));if(s){sellerName=s.name;sellerId=s.id;}}
   const ship=parseFloat(document.getElementById('fee-shipping').value||0)||0;
   const other=parseFloat(document.getElementById('fee-other').value||0)||0;
   const cardTotal=st.session.reduce((s,e)=>s+(e.buyPrice||0)*e.qty,0);
-  const d=today();
-  const offerId=uid();
-  const offerSheet={
-    id:offerId,sellerName,sellerId,date:d,
-    shipping:ship,otherFees:other,cardTotal,
-    total:cardTotal+ship+other,
-    cards:st.session.map(e=>({...e,status:'pending'}))
-  };
+  const d=today();const offerId=uid();
+  const offerSheet={id:offerId,sellerName,sellerId,date:d,shipping:ship,otherFees:other,cardTotal,total:cardTotal+ship+other,cards:st.session.map(e=>({...e,status:'pending'}))};
   st.offers.unshift(offerSheet);save('op-offers',st.offers);
-  const invCards=st.session.map(e=>({
-    ...e,id:uid(),dateAdded:d,offerId,
-    sellerName,sellerId,status:'pending'
-  }));
-  st.inventory.push(...invCards);save('op-inventory',st.inventory);
-  st.session=[];
-  document.getElementById('fee-shipping').value=0;
-  document.getElementById('fee-other').value=0;
-  document.getElementById('offer-seller-select').value='';
-  document.getElementById('new-seller-name-wrap').style.display='none';
-  document.getElementById('offer-panel').style.display='none';
-  updateStats();
-  showToast('✅ Offer sheet saved! Cards added to inventory as Pending.');
-  switchTab('offers');
+  st.inventory.push(...st.session.map(e=>({...e,id:uid(),dateAdded:d,offerId,sellerName,sellerId,status:'pending'})));
+  save('op-inventory',st.inventory);
+  clearSession();updateStats();
+  showToast('✅ Offer sheet saved!');switchTab('offers');
 }
+
+// --- MANUAL ENTRY ---
+function toggleManual(){
+  const form=document.getElementById('manual-entry-form');const icon=document.getElementById('manual-toggle-icon');
+  const open=form.style.display==='none';form.style.display=open?'':'none';icon.textContent=open?'▲ collapse':'▼ expand';
+}
+function getManualEntry(){
+  const name=document.getElementById('me-name').value.trim();if(!name){showToast('⚠️ Card name is required.');return null;}
+  return{id:uid(),name,cardNumber:document.getElementById('me-num').value.trim(),set:document.getElementById('me-set').value.trim(),condition:document.getElementById('me-cond').value,qty:Math.max(1,parseInt(document.getElementById('me-qty').value)||1),marketPrice:parseFloat(document.getElementById('me-market').value)||null,buyPrice:parseFloat(document.getElementById('me-cost').value)||0,buyPerc:null,image:document.getElementById('me-image').value.trim()||null,tcgplayerId:null,manual:true};
+}
+function clearManualForm(){['me-name','me-set','me-num','me-market','me-cost','me-image'].forEach(id=>document.getElementById(id).value='');document.getElementById('me-qty').value=1;document.getElementById('me-cond').value='NM';}
+function addManualToOffer(){const e=getManualEntry();if(!e)return;st.session.push(e);renderOfferSheet();clearManualForm();document.getElementById('offer-panel').style.display='';showToast(`✅ ${e.name} added to offer!`);}
+function addManualToInventory(){const e=getManualEntry();if(!e)return;st.inventory.push({...e,id:uid(),dateAdded:today(),sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null});save('op-inventory',st.inventory);updateStats();clearManualForm();showToast(`✅ ${e.name} added to inventory!`);}
 
 // --- OFFER SHEETS ---
-function showOffersListView(){
-  document.getElementById('offers-list-view').style.display='';
-  document.getElementById('offers-detail-view').style.display='none';
-}
+function showOffersListView(){document.getElementById('offers-list-view').style.display='';document.getElementById('offers-detail-view').style.display='none';}
 
 function renderOffersList(){
-  const list=document.getElementById('offers-list');
-  document.getElementById('offers-count').textContent=`${st.offers.length} sheet${st.offers.length!==1?'s':''}`;
-  if(!st.offers.length){list.innerHTML='<div class="empty">No offer sheets yet. Create one in the 💰 Buylist tab.</div>';return;}
-  list.innerHTML=st.offers.map(o=>{
-    const total=o.cards.length;
-    const onhand=o.cards.filter(c=>c.status==='onhand').length;
-    const shipped=o.cards.filter(c=>c.status==='shipped').length;
-    const missing=o.cards.filter(c=>c.status==='missing').length;
-    const received=onhand+shipped;
-    const pct=total?Math.round((received/total)*100):0;
-    let statusBadge=received===0?'<span class="badge badge-pending">Pending</span>':
-      received<total?'<span class="badge badge-partial">Partial</span>':
-      '<span class="badge badge-complete">Complete</span>';
-    return`
-      <div class="sheet-card" onclick="openOfferDetail('${o.id}')">
-        <div class="sheet-card-header">
-          <div>
-            <div class="sheet-seller">🏴‍☠️ ${o.sellerName}</div>
-            <div class="sheet-date">${o.date}</div>
-          </div>
-          <div style="text-align:right">
-            ${statusBadge}
-            <div style="font-size:13px;color:#34d399;font-weight:700;margin-top:4px">$${o.total.toFixed(2)}</div>
-          </div>
+  const filter=(document.getElementById('offers-filter')?.value||'').toLowerCase();
+  const sort=document.getElementById('offers-sort')?.value||'date-desc';
+  let list=[...st.offers].filter(o=>o.sellerName.toLowerCase().includes(filter)||o.date.includes(filter));
+  list.sort((a,b)=>{
+    if(sort==='date-desc')return b.id-a.id;
+    if(sort==='date-asc')return a.id-b.id;
+    if(sort==='total-desc')return b.total-a.total;
+    if(sort==='total-asc')return a.total-b.total;
+    if(sort==='seller-asc')return a.sellerName.localeCompare(b.sellerName);
+    return 0;
+  });
+  document.getElementById('offers-list').innerHTML=list.length?list.map(o=>{
+    const total=o.cards.length,onhand=o.cards.filter(c=>c.status==='onhand').length,shipped=o.cards.filter(c=>c.status==='shipped').length,missing=o.cards.filter(c=>c.status==='missing').length,received=onhand+shipped,pct=total?Math.round((received/total)*100):0;
+    const statusBadge=received===0?'<span class="badge badge-pending">Pending</span>':received<total?'<span class="badge badge-partial">Partial</span>':'<span class="badge badge-complete">Complete</span>';
+    return`<div class="sheet-card" onclick="openOfferDetail('${o.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+        <div><div class="sheet-seller">🏴‍☠️ ${o.sellerName}</div><div class="sheet-date">${o.date}</div></div>
+        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <button onclick="event.stopPropagation();deleteOffer('${o.id}')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>
+          ${statusBadge}<div style="font-size:13px;color:#34d399;font-weight:700">$${o.total.toFixed(2)}</div>
         </div>
-        <div class="sheet-meta">
-          ${total} card${total!==1?'s':''} • Cards: $${o.cardTotal.toFixed(2)} • Ship: $${o.shipping.toFixed(2)} • Other: $${o.otherFees.toFixed(2)}
-          ${missing?` • <span style="color:#f87171">${missing} missing</span>`:''}
-        </div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-        <div style="font-size:11px;color:#6b7280;margin-top:4px">${received}/${total} received (${pct}%)</div>
       </div>
-    `;
-  }).join('');
+      <div style="font-size:11px;color:#94a3b8;margin-top:5px">${total} cards • Cards: $${o.cardTotal.toFixed(2)} • Ship: $${o.shipping.toFixed(2)} • Other: $${o.otherFees.toFixed(2)}${missing?` • <span style="color:#f87171">${missing} missing</span>`:''}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:10px;color:#6b7280;margin-top:3px">${received}/${total} received (${pct}%)</div>
+    </div>`;
+  }).join(''):'<div class="empty">No offer sheets yet.</div>';
 }
 
 function openOfferDetail(id){
-  const o=st.offers.find(x=>String(x.id)===String(id));
-  if(!o)return;
+  const o=st.offers.find(x=>String(x.id)===String(id));if(!o)return;
   document.getElementById('offers-list-view').style.display='none';
   document.getElementById('offers-detail-view').style.display='';
   renderOfferDetail(o);
 }
 
 function renderOfferDetail(o){
-  const total=o.cards.length;
-  const onhand=o.cards.filter(c=>c.status==='onhand').length;
-  const shipped=o.cards.filter(c=>c.status==='shipped').length;
-  const missing=o.cards.filter(c=>c.status==='missing').length;
-  const received=onhand+shipped;
-  const pct=total?Math.round((received/total)*100):0;
+  const total=o.cards.length,received=o.cards.filter(c=>['onhand','shipped'].includes(c.status)).length,missing=o.cards.filter(c=>c.status==='missing').length,pct=total?Math.round((received/total)*100):0;
   const seller=st.sellers.find(s=>String(s.id)===String(o.sellerId));
-
   document.getElementById('offers-detail-content').innerHTML=`
     <div class="panel">
       <div class="sheet-detail-header">
         <button class="back-btn" onclick="showOffersListView();renderOffersList()">← Back</button>
-        <div>
-          <div class="sheet-detail-title">🏴‍☠️ ${o.sellerName}</div>
-          <div class="sheet-detail-sub">${o.date} • ${total} cards • $${o.total.toFixed(2)} total</div>
-        </div>
+        <div style="flex:1"><div style="font-weight:700;font-size:16px;color:#f0c040">🏴‍☠️ ${o.sellerName}</div><div style="font-size:12px;color:#94a3b8">${o.date} • ${total} cards • ${o.total.toFixed(2)}</div></div>
+        <button onclick="exportOfferPDF('${o.id}')" style="padding:8px 14px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:12px;cursor:pointer">📄 Export PDF</button>
       </div>
-      ${seller?`
-        <div style="background:#0d0820;border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px">
-          <div style="font-weight:600;color:#a78bfa;margin-bottom:6px">Seller Contact</div>
-          ${seller.fb?`<div class="seller-field">💬 <a href="${seller.fb}" target="_blank" style="color:#60a5fa">Facebook Messenger</a></div>`:''}
-          ${seller.phone?`<div class="seller-field">📞 ${seller.phone}</div>`:''}
-          ${seller.address?`<div class="seller-field">📍 ${seller.address}</div>`:''}
-          ${seller.notes?`<div class="seller-field">📝 ${seller.notes}</div>`:''}
-        </div>`:''}
-      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:13px">
-        <div>Cards: <span style="color:#34d399">$${o.cardTotal.toFixed(2)}</span></div>
-        <div>Shipping: <span style="color:#94a3b8">$${o.shipping.toFixed(2)}</span></div>
-        <div>Other: <span style="color:#94a3b8">$${o.otherFees.toFixed(2)}</span></div>
-        <div>Total: <span style="color:#f0c040;font-weight:700">$${o.total.toFixed(2)}</span></div>
+      ${seller?`<div style="background:#0d0820;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px">
+        <div style="font-weight:600;color:#a78bfa;margin-bottom:5px">Seller Contact</div>
+        ${seller.fb?`<div class="seller-field">💬 <a href="${seller.fb}" target="_blank" style="color:#60a5fa">Facebook Messenger</a></div>`:''}
+        ${seller.phone?`<div class="seller-field">📞 ${seller.phone}</div>`:''}
+        ${seller.address?`<div class="seller-field">📍 ${seller.address}</div>`:''}
+        ${seller.notes?`<div class="seller-field">📝 ${seller.notes}</div>`:''}
+      </div>`:''}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:12px">
+        <div>Cards: <span style="color:#34d399">${o.cardTotal.toFixed(2)}</span></div>
+        <div>Shipping: <span style="color:#94a3b8">${o.shipping.toFixed(2)}</span></div>
+        <div>Other: <span style="color:#94a3b8">${o.otherFees.toFixed(2)}</span></div>
+        <div>Total: <span style="color:#f0c040;font-weight:700">${o.total.toFixed(2)}</span></div>
       </div>
-      <div class="progress-bar" style="margin-bottom:6px"><div class="progress-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:12px;color:#6b7280;margin-bottom:14px">${received}/${total} received • ${missing} missing</div>
-      <div>
-        ${o.cards.map((card,i)=>`
-          <div class="checklist-row">
-            ${card.image?`<img class="checklist-thumb" src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="checklist-thumb-blank"></div>'}
-            <div class="checklist-info">
-              <div class="checklist-name">${card.name}</div>
-              <div class="checklist-sub">${card.cardNumber} • ${card.set} • ${COND_FULL[card.condition]} × ${card.qty}</div>
-              <div class="checklist-price">Offer: ${card.buyPrice!=null?'$'+(card.buyPrice*card.qty).toFixed(2):'—'}</div>
-            </div>
-            <div class="status-cycle">
-              ${STATUS_CYCLE.map(s=>`
-                <button class="status-btn ${STATUS_CLASS[s]}" style="opacity:${card.status===s?1:0.35}" onclick="setCardStatus('${o.id}',${i},'${s}')">
-                  ${STATUS_LABELS[s]}
-                </button>
-              `).join('')}
+      <div class="progress-bar" style="margin-bottom:4px"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:11px;color:#6b7280;margin-bottom:12px">${received}/${total} received • ${missing} missing</div>
+      ${o.cards.map((card,i)=>`
+        <div class="checklist-row">
+          ${card.image?`<img class="checklist-thumb" src="${card.image}" onerror="this.style.display='none'"/>`:'<div class="checklist-thumb-blank"></div>'}
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:12px">${card.name}</div>
+            <div style="font-size:10px;color:#94a3b8">${card.cardNumber} • ${COND_FULL[card.condition]||card.condition} × ${card.qty}</div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">
+              <div style="font-size:11px;color:#f0c040">${card.buyPrice!=null?(card.buyPrice*card.qty).toFixed(2):'—'}</div>
+              ${card.tcgplayerId?`<a href="https://www.tcgplayer.com/product/${card.tcgplayerId}" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 6px">TCGPlayer ↗</a>`:''}
             </div>
           </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
+          <div style="display:flex;flex-wrap:wrap;gap:3px">
+            ${STATUS_CYCLE.map(s=>`<button class="status-btn ${STATUS_CLASS[s]}" style="opacity:${card.status===s?1:0.3}" onclick="setCardStatus('${o.id}',${i},'${s}')">${STATUS_LABELS[s]}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>`;
 }
 
 function setCardStatus(offerId,cardIdx,status){
-  const o=st.offers.find(x=>String(x.id)===String(offerId));
-  if(!o)return;
-  o.cards[cardIdx].status=status;
-  save('op-offers',st.offers);
-  // Sync to inventory
+  const o=st.offers.find(x=>String(x.id)===String(offerId));if(!o)return;
+  o.cards[cardIdx].status=status;save('op-offers',st.offers);
   const card=o.cards[cardIdx];
-  const invCard=st.inventory.find(i=>String(i.offerId)===String(offerId)&&i.name===card.name&&i.condition===card.condition);
-  if(invCard){invCard.status=status;save('op-inventory',st.inventory);}
-  updateStats();
-  renderOfferDetail(o);
+  const inv=st.inventory.find(i=>String(i.offerId)===String(offerId)&&i.name===card.name&&i.condition===card.condition);
+  if(inv){inv.status=status;save('op-inventory',st.inventory);}
+  updateStats();renderOfferDetail(o);
+}
+
+function exportOfferPDF(id){
+  const o=st.offers.find(x=>String(x.id)===String(id));
+  if(!o)return;
+  const seller=st.sellers.find(s=>String(s.id)===String(o.sellerId));
+  const cardRows=o.cards.map((c,i)=>`
+    <tr style="border-bottom:1px solid #ddd;${i%2===0?'background:#f9f9f9':''}">
+      <td style="padding:8px 6px;font-size:12px">${i+1}</td>
+      <td style="padding:8px 6px;font-size:12px;font-weight:600">${c.name}</td>
+      <td style="padding:8px 6px;font-size:12px">${c.cardNumber}</td>
+      <td style="padding:8px 6px;font-size:12px">${COND_FULL[c.condition]||c.condition}</td>
+      <td style="padding:8px 6px;font-size:12px;text-align:center">${c.qty}</td>
+      <td style="padding:8px 6px;font-size:12px;text-align:right">${c.marketPrice!=null?c.marketPrice.toFixed(2):'—'}</td>
+      <td style="padding:8px 6px;font-size:12px;text-align:right;font-weight:700">${c.buyPrice!=null?c.buyPrice.toFixed(2):'—'}</td>
+      <td style="padding:8px 6px;font-size:12px;text-align:right;color:#059669;font-weight:700">${c.buyPrice!=null?(c.buyPrice*c.qty).toFixed(2):'—'}</td>
+    </tr>`).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offer Sheet — ${o.sellerName} — ${o.date}</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;padding:30px;color:#111;font-size:13px}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #111}
+    .brand{font-size:22px;font-weight:900;letter-spacing:-0.5px}
+    .brand span{color:#7c3aed}
+    .doc-title{font-size:13px;color:#555;margin-top:4px}
+    .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+    .meta-box{background:#f5f5f5;border-radius:6px;padding:12px}
+    .meta-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:4px}
+    .meta-val{font-size:13px;font-weight:600}
+    table{width:100%;border-collapse:collapse;margin-bottom:20px}
+    thead tr{background:#111;color:#fff}
+    thead td{padding:9px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+    .totals{background:#f5f5f5;border-radius:6px;padding:14px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-bottom:20px}
+    .totals-row{display:flex;gap:40px;font-size:13px}
+    .totals-row.grand{font-weight:900;font-size:16px;border-top:2px solid #111;padding-top:8px;margin-top:4px}
+    .footer{margin-top:30px;padding-top:16px;border-top:1px solid #ddd;font-size:11px;color:#888;text-align:center}
+    .sig-box{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px}
+    .sig-line{border-top:1px solid #aaa;padding-top:6px;font-size:11px;color:#888}
+    @media print{body{padding:20px}}
+  </style></head><body>
+  <div class="header">
+    <div><div class="brand">🏴‍☠️ One Piece TCG <span>Reseller</span></div><div class="doc-title">Official Buy Offer Sheet</div></div>
+    <div style="text-align:right"><div style="font-size:11px;color:#888">Date</div><div style="font-size:15px;font-weight:700">${o.date}</div><div style="font-size:11px;color:#888;margin-top:6px">Offer #${String(o.id).slice(-6)}</div></div>
+  </div>
+  <div class="meta-grid">
+    <div class="meta-box">
+      <div class="meta-label">Seller</div>
+      <div class="meta-val">${o.sellerName}</div>
+      ${seller?.phone?`<div style="font-size:12px;color:#555;margin-top:3px">📞 ${seller.phone}</div>`:''}
+      ${seller?.address?`<div style="font-size:12px;color:#555;margin-top:3px">📍 ${seller.address}</div>`:''}
+    </div>
+    <div class="meta-box">
+      <div class="meta-label">Offer Summary</div>
+      <div class="meta-val">${o.cards.length} card${o.cards.length!==1?'s':''} • ${o.cards.reduce((s,c)=>s+c.qty,0)} total qty</div>
+      <div style="font-size:12px;color:#555;margin-top:3px">All prices in USD</div>
+    </div>
+  </div>
+  <table>
+    <thead><tr>
+      <td>#</td><td>Card Name</td><td>Card #</td><td>Condition</td><td style="text-align:center">Qty</td>
+      <td style="text-align:right">Market Price</td><td style="text-align:right">Buy Price/ea</td><td style="text-align:right">Subtotal</td>
+    </tr></thead>
+    <tbody>${cardRows}</tbody>
+  </table>
+  <div class="totals">
+    <div class="totals-row"><span style="color:#555">Cards Subtotal:</span><span>${o.cardTotal.toFixed(2)}</span></div>
+    ${o.shipping>0?`<div class="totals-row"><span style="color:#555">Shipping:</span><span>${o.shipping.toFixed(2)}</span></div>`:''}
+    ${o.otherFees>0?`<div class="totals-row"><span style="color:#555">Other Fees:</span><span>${o.otherFees.toFixed(2)}</span></div>`:''}
+    <div class="totals-row grand"><span>Total Offer:</span><span style="color:#059669">${o.total.toFixed(2)}</span></div>
+  </div>
+  <div class="sig-box">
+    <div><div class="sig-line">Seller Signature & Date</div></div>
+    <div><div class="sig-line">Buyer Signature & Date</div></div>
+  </div>
+  <div class="footer">This document serves as an official buy offer. Prices are valid for 7 days from the date above. All cards are subject to condition verification upon receipt.</div>
+  </body></html>`;
+
+  const win=window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{win.print();},500);
+}
+
+function deleteOffer(id){
+  if(!confirm('Delete this offer sheet? Linked inventory cards will also be removed.'))return;
+  st.offers=st.offers.filter(o=>String(o.id)!==String(id));
+  st.inventory=st.inventory.filter(i=>String(i.offerId)!==String(id));
+  save('op-offers',st.offers);save('op-inventory',st.inventory);
+  updateStats();renderOffersList();showToast('🗑 Offer sheet deleted.');
 }
 
 // --- INVENTORY ---
 function renderInventory(){
   const filter=(document.getElementById('inv-filter')?.value||'').toLowerCase();
   const statusF=document.getElementById('inv-status-filter')?.value||'';
+  const sort=document.getElementById('inv-sort')?.value||'name-asc';
+
   const filtered=st.inventory.filter(i=>
     ((i.name||'').toLowerCase().includes(filter)||(i.set||'').toLowerCase().includes(filter)||(i.sellerName||'').toLowerCase().includes(filter))
     &&(!statusF||i.status===statusF)
   );
+
+  // Group by name
+  const groups={};
+  filtered.forEach(i=>{
+    const k=i.name;
+    if(!groups[k])groups[k]={name:i.name,cardNumber:i.cardNumber,set:i.set,image:i.image,entries:[]};
+    groups[k].entries.push(i);
+  });
+
+  let groupArr=Object.values(groups);
+  groupArr.forEach(g=>{
+    g.totalQty=g.entries.reduce((s,e)=>s+e.qty,0);
+    g.totalCost=g.entries.reduce((s,e)=>s+(e.buyPrice||0)*e.qty,0);
+    g.totalVal=g.entries.reduce((s,e)=>s+(e.marketPrice||0)*e.qty,0);
+    g.avgPerc=g.entries.filter(e=>e.buyPerc).length?g.entries.reduce((s,e)=>s+(e.buyPerc||0),0)/g.entries.filter(e=>e.buyPerc).length:0;
+    g.latestDate=g.entries.map(e=>e.dateAdded||'').sort().reverse()[0]||'';
+  });
+
+  groupArr.sort((a,b)=>{
+    if(sort==='name-asc')return a.name.localeCompare(b.name);
+    if(sort==='name-desc')return b.name.localeCompare(a.name);
+    if(sort==='cost-desc')return b.totalCost-a.totalCost;
+    if(sort==='cost-asc')return a.totalCost-b.totalCost;
+    if(sort==='value-desc')return b.totalVal-a.totalVal;
+    if(sort==='value-asc')return a.totalVal-b.totalVal;
+    if(sort==='date-desc')return b.latestDate.localeCompare(a.latestDate);
+    if(sort==='date-asc')return a.latestDate.localeCompare(b.latestDate);
+    if(sort==='perc-desc')return b.avgPerc-a.avgPerc;
+    if(sort==='perc-asc')return a.avgPerc-b.avgPerc;
+    return 0;
+  });
+
   const totalCost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
   const totalVal=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
   const byStatus=s=>st.inventory.filter(i=>i.status===s).length;
-  document.getElementById('inv-stats').innerHTML=`
-    ${filtered.length} cards shown &nbsp;•&nbsp; Cost: <span style="color:#34d399">$${totalCost.toFixed(2)}</span> &nbsp;•&nbsp; Value: <span style="color:#f0c040">$${totalVal.toFixed(2)}</span>
-    &nbsp;•&nbsp; <span class="badge badge-pending">Pending: ${byStatus('pending')}</span>
+
+  document.getElementById('inv-stats-bar').innerHTML=`
+    <span>${groupArr.length} unique • ${filtered.length} entries</span>
+    <span style="color:#34d399">Cost: $${totalCost.toFixed(2)}</span>
+    <span style="color:#f0c040">Value: $${totalVal.toFixed(2)}</span>
+    <span class="badge badge-pending">Pending: ${byStatus('pending')}</span>
     <span class="badge badge-onhand">On Hand: ${byStatus('onhand')}</span>
     <span class="badge badge-shipped">Shipped: ${byStatus('shipped')}</span>
     <span class="badge badge-missing">Missing: ${byStatus('missing')}</span>
+    <span class="badge badge-whatnot">Whatnot: ${byStatus('whatnot')}</span>
   `;
-  if(!filtered.length){document.getElementById('inv-grid').innerHTML='<div class="empty">No inventory matches.</div>';return;}
-  document.getElementById('inv-grid').innerHTML=`<div class="inv-grid">${filtered.map(item=>`
-    <div class="inv-card">
-      ${item.image?`<img src="${item.image}" onerror="this.style.display='none'"/>`:'<div class="no-img">No image</div>'}
-      <div class="inv-card-body">
-        <div class="inv-name">${item.name}</div>
-        <div class="inv-sub">${item.cardNumber} • ${item.set}</div>
-        <div class="inv-detail">${COND_FULL[item.condition]||item.condition} × ${item.qty}</div>
-        <div class="inv-cost">Cost: $${item.buyPrice!=null?(item.buyPrice*item.qty).toFixed(2):'—'}</div>
-        <div class="inv-val">Value: $${item.marketPrice!=null?(item.marketPrice*item.qty).toFixed(2):'—'}</div>
-        <div class="inv-seller">👤 ${item.sellerName||'Unknown'}</div>
-        <div style="margin-top:4px"><span class="badge ${STATUS_CLASS[item.status]||'badge-pending'}">${STATUS_LABELS[item.status]||'Pending'}</span></div>
-        <div class="inv-date">${item.dateAdded}</div>
-        <button class="inv-remove" onclick="removeFromInventory(${item.id})">Remove</button>
+
+  if(!groupArr.length){document.getElementById('inv-list').innerHTML='<div class="empty">No inventory matches.</div>';return;}
+
+  document.getElementById('inv-list').innerHTML=`<div class="inv-list">${groupArr.map(g=>{
+    // Condition summary chips
+    const condGroups={};g.entries.forEach(e=>{if(!condGroups[e.condition])condGroups[e.condition]=[];condGroups[e.condition].push(e);});
+    const condChips=CONDITIONS.filter(c=>condGroups[c]).map(c=>{
+      const qty=condGroups[c].reduce((s,e)=>s+e.qty,0);
+      const statuses=[...new Set(condGroups[c].map(e=>e.status))];
+      return`<span style="background:#0d0820;border:1px solid #2d2060;border-radius:4px;padding:2px 5px;font-size:9px;display:inline-flex;gap:3px;align-items:center">
+        <span style="color:#a78bfa;font-weight:700">${c}</span><span style="color:#e2e8f0">×${qty}</span>
+        <span class="badge ${STATUS_CLASS[statuses[0]]||'badge-pending'}" style="padding:1px 4px;font-size:8px;margin:0">${statuses.length>1?'Mix':STATUS_LABELS[statuses[0]]?.slice(0,4)||statuses[0]}</span>
+      </span>`;
+    }).join('');
+    const encodedKey=encodeURIComponent(g.name);
+    return`<div class="inv-row" onclick="openInvDetail('${encodedKey}')">
+      ${g.image?`<img class="inv-row-thumb" src="${g.image}" onerror="this.style.display='none'"/>`:'<div class="inv-row-no-img">?</div>'}
+      <div class="inv-row-name">
+        <div class="inv-row-name-main">${g.name}</div>
+        <div class="inv-row-name-sub">${g.cardNumber} • ${g.set}</div>
+        ${g.entries[0]?.tcgplayerId?`<a href="https://www.tcgplayer.com/product/${g.entries[0].tcgplayerId}" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block">TCGPlayer ↗</a>`:''}
       </div>
-    </div>
-  `).join('')}</div>`;
+      <div class="inv-row-conds">${condChips}</div>
+      <div class="inv-row-cost">$${g.totalCost.toFixed(2)}</div>
+      <div class="inv-row-val">$${g.totalVal.toFixed(2)}</div>
+      <div class="inv-row-actions">
+        <button onclick="event.stopPropagation();moveToWhatnot('${encodedKey}')" style="padding:4px 8px;border-radius:4px;background:#2d0d2d;border:none;color:#d946ef;font-size:10px;white-space:nowrap">📺 Whatnot</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 }
+
+function moveToWhatnot(encodedKey){
+  const name=decodeURIComponent(encodedKey);
+  st.inventory.filter(i=>i.name===name&&i.status!=='whatnot').forEach(i=>i.status='whatnot');
+  save('op-inventory',st.inventory);updateStats();renderInventory();showToast('📺 Moved to Whatnot show!');
+}
+
+function openInvDetail(encodedKey){
+  const name=decodeURIComponent(encodedKey);
+  const entries=st.inventory.filter(i=>i.name===name);if(!entries.length)return;
+  const g=entries[0];
+  const totalQty=entries.reduce((s,e)=>s+e.qty,0);
+  const totalCost=entries.reduce((s,e)=>s+(e.buyPrice||0)*e.qty,0);
+  const condGroups={};entries.forEach(e=>{if(!condGroups[e.condition])condGroups[e.condition]=[];condGroups[e.condition].push(e);});
+
+  document.getElementById('inv-detail-title').innerHTML=`<div>${g.name}</div><div style="font-size:11px;color:#a78bfa;font-weight:400">${g.cardNumber} • ×${totalQty} total • $${totalCost.toFixed(2)} cost</div>`;
+  document.getElementById('inv-detail-content').innerHTML=`
+    <div style="display:flex;gap:12px;margin-bottom:14px;align-items:flex-start">
+      ${g.image?`<img src="${g.image}" style="width:80px;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'"/>`:''}
+      <div style="font-size:12px"><div style="color:#94a3b8;margin-bottom:3px">${g.set}</div><div style="color:#34d399">Total Cost: $${totalCost.toFixed(2)}</div><div style="color:#f0c040">Total Qty: ×${totalQty}</div><div style="color:#94a3b8;font-size:11px;margin-top:3px">${entries.length} purchase${entries.length!==1?'s':''}</div></div>
+    </div>
+    ${CONDITIONS.filter(c=>condGroups[c]).map(c=>`
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:#a78bfa;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">${COND_FULL[c]} (${c}) — ×${condGroups[c].reduce((s,e)=>s+e.qty,0)}</div>
+        ${condGroups[c].map(e=>{
+          const offer=st.offers.find(o=>String(o.id)===String(e.offerId));
+          return`<div style="background:#0d0820;border-radius:7px;padding:10px;margin-bottom:5px;border:1px solid #1a1640">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px">
+              <div><div style="font-weight:600;font-size:12px">👤 ${e.sellerName||'Unknown'}</div><div style="font-size:10px;color:#6b7280">${e.dateAdded}</div></div>
+              <div style="text-align:right"><div style="color:#34d399;font-size:12px">$${e.buyPrice!=null?(e.buyPrice*e.qty).toFixed(2):'—'}</div><div style="color:#94a3b8;font-size:10px">$${e.buyPrice||0}/ea × ${e.qty}</div></div>
+            </div>
+            <div style="display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;align-items:center">
+              <span class="badge ${STATUS_CLASS[e.status]||'badge-pending'}">${STATUS_LABELS[e.status]||e.status}</span>
+              ${e.tcgplayerId?`<a href="https://www.tcgplayer.com/product/${e.tcgplayerId}" target="_blank" style="padding:2px 8px;border-radius:4px;background:#0d2010;border:1px solid #1a4030;color:#34d399;font-size:10px">TCGPlayer ↗</a>`:''}
+              ${offer?`<button onclick="closeInvDetail();switchTab('offers');openOfferDetail('${offer.id}')" style="padding:2px 8px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:10px;cursor:pointer">📋 Offer Sheet</button>`:'<span style="font-size:10px;color:#6b7280">No offer sheet</span>'}
+              <button onclick="removeFromInventory(${e.id});openInvDetail('${encodeURIComponent(name)}')" style="padding:2px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">Remove</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`).join('')}`;
+  document.getElementById('inv-detail-modal').style.display='';
+}
+
+function closeInvDetail(){document.getElementById('inv-detail-modal').style.display='none';}
 
 function removeFromInventory(id){
   st.inventory=st.inventory.filter(i=>i.id!==id);
-  save('op-inventory',st.inventory);
-  updateStats();renderInventory();
+  save('op-inventory',st.inventory);updateStats();renderInventory();
+}
+
+// --- WHATNOT ---
+function renderWhatnot(){
+  const items=st.inventory.filter(i=>i.status==='whatnot');
+  const filter=(document.getElementById('wn-filter')?.value||'').toLowerCase();
+  const sort=document.getElementById('wn-sort')?.value||'name-asc';
+
+  const totalCost=items.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
+  const totalVal=items.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
+  const profit=totalVal-totalCost;
+
+  document.getElementById('whatnot-summary').innerHTML=`
+    <div class="whatnot-stat"><div class="whatnot-stat-label">Cards in Show</div><div class="whatnot-stat-val" style="color:#d946ef">${items.length}</div></div>
+    <div class="whatnot-stat"><div class="whatnot-stat-label">Total Cost Paid</div><div class="whatnot-stat-val" style="color:#34d399">$${totalCost.toFixed(2)}</div></div>
+    <div class="whatnot-stat"><div class="whatnot-stat-label">Total Market Value</div><div class="whatnot-stat-val" style="color:#f0c040">$${totalVal.toFixed(2)}</div></div>
+    <div class="whatnot-stat"><div class="whatnot-stat-label">Potential Profit</div><div class="whatnot-stat-val" style="color:${profit>=0?'#34d399':'#f87171'}">$${profit.toFixed(2)}</div></div>
+  `;
+
+  const filtered=items.filter(i=>(i.name||'').toLowerCase().includes(filter));
+  filtered.sort((a,b)=>{
+    if(sort==='name-asc')return(a.name||'').localeCompare(b.name||'');
+    if(sort==='cost-desc')return(b.buyPrice||0)*b.qty-(a.buyPrice||0)*a.qty;
+    if(sort==='value-desc')return(b.marketPrice||0)*b.qty-(a.marketPrice||0)*a.qty;
+    return 0;
+  });
+
+  document.getElementById('whatnot-list').innerHTML=filtered.length?`<div class="inv-list">${filtered.map(i=>`
+    <div class="inv-row">
+      ${i.image?`<img class="inv-row-thumb" src="${i.image}" onerror="this.style.display='none'"/>`:'<div class="inv-row-no-img">?</div>'}
+      <div class="inv-row-name">
+        <div class="inv-row-name-main">${i.name}</div>
+        <div class="inv-row-name-sub">${i.cardNumber} • ${COND_FULL[i.condition]||i.condition} × ${i.qty}</div>
+      </div>
+      <div style="flex:1;font-size:11px;color:#94a3b8">👤 ${i.sellerName||'Unknown'}</div>
+      <div class="inv-row-cost">Cost: $${((i.buyPrice||0)*i.qty).toFixed(2)}</div>
+      <div class="inv-row-val">Value: $${((i.marketPrice||0)*i.qty).toFixed(2)}</div>
+      <div class="inv-row-actions">
+        <button onclick="restoreFromWhatnot(${i.id})" style="padding:4px 8px;border-radius:4px;background:#0d2010;border:none;color:#34d399;font-size:10px">↩ Restore</button>
+        <button onclick="removeFromInventory(${i.id})" style="padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px">✕</button>
+      </div>
+    </div>`).join('')}</div>`:'<div class="empty">No cards in Whatnot show yet. Move cards here from 📦 Inventory.</div>';
+}
+
+function restoreFromWhatnot(id){
+  const i=st.inventory.find(x=>x.id===id);if(i){i.status='onhand';save('op-inventory',st.inventory);updateStats();renderWhatnot();showToast('↩ Restored to On Hand.');}
+}
+
+function clearWhatnot(){
+  if(!confirm('Remove all Whatnot cards from the show list? They will be marked Shipped.'))return;
+  st.inventory.filter(i=>i.status==='whatnot').forEach(i=>i.status='shipped');
+  save('op-inventory',st.inventory);updateStats();renderWhatnot();showToast('✅ Whatnot show cleared — cards marked Shipped.');
 }
 
 // --- SELLERS ---
 function renderSellers(){
   const list=document.getElementById('sellers-list');
-  if(!st.sellers.length){list.innerHTML='<div class="empty">No sellers yet. Add your first recurring seller!</div>';return;}
+  if(!st.sellers.length){list.innerHTML='<div class="empty">No sellers yet.</div>';return;}
   list.innerHTML=st.sellers.map(s=>`
     <div class="seller-card">
-      <div class="seller-card-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div class="seller-card-name">👤 ${s.name}</div>
-        <div class="seller-card-actions">
-          <button class="edit-btn" onclick="openSellerModal('${s.id}')">Edit</button>
-          <button class="delete-btn" onclick="deleteSeller('${s.id}')">Delete</button>
+        <div style="display:flex;gap:6px">
+          <button style="padding:4px 10px;border-radius:5px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer" onclick="openSellerModal('${s.id}')">Edit</button>
+          <button style="padding:4px 10px;border-radius:5px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer" onclick="deleteSeller('${s.id}')">Delete</button>
         </div>
       </div>
       ${s.fb?`<div class="seller-field">💬 <a href="${s.fb}" target="_blank">Facebook Messenger</a></div>`:''}
       ${s.phone?`<div class="seller-field">📞 ${s.phone}</div>`:''}
       ${s.address?`<div class="seller-field">📍 ${s.address}</div>`:''}
       ${s.notes?`<div class="seller-field">📝 ${s.notes}</div>`:''}
-      <div style="font-size:11px;color:#6b7280;margin-top:8px">
-        ${st.inventory.filter(i=>String(i.sellerId)===String(s.id)).length} cards in inventory
-      </div>
-    </div>
-  `).join('');
+      <div style="font-size:10px;color:#6b7280;margin-top:6px">${st.inventory.filter(i=>String(i.sellerId)===String(s.id)).length} cards in inventory</div>
+    </div>`).join('');
 }
 
 function openSellerModal(id){
   st.editingSellerId=id||null;
-  const modal=document.getElementById('seller-modal');
   document.getElementById('seller-modal-title').textContent=id?'Edit Seller':'Add Seller';
-  if(id){
-    const s=st.sellers.find(x=>String(x.id)===String(id));
-    if(s){
-      document.getElementById('sm-name').value=s.name||'';
-      document.getElementById('sm-fb').value=s.fb||'';
-      document.getElementById('sm-phone').value=s.phone||'';
-      document.getElementById('sm-address').value=s.address||'';
-      document.getElementById('sm-notes').value=s.notes||'';
-    }
-  } else {
-    ['sm-name','sm-fb','sm-phone','sm-address','sm-notes'].forEach(f=>document.getElementById(f).value='');
-  }
-  modal.style.display='';
+  if(id){const s=st.sellers.find(x=>String(x.id)===String(id));if(s){document.getElementById('sm-name').value=s.name||'';document.getElementById('sm-fb').value=s.fb||'';document.getElementById('sm-phone').value=s.phone||'';document.getElementById('sm-address').value=s.address||'';document.getElementById('sm-notes').value=s.notes||'';}}
+  else{['sm-name','sm-fb','sm-phone','sm-address','sm-notes'].forEach(f=>document.getElementById(f).value='');}
+  document.getElementById('seller-modal').style.display='';
 }
-
 function closeSellerModal(){document.getElementById('seller-modal').style.display='none';}
-
 function saveSeller(){
-  const name=document.getElementById('sm-name').value.trim();
-  if(!name){showToast('⚠️ Seller name is required.');return;}
-  const data={
-    name,fb:document.getElementById('sm-fb').value.trim(),
-    phone:document.getElementById('sm-phone').value.trim(),
-    address:document.getElementById('sm-address').value.trim(),
-    notes:document.getElementById('sm-notes').value.trim()
-  };
-  if(st.editingSellerId){
-    const idx=st.sellers.findIndex(x=>String(x.id)===String(st.editingSellerId));
-    if(idx>-1)st.sellers[idx]={...st.sellers[idx],...data};
-  } else {
-    st.sellers.push({id:uid(),...data});
-  }
-  save('op-sellers',st.sellers);
-  closeSellerModal();renderSellers();
-  showToast('✅ Seller saved!');
+  const name=document.getElementById('sm-name').value.trim();if(!name){showToast('⚠️ Seller name is required.');return;}
+  const data={name,fb:document.getElementById('sm-fb').value.trim(),phone:document.getElementById('sm-phone').value.trim(),address:document.getElementById('sm-address').value.trim(),notes:document.getElementById('sm-notes').value.trim()};
+  if(st.editingSellerId){const idx=st.sellers.findIndex(x=>String(x.id)===String(st.editingSellerId));if(idx>-1)st.sellers[idx]={...st.sellers[idx],...data};}
+  else{st.sellers.push({id:uid(),...data});}
+  save('op-sellers',st.sellers);closeSellerModal();renderSellers();showToast('✅ Seller saved!');
+}
+function deleteSeller(id){if(!confirm('Delete this seller?'))return;st.sellers=st.sellers.filter(s=>String(s.id)!==String(id));save('op-sellers',st.sellers);renderSellers();}
+
+// --- FINANCES ---
+function saveFinances(){
+  finances={paypal:parseFloat(document.getElementById('fin-paypal').value)||0,bank:parseFloat(document.getElementById('fin-bank').value)||0,cash:parseFloat(document.getElementById('fin-cash').value)||0};
+  save('op-finances',finances);
 }
 
-function deleteSeller(id){
-  if(!confirm('Delete this seller?'))return;
-  st.sellers=st.sellers.filter(s=>String(s.id)!==String(id));
-  save('op-sellers',st.sellers);renderSellers();
+function updateFinances(){
+  const invVal=st.inventory.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0);
+  const invCost=st.inventory.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0);
+  const paypal=parseFloat(document.getElementById('fin-paypal').value)||0;
+  const bank=parseFloat(document.getElementById('fin-bank').value)||0;
+  const cash=parseFloat(document.getElementById('fin-cash').value)||0;
+  const net=invVal+paypal+bank+cash;
+  document.getElementById('finance-net-worth').textContent='$'+net.toFixed(2);
+  document.getElementById('fin-inv-val').textContent='$'+invVal.toFixed(2);
+  document.getElementById('fin-inv-cost').textContent=`Cost basis: $${invCost.toFixed(2)} • Unrealized gain: $${(invVal-invCost).toFixed(2)}`;
+  document.getElementById('finance-breakdown').textContent=`Inventory $${invVal.toFixed(2)} + PayPal $${paypal.toFixed(2)} + Bank $${bank.toFixed(2)} + Cash $${cash.toFixed(2)}`;
+  const byStatus=s=>st.inventory.filter(i=>i.status===s);
+  const onhand=byStatus('onhand'),pending=byStatus('pending'),whatnot=byStatus('whatnot');
+  document.getElementById('fin-inv-detail').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">
+      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#34d399;font-weight:700;font-size:13px">On Hand: ${onhand.length} cards</div><div>Value: $${onhand.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: $${onhand.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
+      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#f0a040;font-weight:700;font-size:13px">Pending: ${pending.length} cards</div><div>Value: $${pending.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: $${pending.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
+      <div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#d946ef;font-weight:700;font-size:13px">Whatnot: ${whatnot.length} cards</div><div>Value: $${whatnot.reduce((s,i)=>s+(i.marketPrice||0)*i.qty,0).toFixed(2)}</div><div>Cost: $${whatnot.reduce((s,i)=>s+(i.buyPrice||0)*i.qty,0).toFixed(2)}</div></div>
+    </div>`;
 }
 
 // --- SETTINGS ---
-function saveKey(){
-  const k=document.getElementById('key-input').value.trim();
-  if(!k)return;
-  st.apiKey=k;save('op-apikey',k);
-  document.getElementById('key-ok').style.display='';
-  document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);
-  updateBanner();showToast('✅ API key saved!');
-}
+function saveKey(){const k=document.getElementById('key-input').value.trim();if(!k)return;st.apiKey=k;save('op-apikey',k);document.getElementById('key-ok').style.display='';document.getElementById('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);updateBanner();showToast('✅ API key saved!');}
 
 function renderTiers(){
-  const rows=document.getElementById('tier-rows');
-  rows.innerHTML=st.tiers.map((t,i)=>`
+  document.getElementById('tier-rows').innerHTML=st.tiers.map((t,i)=>`
     <div class="tier-row">
-      <input type="number" class="tier-input" value="${t.min}" min="0" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))" placeholder="Min"/>
-      <input type="number" class="tier-input" value="${t.max}" min="0" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))" placeholder="Max"/>
-      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))" placeholder="NM%"/>
-      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))" placeholder="LP%"/>
+      <input type="number" class="tier-input" value="${t.min}" step="0.01" onchange="updateTier(${i},'min',parseFloat(this.value))"/>
+      <input type="number" class="tier-input" value="${t.max}" step="0.01" onchange="updateTier(${i},'max',parseFloat(this.value))"/>
+      <input type="number" class="tier-input" value="${t.nm}" min="1" max="100" onchange="updateTier(${i},'nm',parseInt(this.value))"/>
+      <input type="number" class="tier-input" value="${t.lp}" min="1" max="100" onchange="updateTier(${i},'lp',parseInt(this.value))"/>
       <button class="remove-tier-btn" onclick="removeTier(${i})">✕</button>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
-function updateTier(i,field,val){st.tiers[i][field]=val;save('op-tiers',st.tiers);}
+function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
 function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
-function addTier(){
-  st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});
-  save('op-tiers',st.tiers);renderTiers();
-}
+function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
 
 // --- STATS ---
 function updateStats(){
@@ -932,7 +1191,6 @@ function updateStats(){
   document.getElementById('stat-value').textContent='$'+val.toFixed(2);
 }
 
-// --- INIT ---
 loadAll();updateStats();updateBanner();
 </script>
 </body>
