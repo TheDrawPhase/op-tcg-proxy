@@ -7,7 +7,13 @@ const PORT = process.env.PORT || 3001;
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = "one-piece-tcg-prices.p.rapidapi.com";
 
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.options("*", cors());
 
 app.get("/cards", async (req, res) => {
   try {
