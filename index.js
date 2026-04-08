@@ -1,19 +1,23 @@
 const express = require("express");
 const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
-const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = "one-piece-tcg-prices.p.rapidapi.com";
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+// Manually set CORS headers on every single request
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+});
 
-app.options("*", cors());
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
 app.get("/cards", async (req, res) => {
   try {
@@ -47,10 +51,6 @@ app.get("/episodes", async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-});
-
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
 });
 
 app.listen(PORT, () => {
