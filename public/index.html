@@ -277,7 +277,8 @@ button{cursor:pointer}a{text-decoration:none}
     </select>
     <button class="btn" style="font-size:12px;padding:5px 12px" onclick="bulkMoveInv()">Apply</button>
     <button class="btn" style="font-size:12px;padding:5px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="bulkToWhatnot()">📺 → Whatnot</button>
-    <button class="btn btn-r" style="font-size:12px;padding:5px 10px" onclick="clearInvSel()">✕ Clear</button>
+    <button class="btn" style="font-size:12px;padding:5px 10px;background:#1a1040;border:1px solid #2d2060;color:#6b7280" onclick="clearInvSel()">☐ Deselect</button>
+    <button class="btn btn-r" style="font-size:12px;padding:5px 10px" onclick="bulkDeleteInv()">🗑 Delete</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;padding:4px 13px;font-size:10px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.4px" id="inv-col-header">
     <div style="width:16px;flex-shrink:0"></div>
@@ -609,6 +610,9 @@ function stats(){
 // ─── Search ───────────────────────────────────────────────────────────────────
 function sstat(h){var e=g('s-status');if(e)e.innerHTML=h;}
 
+// Search cache: key=query string, value=array of cards
+var searchCache={};
+
 async function search(){
   var raw=g('q').value.trim();if(!raw)return;
   if(!app.key){sstat('<span style="color:#f87171;font-size:12px">Add your API key in ⚙️ Settings.</span>');return;}
@@ -616,25 +620,59 @@ async function search(){
   var btn=g('sbtn');btn.disabled=true;btn.textContent='⏳';
   g('rgrid').innerHTML='';allRes=[];g('sort-bar').style.display='none';
   app.selCard=null;g('sel-panel').style.display='none';
-  sstat('<span style="color:#a78bfa;font-size:12px">⏳ Searching...</span>');
+  // 1. Show catalog results instantly
+  var cat=ll('catalog',[]);
+  var q2=name.toLowerCase();
+  var custom=cat.filter(function(x){return(x.name||'').toLowerCase().includes(q2)||(x.cardNumber||'').toLowerCase().includes(q2)||(x.set||'').toLowerCase().includes(q2);});
+  if(custom.length){
+    allRes=custom.slice();buildFilters(custom);applySort();
+    sstat('<span style="color:#a78bfa;font-size:12px">📁 '+custom.length+' catalog match'+(custom.length!==1?'es':'')+'  •  ⏳ Searching API...</span>');
+  } else {
+    sstat('<span style="color:#a78bfa;font-size:12px">⏳ Searching...</span>');
+  }
+  // 2. Check session cache
+  if(searchCache[name]){
+    var cached=searchCache[name];
+    var merged2=custom.concat(cached.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.cardNumber===(x.card_number||'');});}));
+    allRes=merged2;buildFilters(merged2);sstat('<span style="color:#34d399;font-size:12px">⚡ '+merged2.length+' results (cached)</span>');applySort();
+    btn.disabled=false;btn.textContent='Search';return;
+  }
   try{
-    var all=[],page=1,total=1;
-    do{
-      sstat('<span style="color:#a78bfa;font-size:12px">⏳ Page '+page+(total>1?' / '+total:'')+'...</span>');
-      var r=await fetch(P+'/cards?search='+encodeURIComponent(name)+'&page='+page+'&per_page=20');
-      if(!r.ok)throw new Error('API '+r.status);
-      var d=await r.json();
-      var cards=Array.isArray(d)?d:(d.data||[]);
-      cards.forEach(function(c){if(c.prices&&c.prices.tcg_player)c.prices.tcgplayer=c.prices.tcg_player;});
-      all=all.concat(cards);
-      if(d.paging){total=d.paging.total||1;if(!cards.length)break;page++;}else break;
-    }while(page<=total);
-    var cat=ll('catalog',[]);
-    var q2=name.toLowerCase();
-    var custom=cat.filter(function(c){return(c.name||'').toLowerCase().includes(q2)||(c.cardNumber||'').toLowerCase().includes(q2)||(c.set||'').toLowerCase().includes(q2);});
-    var merged=custom.concat(all.filter(function(c){return!custom.find(function(x){return x.name.toLowerCase()===(c.name||'').toLowerCase()&&x.cardNumber===(c.card_number||'');});}));
-    if(!merged.length){sstat('<span style="color:#f87171;font-size:12px">No results for "'+name+'".</span>');g('sort-bar').style.display='none';}
-    else{allRes=merged;buildFilters(merged);sstat('');applySort();}
+    // 3. Fetch page 1 first — show results immediately, then fetch remaining pages in parallel
+    var r1=await fetch(P+'/cards?search='+encodeURIComponent(name)+'&page=1&per_page=20');
+    if(!r1.ok)throw new Error('API '+r1.status);
+    var d1=await r1.json();
+    var cards1=Array.isArray(d1)?d1:(d1.data||[]);
+    cards1.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
+    var totalPages=(d1.paging&&d1.paging.total)||1;
+    // Show page 1 results right away
+    var merge1=custom.concat(cards1.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.cardNumber===(x.card_number||'');});}));
+    allRes=merge1;buildFilters(merge1);applySort();
+    if(totalPages>1){
+      sstat('<span style="color:#a78bfa;font-size:12px">⏳ Loading '+totalPages+' pages...</span>');
+      // 4. Fetch all remaining pages in parallel
+      var pageNums=[];for(var p2=2;p2<=totalPages;p2++)pageNums.push(p2);
+      var remaining=await Promise.all(pageNums.map(function(pg){
+        return fetch(P+'/cards?search='+encodeURIComponent(name)+'&page='+pg+'&per_page=20')
+          .then(function(r){return r.ok?r.json():null;})
+          .catch(function(){return null;});
+      }));
+      var all=cards1.slice();
+      remaining.forEach(function(d){
+        if(!d)return;
+        var cards=(Array.isArray(d)?d:(d.data||[]));
+        cards.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
+        all=all.concat(cards);
+      });
+      searchCache[name]=all;
+      var merged=custom.concat(all.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.cardNumber===(x.card_number||'');});}));
+      allRes=merged;buildFilters(merged);applySort();
+      sstat('');
+    } else {
+      searchCache[name]=cards1;
+      sstat('');
+    }
+    if(!allRes.length){sstat('<span style="color:#f87171;font-size:12px">No results for "'+name+'".</span>');g('sort-bar').style.display='none';}
   }catch(e){sstat('<span style="color:#f87171;font-size:12px">Search failed: '+e.message+'</span>');}
   btn.disabled=false;btn.textContent='Search';
 }
@@ -1418,11 +1456,8 @@ function togInvGrp(chk){
   updBulkBar();
 }
 function invSelAll(){
-  // Collect IDs first, then mark after render
-  var ids=app.inv.map(function(i){return i.id;});
-  renderInv(); // this resets invSel, so re-apply after
-  ids.forEach(function(id){invSel[id]=true;});
-  // Check all checkboxes
+  // Select all currently rendered (filtered) entries without re-rendering
+  app.inv.forEach(function(i){invSel[i.id]=true;});
   document.querySelectorAll('.inv-grp-chk').forEach(function(chk){chk.checked=true;});
   updBulkBar();
 }
@@ -1443,6 +1478,13 @@ function bulkToWhatnot(){
   var ids=Object.keys(invSel);if(!ids.length){toast('⚠️ Nothing selected.');return;}
   ids.forEach(function(id){for(var i=0;i<app.inv.length;i++){if(app.inv[i].id===id){app.inv[i].status='whatnot';break;}}});
   saveInv();stats();invSel={};renderInv();toast('📺 '+ids.length+' cards → Whatnot!');
+}
+function bulkDeleteInv(){
+  var ids=Object.keys(invSel);if(!ids.length){toast('⚠️ Nothing selected.');return;}
+  if(!confirm('Permanently delete '+ids.length+' selected card'+(ids.length!==1?'s':'')+' from inventory?'))return;
+  var idSet={};ids.forEach(function(id){idSet[id]=true;});
+  app.inv=app.inv.filter(function(i){return!idSet[i.id];});
+  saveInv();stats();invSel={};renderInv();toast('🗑 '+ids.length+' card'+(ids.length!==1?'s':'')+' deleted.');
 }
 
 function openInvMod(ek){
