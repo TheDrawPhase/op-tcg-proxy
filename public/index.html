@@ -76,7 +76,7 @@ button{cursor:pointer}a{text-decoration:none}
 .iname{flex:2;min-width:120px}.iname-m{font-weight:600;font-size:13px}.iname-s{font-size:10px;color:#7c6fcd}
 .iconds{flex:2;display:flex;flex-wrap:wrap;gap:3px}
 .icost{flex:1;font-size:12px;color:#f0c040;text-align:right;white-space:nowrap}
-.ival{flex:1;font-size:12px;color:#f0c040;text-align:right;white-space:nowrap}
+.ival{flex:1;font-size:12px;color:#34d399;text-align:right;white-space:nowrap}
 
 /* Checkboxes for bulk actions */
 .chk{width:16px;height:16px;accent-color:#7c3aed;cursor:pointer;flex-shrink:0}
@@ -546,11 +546,17 @@ async function dbLoad(){
     var r=await fetch(P+'/db/load');if(!r.ok)throw 0;
     var d=await r.json();
     if(d.inventory&&d.inventory.length){app.inv=d.inventory;ls('inv',app.inv);}
-    if(d.offers&&d.offers.length){app.offers=d.offers;ls('offers',app.offers);}
+    // Always load offers from supabase (even empty array is valid)
+    if(d.offers){app.offers=d.offers;ls('offers',app.offers);}
     if(d.sellers&&d.sellers.length){app.sellers=d.sellers;ls('sellers',app.sellers);}
     if(d.tiers&&d.tiers.length){app.tiers=d.tiers;ls('tiers',app.tiers);}
     if(d.custom_catalog&&d.custom_catalog.length){ls('catalog',d.custom_catalog);}
-    if(d.finances&&Object.keys(d.finances).length){fin=d.finances;if(!fin.history)fin.history=[];if(!fin.shows)fin.shows=[];ls('fin',fin);}
+    // Always restore finances if present (even if paypal/bank/cash are 0)
+    if(d.finances){fin=d.finances;if(!fin.history)fin.history=[];if(!fin.shows)fin.shows=[];ls('fin',fin);}
+    // Load API key if stored in supabase
+    if(d.api_key&&typeof d.api_key==='string'&&d.api_key.length>10){
+      app.key=d.api_key;ls('key',app.key);
+    }
     syncUI('ok');return true;
   }catch(e){syncUI('err');return false;}
 }
@@ -940,11 +946,10 @@ function autofillTCG(){
       if(setM&&!g('me-set').value)g('me-set').value=setM[1].toUpperCase();
       if(name&&!g('me-name').value)g('me-name').value=name;
     }
-    // Try to fetch image via proxy
+    // Auto-populate image from TCGPlayer CDN pattern
     if(pid&&!g('me-img').value){
-      fetch(P+'/tcg-image?id='+pid).then(function(r){return r.json();}).then(function(d){
-        if(d&&d.image&&g('me-img'))g('me-img').value=d.image;
-      }).catch(function(){});
+      var imgUrl='https://product-images.tcgplayer.com/fit-in/456x632/'+pid+'.jpg';
+      g('me-img').value=imgUrl;
     }
   }
   toast('✅ TCGPlayer URL saved. Fill remaining fields.');
@@ -991,38 +996,35 @@ function saveCat(e){
   if(idx>-1)cat[idx]=c;else cat.unshift(c);
   ls('catalog',cat);saveCatalog(cat);
   // Refresh allRes so search results reflect updated catalog card (e.g. new TCGPlayer URL)
+  // Patch live search results
   for(var _ri=0;_ri<allRes.length;_ri++){
     var _r=allRes[_ri];
     if(_r.isCustom&&(_r.id===c.id||(_r.name||'').toLowerCase()===c.name.toLowerCase())){
-      _r.card_number=c.cardNumber||_r.card_number||'';
-      _r.set=c.set||_r.set||'';
-      _r.color=c.color||_r.color||'';
-      _r.rarity=c.rarity||_r.rarity||'';
+      _r.name=c.name;_r.card_number=c.cardNumber||_r.card_number||'';
+      _r.set=c.set||'';_r.color=c.color||'';_r.rarity=c.rarity||'';
       _r.image=c.image||_r.image||null;
       _r.tcgplayer_id=c.tcgplayerUrl||_r.tcgplayer_id||null;
-      _r.name=c.name||_r.name||'';
-      _r.id=c.id;
-      break;
+      _r.id=c.id;break;
     }
   }
-  // Update ALL matching inventory entries with every edited field
-  var _oldName=null;
-  // Find old name by looking up by id in existing inv
-  for(var _ii=0;_ii<app.inv.length;_ii++){
-    if(app.inv[_ii].tcgId===c.tcgplayerUrl||app.inv[_ii].name.toLowerCase()===c.name.toLowerCase()){_oldName=app.inv[_ii].name;break;}
-  }
+  // Update inventory entries — match by catalog id stored on entry OR by old name
+  // We store c.id on manual inventory entries so we can match precisely
+  var _updated=false;
   app.inv.forEach(function(inv){
-    if(inv.name.toLowerCase()===c.name.toLowerCase()||(_oldName&&inv.name===_oldName)){
+    // Match by catalogId (most reliable) or by name match
+    if(inv.catalogId===c.id||(inv.manual&&inv.name.toLowerCase()===c.name.toLowerCase())){
+      inv.catalogId=c.id;
       inv.name=c.name;
-      inv.num=c.cardNumber||inv.num;
-      inv.set=c.set||inv.set;
-      inv.color=c.color||inv.color;
-      inv.rarity=c.rarity||inv.rarity;
+      inv.num=c.cardNumber||inv.num||'';
+      inv.set=c.set||inv.set||'';
+      inv.color=c.color||inv.color||'';
+      inv.rarity=c.rarity||inv.rarity||'';
       if(c.image)inv.img=c.image;
       if(c.tcgplayerUrl)inv.tcgId=c.tcgplayerUrl;
+      _updated=true;
     }
   });
-  saveInv();
+  if(_updated)saveInv();
 }
 
 function clearManual(){g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';g('me-rarity').value='';g('me-img').value='';g('me-qty').value=1;g('me-cond').value='NM';g('me-tcglink').value='';g('me-tcg-url').value='';g('me-edit-id').textContent='';}
@@ -1046,7 +1048,7 @@ function manualToOffer(){
 function manualToInv(){
   var e=getManual();if(!e)return;
   saveCat(e);
-  var inv={id:uid(),name:e.name,num:e.num,set:e.set,color:e.color,rarity:e.rarity,img:e.img,tcgId:e.tcgId,cond:e.cond,qty:e.qty,mkt:null,cost:0,perc:null,seller:'Direct Add',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true};
+  var inv={id:uid(),catalogId:e.id||null,name:e.name,num:e.num,set:e.set,color:e.color,rarity:e.rarity,img:e.img,tcgId:e.tcgId,cond:e.cond,qty:e.qty,mkt:null,cost:0,perc:null,seller:'Direct Add',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true};
   app.inv.push(inv);saveInv();stats();clearManual();closeManualMod();
   toast('✅ '+e.name+' added to inventory!');
 }
@@ -1370,7 +1372,10 @@ function renderInv(){
       var sts={};cg[c].forEach(function(e){sts[e.status]=1;});var sk=Object.keys(sts);
       chips+='<span style="background:#0d0820;border:1px solid #2d2060;border-radius:4px;padding:2px 4px;font-size:9px;display:inline-flex;gap:2px;align-items:center">';
       chips+='<span style="color:#a78bfa;font-weight:700">'+c+'</span><span style="color:#e2e8f0">×'+q+'</span>';
-      chips+='<span class="badge '+(SB[sk[0]]||'bp')+'" style="padding:1px 3px;font-size:8px;margin:0">'+(sk.length>1?'Mix':(SL[sk[0]]||'').slice(0,4))+'</span>';
+      var _hasSales=sk.some(function(s){return s==='whatnot'||s==='vend'||s==='direct';});
+      var _badgeCls=sk.length>1?(_hasSales?'bw':'bpart'):(SB[sk[0]]||'bp');
+      var _badgeTxt=sk.length>1?'Mix':(SL[sk[0]]||'').slice(0,4);
+      chips+='<span class="badge '+_badgeCls+'" style="padding:1px 3px;font-size:8px;margin:0">'+_badgeTxt+'</span>';
       chips+='</span>';
     });
     var hw=grp.entries.some(function(e){return e.status==='whatnot';});
@@ -1815,7 +1820,10 @@ function delShow(id){if(!confirm('Delete this show?'))return;fin.shows=fin.shows
 // ─── Settings ─────────────────────────────────────────────────────────────────
 function saveKey(){
   var k=g('api-key-inp').value.trim();if(!k){toast('⚠️ Paste your API key first.');return;}
-  app.key=k;ls('key',k);g('key-ok').style.display='';g('key-ok').textContent='✅ Key saved: ...'+k.slice(-6);banner();toast('✅ API key saved!');
+  app.key=k;ls('key',k);
+  g('key-ok').style.display='';g('key-ok').textContent='✅ Key saved: ...'+k.slice(-6);banner();toast('✅ API key saved!');
+  // Also persist to Supabase so other devices pick it up
+  dbSave('api_key',k);
 }
 
 function exportBak(){
@@ -1955,7 +1963,18 @@ function delCatCard(id){var cat=ll('catalog',[]);cat=cat.filter(function(c){retu
 (async function init(){
   loadLocal();stats();banner();
   await dbLoad().then(function(ok){
-    if(ok){stats();if(app.key){g('api-key-inp').value=app.key;g('key-ok').style.display='';g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);}g('f-pp').value=fin.paypal||0;g('f-bank').value=fin.bank||0;g('f-cash').value=fin.cash||0;}
+    if(ok){
+      stats();
+      if(app.key){
+        g('api-key-inp').value=app.key;
+        g('key-ok').style.display='';
+        g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
+        banner();
+      }
+      g('f-pp').value=fin.paypal||0;
+      g('f-bank').value=fin.bank||0;
+      g('f-cash').value=fin.cash||0;
+    }
   }).catch(function(){});
 })();
 </script>
