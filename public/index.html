@@ -993,18 +993,26 @@ function addToSess(){
 }
 
 function showBrokenInv(){
-  // Find entries that are invisible in the normal list
-  var broken=app.inv.filter(function(i){
-    return !i.name || i.name==='' || isNaN(i.qty) || i.qty===0 || i.qty===null || i.qty===undefined;
+  // Check if there are hidden-by-filter cards first
+  var flt=(g('inv-q')?g('inv-q').value||'':'').toLowerCase();
+  var sf=g('inv-sf')?g('inv-sf').value:'';
+  var hiddenByFilter=app.inv.filter(function(i){
+    var nameMatch=(i.name||'').toLowerCase().includes(flt)||(i.set||'').toLowerCase().includes(flt);
+    var statusMatch=!sf||i.status===sf;
+    return !(nameMatch&&statusMatch);
   });
-  if(!broken.length){
-    // Also check for entries that exist but might not render due to NaN values
-    var suspicious=app.inv.filter(function(i){
-      return isNaN(i.mkt*1)||isNaN(i.cost*1)||isNaN(i.qty*1)||!i.name;
-    });
-    if(!suspicious.length){toast('✅ No broken entries found! Try clearing the search/filter.');return;}
-    broken=suspicious;
+  if(hiddenByFilter.length){
+    if(confirm('You have '+hiddenByFilter.length+' card(s) hidden by your current filter/search. Clear filters to show all?')){
+      var iq=g('inv-q');if(iq)iq.value='';
+      var isf=g('inv-sf');if(isf)isf.value='';
+      renderInv();closeInvMod();return;
+    }
   }
+  // Find genuinely broken entries
+  var broken=app.inv.filter(function(i){
+    return !i.name || i.name==='' || isNaN(i.qty*1) || i.qty<=0;
+  });
+  if(!broken.length){toast('✅ No broken entries. Your cards may be hidden by filters — try clearing them.');return;}
   var modal=g('inv-modal');
   var h='<div style="margin-bottom:12px">';
   h+='<div style="font-weight:700;font-size:14px;color:#f0a040;margin-bottom:6px">⚠️ Found '+broken.length+' broken entr'+(broken.length===1?'y':'ies')+'</div>';
@@ -1056,13 +1064,17 @@ function fixInvEntry(id){
 
 function addDirect(){
   var c=app.selCard;if(!c)return;
-  // Re-read qty from DOM in case oninput hasn't fired yet
   var qtyEl=document.querySelector('#sel-content input[type="number"]');
   if(qtyEl)app.selQty=Math.max(1,parseInt(qtyEl.value)||1);
   var entry=makeInvEntry(c,{seller:'Direct Add',sellerId:null,status:'onhand'});
+  console.log('[addDirect] entry:', JSON.stringify({id:entry.id,name:entry.name,qty:entry.qty,mkt:entry.mkt,cost:entry.cost,status:entry.status}));
   app.inv.push(entry);
   saveInv();stats();
-  toast('✅ '+entry.name+' → Inventory ('+CF[entry.cond]+' ×'+entry.qty+')');
+  // Reset inventory filters so the new card is visible immediately
+  var iq=g('inv-q');if(iq)iq.value='';
+  var isf=g('inv-sf');if(isf)isf.value='';
+  if(app.tab==='inventory')renderInv();
+  toast('✅ '+entry.name+' → Inventory ('+CF[entry.cond]+' ×'+entry.qty+') — check Inventory tab');
 }
 
 function onSelChg(){g('new-sname-wrap').style.display=g('o-seller').value==='__new__'?'':'none';}
@@ -1662,9 +1674,11 @@ function pdfOffer(id){
 function renderInv(){
   invSel={};updBulkBar();
   var flt=(g('inv-q').value||'').toLowerCase(),sf=g('inv-sf').value,srt=g('inv-sort').value||'vd';
+  console.log('[renderInv] total:',app.inv.length,'filter:',flt,'sf:',sf,'inv sample:',app.inv.slice(0,3).map(function(i){return{name:i.name,qty:i.qty,status:i.status};}));
   var filtered=app.inv.filter(function(i){
     return((i.name||'').toLowerCase().includes(flt)||(i.set||'').toLowerCase().includes(flt)||(i.seller||'').toLowerCase().includes(flt))&&(!sf||i.status===sf);
   });
+  console.log('[renderInv] filtered:',filtered.length);
   // Group by name
   var grpMap={};
   filtered.forEach(function(i){
@@ -1703,6 +1717,7 @@ function renderInv(){
   if(!ga.length){g('inv-list').innerHTML='<div class="empty">No matches.</div>';return;}
   var h='<div class="ilist">';
   ga.forEach(function(grp){
+    try{
     var cg={};grp.entries.forEach(function(e){if(!cg[e.cond])cg[e.cond]=[];cg[e.cond].push(e);});
     var chips='';
     CONDS.forEach(function(c){
@@ -1735,8 +1750,10 @@ function renderInv(){
     h+='<div class="icost" onclick="openInvMod(\''+ek+'\')"><div style="font-weight:600">'+nm(fe?fe.cost:null)+'/ea</div><div style="font-size:10px;color:#6b7280">'+nm(grp.tc)+' tot</div></div>';
     h+='<div class="ival" onclick="openInvMod(\''+ek+'\')"><div style="font-weight:600">'+nm(fe?fe.mkt:null)+'/ea</div><div style="font-size:10px;color:#6b7280">'+nm(grp.tv)+' tot</div></div>';
     h+='</div>';
+    }catch(err){console.error('[renderInv] error on',grp.name,err);}
   });
   g('inv-list').innerHTML=h+'</div>';
+  console.log('[renderInv] rendered',ga.length,'groups, html length:',h.length);
 }
 
 function togInvGrp(chk){
@@ -1842,6 +1859,37 @@ function togWhatnot(id,ek,partialQty,channel){
     }
   }
   saveInv();stats();renderInv();if(ek)openInvMod(ek);toast(SL[ch]+' added!');
+}
+// Run once on boot — fixes any corrupted inventory entries and saves
+function fixInv(){
+  var fixed=0;
+  app.inv.forEach(function(i){
+    if(!i.name||i.name===''){i.name='Unknown Card';fixed++;}
+    if(isNaN(i.qty*1)||!i.qty||i.qty<=0){i.qty=1;fixed++;}
+    if(isNaN(i.mkt*1))i.mkt=null;
+    if(isNaN(i.cost*1)){i.cost=0;fixed++;}
+    if(!i.status){i.status='onhand';fixed++;}
+    if(!i.cond){i.cond='NM';fixed++;}
+  });
+  if(fixed>0){
+    console.log('[fixInv] fixed',fixed,'field(s) across',app.inv.length,'entries');
+    saveInv();
+  }
+  return fixed;
+}
+
+function fixInv(){
+  var fixed=0;
+  app.inv.forEach(function(i){
+    if(!i.name||i.name===''){i.name='Unknown Card';fixed++;}
+    if(isNaN(i.qty*1)||!i.qty||i.qty<=0){i.qty=1;fixed++;}
+    if(isNaN(i.mkt*1))i.mkt=null;
+    if(isNaN(i.cost*1)){i.cost=0;fixed++;}
+    if(!i.status){i.status='onhand';fixed++;}
+    if(!i.cond){i.cond='NM';fixed++;}
+  });
+  if(fixed>0){console.log('[fixInv] repaired',fixed,'fields');saveInv();}
+  return fixed;
 }
 function rmInv(id){app.inv=app.inv.filter(function(i){return String(i.id)!==String(id);});saveInv();stats();renderInv();}
 
@@ -2191,6 +2239,7 @@ function delCatCard(id){
 (async function init(){
   loadLocal();stats();banner();
   await dbLoad().catch(function(){return false;});
+  fixInv(); // repair any corrupted entries from previous versions
   stats();
   if(app.key){
     g('api-key-inp').value=app.key;
@@ -2200,7 +2249,9 @@ function delCatCard(id){
   }
   g('f-pp').value=fin.paypal||0;
   g('f-bank').value=fin.bank||0;
+  fixInv();
   g('f-cash').value=fin.cash||0;
+  fixInv();
 })();
 
 </script>
