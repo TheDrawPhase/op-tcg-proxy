@@ -266,6 +266,7 @@ button{cursor:pointer}a{text-decoration:none}
       <option value="na">Name A→Z</option><option value="nd">Name Z→A</option>
       <option value="dd">Newest First</option><option value="da">Oldest First</option>
     </select>
+    <button class="btn" style="background:#2d1a00;color:#f0a040;border:1px solid #4a3000;font-size:12px;padding:7px 10px;white-space:nowrap" onclick="showBrokenInv()">🔧 Fix Broken</button>
   </div>
   <div id="inv-stats" style="font-size:12px;color:#94a3b8;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
   <!-- Bulk action bar -->
@@ -579,7 +580,7 @@ function tieredPerc(nmPrice,cond){
 function makeInvEntry(card,overrides){
   var nm2=cardNmUsd(card);
   var cond=(overrides&&overrides.cond)||app.selCond||'NM';
-  var qty=(overrides&&overrides.qty)||app.selQty||1;
+  var qty=parseInt((overrides&&overrides.qty)||app.selQty||1)||1;
   var mkt=cardPrice(card,cond);
   var perc=nm2!=null?tieredPerc(nm2,cond):null;
   var cost=mkt!=null&&perc!=null?parseFloat(((mkt*perc)/100).toFixed(2)):0;
@@ -967,7 +968,7 @@ function renderSel(){
   if(nmPrice!=null)h+='<div style="font-size:13px;margin-bottom:8px">NM Market: <b style="color:#34d399">'+nm(nmPrice)+'</b></div>';
   h+='<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap">';
   h+='<select class="sel" style="font-size:12px" onchange="app.selCond=this.value;renderSel()">'+opts+'</select>';
-  h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:#94a3b8">Qty</span><input type="number" class="pinp" style="width:52px;font-size:13px" min="1" value="'+app.selQty+'" oninput="app.selQty=Math.max(1,parseInt(this.value)||1)"/></div>';
+  h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:#94a3b8">Qty</span><input type="number" class="pinp" style="width:52px;font-size:13px" min="1" value="'+app.selQty+'" oninput="app.selQty=Math.max(1,parseInt(this.value)||1)" onchange="app.selQty=Math.max(1,parseInt(this.value)||1)"/></div>';
   h+='</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
   h+='<button class="btn" onclick="addToSess()">+ Add to Offer</button>';
   h+='<button class="btn btn-g" onclick="addDirect()">+ Direct to Inv</button>';
@@ -981,6 +982,8 @@ function renderSel(){
 // ─── Offer session (sidebar) ──────────────────────────────────────────────────
 function addToSess(){
   var c=app.selCard;if(!c)return;
+  var qtyEl2=document.querySelector('#sel-content input[type="number"]');
+  if(qtyEl2)app.selQty=Math.max(1,parseInt(qtyEl2.value)||1);
   var name=c.name||c.name_numbered||'';
   var dup=app.sess.find(function(e){return e.name===name&&e.cond===app.selCond;});
   if(dup&&!confirm('⚠️ '+name+' ('+CF[app.selCond]+') is already in this offer. Add another?'))return;
@@ -989,8 +992,73 @@ function addToSess(){
   toast('Added '+name+' to offer');
 }
 
+function showBrokenInv(){
+  // Find entries that are invisible in the normal list
+  var broken=app.inv.filter(function(i){
+    return !i.name || i.name==='' || isNaN(i.qty) || i.qty===0 || i.qty===null || i.qty===undefined;
+  });
+  if(!broken.length){
+    // Also check for entries that exist but might not render due to NaN values
+    var suspicious=app.inv.filter(function(i){
+      return isNaN(i.mkt*1)||isNaN(i.cost*1)||isNaN(i.qty*1)||!i.name;
+    });
+    if(!suspicious.length){toast('✅ No broken entries found! Try clearing the search/filter.');return;}
+    broken=suspicious;
+  }
+  var modal=g('inv-modal');
+  var h='<div style="margin-bottom:12px">';
+  h+='<div style="font-weight:700;font-size:14px;color:#f0a040;margin-bottom:6px">⚠️ Found '+broken.length+' broken entr'+(broken.length===1?'y':'ies')+'</div>';
+  h+='<div style="font-size:12px;color:#94a3b8;margin-bottom:10px">These cards exist in your inventory but are hidden due to missing or invalid data.</div>';
+  h+='<button onclick="deleteAllBroken()" style="padding:6px 14px;border-radius:6px;background:#7f1d1d;border:none;color:#fca5a5;font-size:12px;cursor:pointer;margin-bottom:12px">🗑 Delete All '+broken.length+' Broken</button>';
+  h+='</div><div style="display:flex;flex-direction:column;gap:6px">';
+  broken.forEach(function(e){
+    h+='<div style="background:#0d0820;border-radius:7px;padding:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+    h+=e.img?'<img src="'+e.img+'" style="width:34px;height:47px;border-radius:3px;object-fit:cover" onerror="this.hidden=1"/>':'<div style="width:34px;height:47px;background:#2d2060;border-radius:3px"></div>';
+    h+='<div style="flex:1;min-width:140px">';
+    h+='<div style="font-weight:600;color:#e2e8f0">'+(e.name||'<span style="color:#f87171">[no name]</span>')+'</div>';
+    h+='<div style="font-size:11px;color:#94a3b8">';
+    h+='qty: <span style="color:'+(isNaN(e.qty)||!e.qty?'#f87171':'#34d399')+'">'+e.qty+'</span>';
+    h+=' • mkt: '+nm(e.mkt)+' • cost: '+nm(e.cost);
+    h+=' • status: '+(e.status||'?');
+    h+='</div></div>';
+    h+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
+    h+='<button data-fixid="'+e.id+'" onclick="fixInvEntry(this.dataset.fixid)" style="padding:4px 10px;border-radius:4px;background:#1a2d00;border:1px solid #2a4000;color:#a0d040;font-size:11px;cursor:pointer">✏️ Fix</button>';
+    h+='<button data-rmid="'+e.id+'" onclick="rmInv(this.dataset.rmid);showBrokenInv()" style="padding:4px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">🗑 Delete</button>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  g('inv-mod-title').innerHTML='🔧 Broken Inventory Entries';
+  g('inv-mod-content').innerHTML=h;
+  modal.style.display='';
+}
+
+function deleteAllBroken(){
+  if(!confirm('Delete all broken inventory entries? This cannot be undone.'))return;
+  app.inv=app.inv.filter(function(i){
+    return i.name&&i.name!==''&&!isNaN(i.qty*1)&&i.qty>0;
+  });
+  saveInv();stats();closeInvMod();renderInv();
+  toast('🗑 Broken entries deleted.');
+}
+
+function fixInvEntry(id){
+  var e=app.inv.find(function(i){return String(i.id)===String(id);});
+  if(!e)return;
+  // Fix common issues in place
+  if(!e.name||e.name==='')e.name='Unknown Card';
+  if(isNaN(e.qty*1)||!e.qty||e.qty<=0)e.qty=1;
+  if(isNaN(e.mkt*1))e.mkt=null;
+  if(isNaN(e.cost*1))e.cost=0;
+  if(!e.status)e.status='onhand';
+  saveInv();stats();showBrokenInv();
+  toast('✅ Entry fixed.');
+}
+
 function addDirect(){
   var c=app.selCard;if(!c)return;
+  // Re-read qty from DOM in case oninput hasn't fired yet
+  var qtyEl=document.querySelector('#sel-content input[type="number"]');
+  if(qtyEl)app.selQty=Math.max(1,parseInt(qtyEl.value)||1);
   var entry=makeInvEntry(c,{seller:'Direct Add',sellerId:null,status:'onhand'});
   app.inv.push(entry);
   saveInv();stats();
@@ -1600,8 +1668,9 @@ function renderInv(){
   // Group by name
   var grpMap={};
   filtered.forEach(function(i){
-    if(!grpMap[i.name])grpMap[i.name]={name:i.name,num:i.num,set:i.set,img:i.img,entries:[]};
-    grpMap[i.name].entries.push(i);
+    var key=i.name||'(unnamed)';
+    if(!grpMap[key])grpMap[key]={name:i.name||'(unnamed)',num:i.num||'',set:i.set||'',img:i.img||null,entries:[]};
+    grpMap[key].entries.push(i);
   });
   var ga=Object.values(grpMap);
   ga.forEach(function(g2){
