@@ -588,7 +588,7 @@ function makeInvEntry(card,overrides){
     id:uid(),
     catalogId:card.id||null,
     name:card.name||card.name_numbered||'',
-    num:card.card_number||card.cardNumber||card.number||'',
+    num:(card.card_number||card.cardNumber||card.number||'').trim(),
     set:(card.episode&&card.episode.name?card.episode.name:(card.set_name||card.set||'')).trim(),
     color:card.color||'',
     rarity:card.rarity||'',
@@ -618,7 +618,7 @@ function makeSessCard(card){
     id:uid(),
     catalogId:card.id||null,
     name:card.name||card.name_numbered||'',
-    num:card.card_number||card.cardNumber||card.number||'',
+    num:(card.card_number||card.cardNumber||card.number||'').trim(),
     set:(card.episode&&card.episode.name?card.episode.name:(card.set_name||card.set||'')).trim(),
     color:card.color||'',
     rarity:card.rarity||'',
@@ -1721,9 +1721,14 @@ function renderInv(){
   // Group by name
   var grpMap={};
   filtered.forEach(function(i){
-    // Group by name + card number + set so same-named cards from different sets stay separate
-    var key=(i.name||'(unnamed)')+'||'+(i.num||'')+'||'+(i.set||'');
-    if(!grpMap[key])grpMap[key]={name:i.name||'(unnamed)',num:i.num||'',set:i.set||'',img:i.img||null,entries:[]};
+    // Group by name + card number + set
+    // If num AND set are both empty, use the entry's own id so it never merges with anything
+    var numKey=i.num||'';
+    var setKey=i.set||'';
+    var varKey=i.variant||'';
+    var key=(i.name||'(unnamed)')+'||'+numKey+'||'+setKey+'||'+varKey;
+    if(!numKey&&!setKey&&!varKey)key=key+'||'+i.id; // isolate cards with no identifying data
+    if(!grpMap[key])grpMap[key]={name:i.name||'(unnamed)',num:numKey,set:setKey,img:i.img||null,entries:[]};
     grpMap[key].entries.push(i);
   });
   var ga=Object.values(grpMap);
@@ -1771,7 +1776,8 @@ function renderInv(){
       chips+='<span style="color:#a78bfa;font-weight:700">'+c+'</span><span style="color:#e2e8f0">×'+q+'</span>';
       chips+='<span class="badge '+badgeCls+'" style="padding:1px 3px;font-size:8px;margin:0">'+badgeTxt+'</span></span>';
     });
-    var ek=encodeURIComponent(grp.name+'||'+(grp.num||'')+'||'+(grp.set||''));
+    var variant=grp.entries[0]?grp.entries[0].variant||'':'';
+    var ek=encodeURIComponent(grp.name+'||'+(grp.num||'')+'||'+(grp.set||'')+'||'+variant);
     var ft=grp.entries[0]&&grp.entries[0].tcgId?grp.entries[0].tcgId:null;
     var ebayQ=encodeURIComponent(grp.name+(grp.num?' '+grp.num:''));
     var entryIds=grp.entries.map(function(e){return e.id;}).join(',');
@@ -1780,7 +1786,7 @@ function renderInv(){
     h+='<input type="checkbox" class="chk inv-grp-chk" '+(isGrpSel?'checked':'')+' data-ids="'+entryIds+'" onclick="event.stopPropagation();togInvGrp(this)"/>';
     h+=grp.img?'<img class="ithumb" src="'+grp.img+'" onerror="this.hidden=1" onclick="openInvMod(\''+ek+'\')"/>':'<div class="inoimg" onclick="openInvMod(\''+ek+'\')">?</div>';
     h+='<div class="iname" onclick="openInvMod(\''+ek+'\')" style="cursor:pointer"><div class="iname-m">'+grp.name+'</div>';
-    h+='<div class="iname-s">'+(grp.num||'')+' • '+(grp.set||'')+'</div>';
+    h+='<div class="iname-s">'+(grp.num||'')+' • '+(grp.set||'')+(variant?' • <span style="color:#a78bfa;font-weight:700">'+variant+'</span>':'')+'</div>';
     h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">';
     if(ft){var tcgH=String(ft).startsWith('http')?ft:'https://www.tcgplayer.com/product/'+ft;h+='<a href="'+tcgH+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 4px">TCGPlayer ↗</a>';}
     h+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay ↗</a>';
@@ -1835,11 +1841,13 @@ function bulkDeleteInv(){
 function openInvMod(ek){
   var decoded=decodeURIComponent(ek);
   var parts=decoded.split('||');
-  var name=parts[0],num=parts[1]||'',set=parts[2]||'';
+  var name=parts[0],num=parts[1]||'',set=parts[2]||'',variant=parts[3]||'';
   var entries=app.inv.filter(function(i){
-    return i.name===name&&(i.num||'')==num&&(i.set||'')==set;
+    return i.name===name&&(i.num||'')==num&&(i.set||'')==set&&(i.variant||'')==variant;
   });
-  // fallback: name only (for old data)
+  // fallback: name+num+set only
+  if(!entries.length)entries=app.inv.filter(function(i){return i.name===name&&(i.num||'')==num&&(i.set||'')==set;});
+  // fallback: name only
   if(!entries.length)entries=app.inv.filter(function(i){return i.name===name;});
   if(!entries.length)return;
   var f=entries[0];
@@ -1852,6 +1860,14 @@ function openInvMod(ek){
     rows+='<tr style="border-bottom:1px solid #1a1640">';
     rows+='<td style="padding:7px 5px;font-size:11px;color:#a78bfa;font-weight:700">'+e.cond+'</td>';
     rows+='<td style="padding:7px 5px;font-size:11px;text-align:center">'+e.qty+'</td>';
+    rows+='<td style="padding:4px 5px;font-size:11px">';
+    rows+='<div style="font-size:9px;color:#94a3b8;margin-bottom:2px">Card #</div>';
+    rows+='<input class="inp" value="'+(e.num||'')+'" placeholder="—" style="width:80px;font-size:11px;padding:3px 6px" data-id="'+e.id+'" data-ek="'+ek+'" data-f="num" onchange="updInvMeta(this)">';
+    rows+='<div style="font-size:9px;color:#94a3b8;margin-bottom:2px;margin-top:4px">Set</div>';
+    rows+='<input class="inp" value="'+(e.set||'')+'" placeholder="—" style="width:120px;font-size:11px;padding:3px 6px" data-id="'+e.id+'" data-ek="'+ek+'" data-f="set" onchange="updInvMeta(this)">';
+    rows+='<div style="font-size:9px;color:#a78bfa;margin-bottom:2px;margin-top:4px">Variant <span style="color:#6b7280">(AA/FA/SP...)</span></div>';
+    rows+='<input class="inp" value="'+(e.variant||'')+'" placeholder="None" style="width:80px;font-size:11px;padding:3px 6px" data-id="'+e.id+'" data-ek="'+ek+'" data-f="variant" onchange="updInvMeta(this)">';
+    rows+='</td>';
     rows+='<td style="padding:7px 5px;font-size:11px"><div style="display:flex;align-items:center;gap:4px;margin-bottom:4px"><span style="font-size:9px;color:#f0c040">Cost:</span><input type="number" step="0.01" min="0" value="'+(e.cost!=null?e.cost:'')+'" placeholder="—" class="pinp pcost" style="width:72px;font-size:13px" onchange="updInvCost(\''+e.id+'\',this.value,\''+ek+'\')"/></div>';
     rows+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:9px;color:#34d399">Mkt:</span>';
     rows+='<input type="number" step="0.01" min="0" value="'+(e.mkt!=null?e.mkt:'')+'" placeholder="—" class="pinp pp" style="width:72px;font-size:13px" onchange="updInvMkt(\''+e.id+'\',this.value,\''+ek+'\')"/></div></td>';
@@ -1879,7 +1895,7 @@ function openInvMod(ek){
   h+='<button onclick="editCatalogEntry(\''+ek+'\')" style="margin-top:6px;padding:4px 9px;border-radius:4px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">✏️ Edit Card Info</button>';
   h+='</div></div>';
   h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid #2d2060">';
-  ['Cond','Qty','Cost / Mkt','Status','Offer','Sales Lane',''].forEach(function(x){h+='<th style="padding:5px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">'+x+'</th>';});
+  ['Cond','Qty','Card # / Set','Cost / Mkt','Status','Offer','Sales Lane',''].forEach(function(x){h+='<th style="padding:5px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">'+x+'</th>';});
   h+='</tr></thead><tbody>'+rows+'</tbody></table></div>';
   g('inv-mod-content').innerHTML=h;
   g('inv-modal').style.display='';
@@ -1896,6 +1912,15 @@ function updInvCost(id,val,ek){
   e.cost=parseFloat(val)||0;
   if(e.cost>0&&e.mkt!=null&&e.mkt>0)e.perc=parseFloat(((e.cost/e.mkt)*100).toFixed(1));
   saveInv();stats();
+}
+function updInvMeta(el){
+  var id=el.dataset.id,field=el.dataset.f,val=el.value.trim();
+  var e=findInv(id);if(!e)return;
+  e[field]=val;
+  saveInv();
+  // Re-open modal with updated key so grouping reflects the change
+  var newEk=encodeURIComponent(e.name+'||'+(e.num||'')+'||'+(e.set||''));
+  openInvMod(newEk);
 }
 function closeInvMod(){g('inv-modal').style.display='none';}
 
