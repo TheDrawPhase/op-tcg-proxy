@@ -588,8 +588,8 @@ function makeInvEntry(card,overrides){
     id:uid(),
     catalogId:card.id||null,
     name:card.name||card.name_numbered||'',
-    num:card.card_number||card.cardNumber||'',
-    set:card.episode&&card.episode.name?card.episode.name:(card.set||''),
+    num:card.card_number||card.cardNumber||card.number||'',
+    set:(card.episode&&card.episode.name?card.episode.name:(card.set_name||card.set||'')).trim(),
     color:card.color||'',
     rarity:card.rarity||'',
     img:card.image||null,
@@ -618,8 +618,8 @@ function makeSessCard(card){
     id:uid(),
     catalogId:card.id||null,
     name:card.name||card.name_numbered||'',
-    num:card.card_number||card.cardNumber||'',
-    set:card.episode&&card.episode.name?card.episode.name:(card.set||''),
+    num:card.card_number||card.cardNumber||card.number||'',
+    set:(card.episode&&card.episode.name?card.episode.name:(card.set_name||card.set||'')).trim(),
     color:card.color||'',
     rarity:card.rarity||'',
     img:card.image||null,
@@ -806,7 +806,7 @@ async function search(){
   if(!app.key){sstat('<span style="color:#f87171;font-size:12px">Add your API key in ⚙️ Settings.</span>');return;}
   var name=raw.replace(/\b(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc)\b/gi,'').replace(/\s+/g,' ').trim()||raw;
   var btn=g('sbtn');btn.disabled=true;btn.textContent='⏳';
-  g('rgrid').innerHTML='';allRes=[];g('sort-bar').style.display='none';
+  g('rgrid').innerHTML='';g('rgrid').style.display='';allRes=[];g('sort-bar').style.display='none';
   app.selCard=null;g('sel-panel').style.display='none';
 
   // Catalog matches — shown instantly (mixed into single grid)
@@ -939,18 +939,21 @@ function pickCard(card){
   app.selCard=card;app.selCond='NM';app.selQty=1;
   g('q').value=card.name||card.name_numbered||'';
   renderSel();
-  // Scroll sel-panel to top of viewport
-  setTimeout(function(){var p=g('sel-panel');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},50);
+  setTimeout(function(){var p=g('buylist-left');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},30);
 }
 
 function backToResults(){
-  app.selCard=null;g('sel-panel').style.display='none';
-  if(allRes.length)applySort();
+  app.selCard=null;
+  g('sel-panel').style.display='none';
+  g('rgrid').style.display='';
+  if(allRes.length){g('sort-bar').style.display='flex';applySort();}
 }
 
 function renderSel(){
   var c=app.selCard;if(!c)return;
   g('sel-panel').style.display='';
+  g('rgrid').style.display='none';
+  if(g('sort-bar'))g('sort-bar').style.display='none';
   var nmPrice=cardNmUsd(c);
   var name=c.name||c.name_numbered||'';
   var cardNum=c.card_number||c.cardNumber||'';
@@ -1069,7 +1072,7 @@ function addDirect(){
   var qtyEl=document.querySelector('#sel-content input[type="number"]');
   if(qtyEl)app.selQty=Math.max(1,parseInt(qtyEl.value)||1);
   var entry=makeInvEntry(c,{seller:'Direct Add',sellerId:null,status:'onhand'});
-  console.log('[addDirect] entry:', JSON.stringify({id:entry.id,name:entry.name,qty:entry.qty,mkt:entry.mkt,cost:entry.cost,status:entry.status}));
+  console.log('[addDirect] entry:', JSON.stringify({id:entry.id,name:entry.name,num:entry.num,set:entry.set,qty:entry.qty,mkt:entry.mkt,status:entry.status}));
   app.inv.push(entry);
   saveInv();stats();
   // Reset inventory filters so the new card is visible immediately
