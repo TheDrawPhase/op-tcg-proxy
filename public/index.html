@@ -116,6 +116,7 @@ button{cursor:pointer}a{text-decoration:none}
 .tier-row{display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap}
 .tinp{width:68px;padding:6px 7px;border-radius:5px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:12px;text-align:center}
 
+.sel-tooltip{position:fixed;z-index:200;background:#13102a;border:1px solid #7c3aed;border-radius:8px;padding:10px 14px;font-size:12px;min-width:180px;max-width:280px;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.7)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #7c3aed;border-radius:8px;padding:10px 22px;font-size:13px;color:#e2e8f0;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.6);display:none;white-space:nowrap}
 .empty{text-align:center;color:#6b7280;padding:50px;font-size:13px}
 .tbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
@@ -244,7 +245,6 @@ button{cursor:pointer}a{text-decoration:none}
     </div>
     <div id="offers-items"></div>
   </div>
-  <div id="offers-detail" style="display:none"><div id="offers-detail-inner"></div></div>
 </div>
 
 <!-- INVENTORY -->
@@ -254,7 +254,10 @@ button{cursor:pointer}a{text-decoration:none}
     <select class="sel" id="inv-sf" onchange="renderInv()">
       <option value="">All Statuses</option>
       <option value="pending">Pending</option><option value="onhand">On Hand</option>
-      <option value="shipped">Shipped</option><option value="missing">Missing</option><option value="whatnot">Whatnot</option>
+      <option value="shipped">Shipped</option><option value="missing">Missing</option>
+      <option value="whatnot">📺 Whatnot</option>
+      <option value="vend">🏪 Vend</option>
+      <option value="direct">💬 Direct</option>
     </select>
     <select class="sel" id="inv-sort" onchange="renderInv()">
       <option value="vd">Value High→Low</option><option value="va">Value Low→High</option>
@@ -276,36 +279,32 @@ button{cursor:pointer}a{text-decoration:none}
     <button class="btn" style="font-size:12px;padding:5px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="bulkToWhatnot()">📺 → Whatnot</button>
     <button class="btn btn-r" style="font-size:12px;padding:5px 10px" onclick="clearInvSel()">✕ Clear</button>
   </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:4px 13px;font-size:10px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.4px" id="inv-col-header">
+    <div style="width:16px;flex-shrink:0"></div>
+    <div style="width:34px;flex-shrink:0"></div>
+    <div style="flex:2;min-width:120px">Card</div>
+    <div style="flex:2">Condition / Status</div>
+    <div style="flex:1;text-align:right;min-width:80px;color:#34d399">Cost /ea · tot</div>
+    <div style="flex:1;text-align:right;min-width:80px;color:#f0c040">Value /ea · tot</div>
+  </div>
   <div id="inv-list"></div>
 </div>
 
 <!-- SALES / WHATNOT -->
 <div id="p-whatnot" class="page">
-  <!-- Sales summary & channel toggle -->
-  <div class="panel" style="padding:12px;margin-bottom:12px">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
-      <div style="font-weight:700;color:#a78bfa;font-size:14px">🏪 Current Show / Sale Queue</div>
-      <div class="row" style="gap:7px">
-        <select class="sel" id="wn-channel" onchange="renderWhatnot()" style="font-size:12px">
-          <option value="">All Channels</option>
-          <option value="whatnot">📺 Whatnot</option>
-          <option value="vend">🏪 Vend/In-Person</option>
-          <option value="direct">💬 Direct Sale</option>
-        </select>
-        <button class="btn" style="font-size:12px;padding:6px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="recSale()">+ Record Sale</button>
-        <button class="btn btn-r" style="font-size:12px;padding:6px 12px" onclick="clearShow()">🗑 Clear Queue</button>
-      </div>
-    </div>
-    <div class="wgrid" id="wn-stats" style="margin-bottom:0"></div>
-  </div>
+  <!-- Dashboard summary -->
+  <div class="wgrid" id="wn-stats"></div>
+  <!-- Controls -->
   <div class="tbar">
-    <input class="inp" id="wn-q" placeholder="Filter..." oninput="renderWhatnot()" style="flex:1"/>
+    <input class="inp" id="wn-q" placeholder="Filter cards..." oninput="renderWhatnot()" style="flex:1"/>
     <select class="sel" id="wn-sort" onchange="renderWhatnot()">
       <option value="vd">Value High→Low</option><option value="va">Value Low→High</option>
       <option value="na">Name A→Z</option><option value="cd">Cost High→Low</option>
     </select>
+    <button class="btn" style="font-size:12px;padding:6px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="recSale()">+ Record Sale</button>
   </div>
-  <div id="wn-list"></div>
+  <!-- 3 lanes -->
+  <div id="wn-lanes" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px"></div>
 </div>
 
 <!-- SELLERS -->
@@ -458,39 +457,45 @@ button{cursor:pointer}a{text-decoration:none}
   </div>
 </div>
 
-<!-- Record Show modal -->
+<!-- Record Sale modal -->
 <div class="overlay" id="show-modal" style="display:none" onclick="if(event.target===this)closeShowMod()">
   <div class="modal" style="max-width:420px">
-    <div style="font-weight:700;font-size:15px;color:#d946ef;margin-bottom:14px" id="show-modal-title">📺 Record Sale / Show</div>
-    <div style="margin-bottom:10px"><div class="ml">Sale Channel</div>
+    <div style="font-weight:700;font-size:15px;color:#d946ef;margin-bottom:14px">🏪 Record Sale</div>
+    <div style="margin-bottom:10px"><div class="ml">Channel</div>
       <select class="inp full" id="sh-channel">
         <option value="whatnot">📺 Whatnot Stream</option>
-        <option value="vend">🏪 Vend / In-Person Show</option>
+        <option value="vend">🏪 Vend / In-Person</option>
         <option value="direct">💬 Direct Sale</option>
       </select>
     </div>
     <div style="margin-bottom:10px"><div class="ml">Date</div><input class="inp full" id="sh-date" type="date"/></div>
-    <div style="margin-bottom:10px"><div class="ml">Gross Revenue ($)</div><input type="number" class="inp full" id="sh-rev" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Gross Revenue ($) — total before anything</div><input type="number" class="inp full" id="sh-rev" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Shipping Costs ($) — what you paid to ship</div><input type="number" class="inp full" id="sh-ship" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
     <div style="margin-bottom:10px"><div class="ml">Cards Sold (qty)</div><input type="number" class="inp full" id="sh-qty" placeholder="0" min="0"/></div>
-    <div style="margin-bottom:10px"><div class="ml">Platform Fees ($)</div><input type="number" class="inp full" id="sh-fees" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
-    <div style="margin-bottom:10px"><div class="ml">Shipping Costs ($)</div><input type="number" class="inp full" id="sh-ship" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
-    <div style="margin-bottom:10px"><div class="ml">Cost of Goods Sold ($)</div><input type="number" class="inp full" id="sh-cogs" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
-    <div style="margin-bottom:10px"><div class="ml">Notes</div><textarea class="inp full" id="sh-notes" rows="2"></textarea></div>
-    <div id="sh-calc" style="background:#0d0820;border-radius:7px;padding:10px;font-size:12px;margin-bottom:12px;display:none">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">Revenue</span><span id="sh-c-rev" style="color:#34d399"></span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">- Fees</span><span id="sh-c-fees" style="color:#f87171"></span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">- Shipping</span><span id="sh-c-ship" style="color:#f87171"></span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#94a3b8">- COGS</span><span id="sh-c-cogs" style="color:#f87171"></span></div>
-      <div style="display:flex;justify-content:space-between;border-top:1px solid #2d2060;padding-top:5px"><span style="font-weight:700">Net Profit</span><span id="sh-c-net" style="font-weight:700;font-size:14px"></span></div>
+    <div id="sh-calc" style="background:#0d0820;border-radius:7px;padding:10px;font-size:12px;margin-bottom:10px;display:none">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">Gross Revenue</span><span id="sh-c-rev" style="color:#34d399"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#94a3b8">- Shipping Costs</span><span id="sh-c-ship" style="color:#f87171"></span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid #2d2060;padding-top:5px"><span style="font-weight:700">Net Revenue</span><span id="sh-c-net" style="font-weight:700;font-size:14px;color:#f0c040"></span></div>
     </div>
+    <div style="background:#0d0820;border-radius:7px;padding:10px;margin-bottom:10px;font-size:12px">
+      <div style="color:#a78bfa;font-weight:700;margin-bottom:7px">Split net revenue into:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+        <div><div class="ml">💳 PayPal</div><input type="number" class="pinp pp" id="sh-pp" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
+        <div><div class="ml">🏦 Bank</div><input type="number" class="pinp pp" id="sh-bank" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
+        <div><div class="ml">💵 Cash</div><input type="number" class="pinp pp" id="sh-cash" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
+      </div>
+      <div id="sh-split-warn" style="font-size:11px;color:#f87171;margin-top:5px;display:none">⚠️ Split total doesn't match net revenue</div>
+    </div>
+    <div style="margin-bottom:10px"><div class="ml">Notes</div><textarea class="inp full" id="sh-notes" rows="2"></textarea></div>
     <div class="row" style="margin-top:12px">
-      <button class="btn" style="flex:1;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="saveShow()">💾 Save Show</button>
+      <button class="btn" style="flex:1;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="saveShow()">💾 Save Sale</button>
       <button class="btn btn-r" onclick="closeShowMod()">Cancel</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="sel-tooltip" id="sel-tooltip" style="display:none"></div>
 
 <script>
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -499,10 +504,10 @@ var EU=1.08;
 var CONDS=['NM','LP','MP','HP','DMG'];
 var CF={NM:'Near Mint',LP:'Lightly Played',MP:'Moderately Played',HP:'Heavily Played',DMG:'Damaged'};
 var CM={NM:1,LP:.8,MP:.64,HP:.4,DMG:.25};
-var SL={pending:'Pending',onhand:'On Hand',shipped:'Shipped',missing:'Missing',whatnot:'Whatnot'};
-var SC={pending:'sp',onhand:'so',shipped:'ss',missing:'sm',whatnot:'sw'};
-var SB={pending:'bp',onhand:'bo',shipped:'bs',missing:'bm',whatnot:'bw'};
-var SCYC=['pending','onhand','shipped','missing','whatnot'];
+var SL={pending:'Pending',onhand:'On Hand',shipped:'Shipped',missing:'Missing',whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct'};
+var SC={pending:'sp',onhand:'so',shipped:'ss',missing:'sm',whatnot:'sw',vend:'sw',direct:'sw'};
+var SB={pending:'bp',onhand:'bo',shipped:'bs',missing:'bm',whatnot:'bw',vend:'bw',direct:'bw'};
+var SCYC=['pending','onhand','shipped','missing','whatnot','vend','direct'];
 var RARITY={LEADER:0,'SECRET RARE':1,'SUPER RARE':2,R:3,Rare:3,Common:4,UC:5};
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -566,7 +571,7 @@ function show(tab){
   var names=['buylist','offers','inventory','whatnot','sellers','finance','settings'];
   var i=names.indexOf(tab);if(i>=0&&tabs[i])tabs[i].classList.add('on');
   app.tab=tab;banner();
-  if(tab==='offers'){renderOffers();g('offers-list').style.display='';g('offers-detail').style.display='none';}
+  if(tab==='offers'){renderOffers();}
   if(tab==='inventory')renderInv();
   if(tab==='whatnot')renderWhatnot();
   if(tab==='sellers')renderSellers();
@@ -679,7 +684,11 @@ function pickCard(card){
   if(card.isCustom){
     card.card_number=card.card_number||card.cardNumber||'';
     card.episode=card.episode||{name:card.set||''};
-    card.tcgplayer_id=card.tcgplayer_id||card.tcgplayerId||card.tcgplayerUrl||null;
+    // Always pull latest tcgplayer_id from live catalog so edit reflects saves
+    var _cat=ll('catalog',[]);
+    var _fresh=_cat.find(function(x){return x.id===card.id||(x.name.toLowerCase()===(card.name||'').toLowerCase()&&x.cardNumber===(card.card_number||''));});
+    if(_fresh){card.tcgplayer_id=_fresh.tcgplayerUrl||card.tcgplayer_id||null;card.id=_fresh.id;}
+    else{card.tcgplayer_id=card.tcgplayer_id||card.tcgplayerId||card.tcgplayerUrl||null;}
     card.prices=card.prices||null;
   }
   app.selCard=card;app.selCond='NM';app.selQty=1;
@@ -722,7 +731,7 @@ function renderSel(){
   var name=c.name||c.name_numbered||'';
   var cardNum=c.card_number||'';
   // eBay query: name + set, no "one piece card"
-  var ebayQ=encodeURIComponent(name+' '+(ep||cardNum));
+  var ebayQ=encodeURIComponent(name+(cardNum?' '+cardNum:''));
   var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
   h+='<button onclick="backToResults()" style="background:#1a1640;border:1px solid #3d2080;color:#a78bfa;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer">← Results</button>';
   h+='<button onclick="app.selCard=null;g(\'sel-panel\').style.display=\'none\'" style="background:none;border:none;color:#f87171;font-size:20px;cursor:pointer">×</button>';
@@ -750,8 +759,9 @@ function renderSel(){
   h+='<a class="inp" style="color:#f0c040;padding:7px 9px;border-radius:7px;font-size:11px;border-color:#4a3800" href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank">eBay Sold ↗</a>';
   // Edit button if catalog card — build data object safely before injecting
   if(c.isCustom){
-    var _editData={id:c.id||'',name:c.name||c.name_numbered||'',cardNumber:c.card_number||c.cardNumber||'',set:c.set||'',color:c.color||'',rarity:c.rarity||'',image:c.image||'',tcgplayerUrl:c.tcgplayer_id||''};
-    h+='<button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:11px;padding:5px 9px" onclick="editCatalogCard(\''+encodeURIComponent(JSON.stringify(_editData))+'\')">✏️ Edit</button>';
+    // Look up fresh from catalog by id so edits are reflected
+    var _cid=c.id||c.catId||'';
+    h+='<button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:11px;padding:5px 9px" onclick="editCatalogById(\''+_cid+'\',\''+encodeURIComponent(c.name||c.name_numbered||'')+'\')">✏️ Edit</button>';
   }
   h+='</div></div></div>';
   g('sel-content').innerHTML=h;
@@ -875,6 +885,7 @@ function clearSess(){
 function saveOffer(){
   if(!app.sess.length)return;
   var sv=g('o-seller').value,sn='Unknown',sid=null;
+  if(!sv){toast('⚠️ Please select a seller first.');return;}
   if(sv==='__ip__'){sn='In Person / Vending';}
   else if(sv==='__new__'){
     var nm2=g('new-sname').value.trim();if(!nm2){toast('⚠️ Enter a seller name.');return;}
@@ -943,6 +954,21 @@ function autofillTCG(){
 function editCatalogCard(encoded){
   try{var c=JSON.parse(decodeURIComponent(encoded));openManualMod(c);}catch(e){}
 }
+function editCatalogById(id,encodedName){
+  // Refresh from live catalog
+  var cat=ll('catalog',[]);
+  var found=id?cat.find(function(x){return x.id===id;}):null;
+  if(!found&&encodedName){
+    var nm2=decodeURIComponent(encodedName).toLowerCase();
+    found=cat.find(function(x){return x.name.toLowerCase()===nm2;});
+  }
+  // Also re-read app.selCard for any fields not in catalog
+  if(!found&&app.selCard){
+    found={id:app.selCard.id||uid(),name:app.selCard.name||app.selCard.name_numbered||'',cardNumber:app.selCard.card_number||'',set:app.selCard.set||'',color:app.selCard.color||'',rarity:app.selCard.rarity||'',image:app.selCard.image||null,tcgplayerUrl:app.selCard.tcgplayer_id||null,isCustom:true};
+  }
+  if(found)openManualMod(found);
+  else toast('⚠️ Card not found in catalog');
+}
 
 function getManual(){
   var n=g('me-name').value.trim();if(!n){toast('⚠️ Card name required.');return null;}
@@ -965,6 +991,21 @@ function saveCat(e){
   var c={id:e.id||uid(),name:e.name,cardNumber:e.num||'',set:e.set||'',color:e.color||'',rarity:e.rarity||'',image:e.img||null,tcgplayerUrl:e.tcgId||null,isCustom:true};
   if(idx>-1)cat[idx]=c;else cat.unshift(c);
   ls('catalog',cat);saveCatalog(cat);
+  // Refresh allRes so search results reflect updated catalog card (e.g. new TCGPlayer URL)
+  for(var _ri=0;_ri<allRes.length;_ri++){
+    var _r=allRes[_ri];
+    if(_r.isCustom&&(_r.id===c.id||(_r.name||'').toLowerCase()===c.name.toLowerCase())){
+      // Patch the live result with updated fields
+      _r.card_number=c.cardNumber||_r.card_number||'';
+      _r.set=c.set||_r.set||'';
+      _r.color=c.color||_r.color||'';
+      _r.rarity=c.rarity||_r.rarity||'';
+      _r.image=c.image||_r.image||null;
+      _r.tcgplayer_id=c.tcgplayerUrl||_r.tcgplayer_id||null;
+      _r.id=c.id;
+      break;
+    }
+  }
 }
 
 function clearManual(){g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';g('me-rarity').value='';g('me-img').value='';g('me-qty').value=1;g('me-cond').value='NM';g('me-tcglink').value='';g('me-tcg-url').value='';g('me-edit-id').textContent='';}
@@ -1004,31 +1045,51 @@ function renderOffers(){
   });
   var h='';
   list.forEach(function(o){
-    var tot=o.cards.length,rec=o.cards.filter(function(c){return c.status==='onhand'||c.status==='shipped';}).length;
-    var mis=o.cards.filter(function(c){return c.status==='missing';}).length;
+    var tot=o.cards.length,rec=o.cards.filter(function(c2){return c2.status==='onhand'||c2.status==='shipped';}).length;
+    var mis=o.cards.filter(function(c2){return c2.status==='missing';}).length;
     var pct=tot?Math.round((rec/tot)*100):0;
+    var isOpen=expandedOffer===o.id;
     var sb=rec===0?'<span class="badge bp">Pending</span>':rec<tot?'<span class="badge bpart">Partial</span>':'<span class="badge bcomp">Complete</span>';
-    h+='<div class="scard" onclick="openOffer(\''+o.id+'\')">';
+    var sellerSid=o.sellerId;
+    var sellerObj=null;for(var _si=0;_si<app.sellers.length;_si++){if(String(app.sellers[_si].id)===String(sellerSid)){sellerObj=app.sellers[_si];break;}}
+    // Seller name — hoverable tooltip if we have contact info
+    var selNameHtml;
+    if(sellerObj&&(sellerObj.ph||sellerObj.fb||sellerObj.addr)){
+      selNameHtml='<span class="seller-tip" data-sid="'+sellerSid+'" style="color:#f0c040;cursor:pointer;text-decoration:underline dotted;font-weight:700;font-size:14px" onmouseenter="showSelTip(this,\''+sellerSid+'\')" onmouseleave="hideSelTip()">🏴\u200d☠️ '+o.seller+'</span>';
+    }else{
+      selNameHtml='<span style="color:#f0c040;font-weight:700;font-size:14px">🏴\u200d☠️ '+o.seller+'</span>';
+    }
+    h+='<div class="scard" style="'+(isOpen?'border-color:#7c3aed':'')+'"><div data-oid="'+o.id+'" onclick="openOffer(this.dataset.oid)" style="cursor:pointer">';
     h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">';
-    h+='<div><div style="font-weight:700;font-size:14px;color:#f0c040">🏴‍☠️ '+o.seller+'</div><div style="font-size:11px;color:#94a3b8">'+o.date+'</div></div>';
+    h+='<div>'+selNameHtml+'<div style="font-size:11px;color:#94a3b8">'+o.date+'</div></div>';
     h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">';
     h+='<button onclick="event.stopPropagation();delOffer(\''+o.id+'\')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>';
     h+=sb+'<div style="font-size:13px;color:#34d399;font-weight:700">$'+o.total.toFixed(2)+'</div></div></div>';
     h+='<div style="font-size:11px;color:#94a3b8;margin-top:5px">'+tot+' cards • $'+o.ct.toFixed(2)+' • Ship: $'+o.ship.toFixed(2)+(mis?' • <span style="color:#f87171">'+mis+' missing</span>':'')+'</div>';
     h+='<div class="pbar"><div class="pfill" style="width:'+pct+'%"></div></div>';
-    h+='<div style="font-size:10px;color:#6b7280;margin-top:3px">'+rec+'/'+tot+' received ('+pct+'%)</div></div>';
+    h+='<div style="font-size:10px;color:#6b7280;margin-top:3px">'+rec+'/'+tot+' received ('+pct+'%) '+(isOpen?'▲ collapse':'▼ expand')+'</div>';
+    h+='</div>'; // end clickable header
+    if(isOpen){
+      h+='<div id="odetail-'+o.id+'" style="margin-top:12px;border-top:1px solid #2d2060;padding-top:12px">';
+      h+=buildOfferDetailHTML(o);
+      h+='</div>';
+    }
+    h+='</div>'; // end scard
   });
   g('offers-items').innerHTML=h||'<div class="empty">No offer sheets yet.</div>';
 }
 
+// Accordion state
+var expandedOffer=null;
 function openOffer(id){
-  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(id)){o=app.offers[i];break;}}
-  if(!o)return;
-  g('offers-list').style.display='none';g('offers-detail').style.display='';
-  renderOfferDetail(o);
+  if(expandedOffer===id){expandedOffer=null;}else{expandedOffer=id;}
+  renderOffers();
+  if(expandedOffer){
+    setTimeout(function(){var el=document.getElementById('odetail-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
+  }
 }
 
-function renderOfferDetail(o){
+function buildOfferDetailHTML(o){
   var tot=o.cards.length,rec=o.cards.filter(function(c){return c.status==='onhand'||c.status==='shipped';}).length;
   var mis=o.cards.filter(function(c){return c.status==='missing';}).length;
   var pct=tot?Math.round((rec/tot)*100):0;
@@ -1055,13 +1116,16 @@ function renderOfferDetail(o){
     var sbtns='';
     SCYC.forEach(function(s){sbtns+='<button class="sbtn '+SC[s]+'" style="opacity:'+(card.status===s?1:0.35)+'" onclick="setStatus(\''+o.id+'\','+i+',\''+s+'\')">'+SL[s]+'</button>';});
     var ep=card.set||'';
-    var ebayQ=encodeURIComponent(card.name+' '+(ep||card.num||''));
+    var ebayQ=encodeURIComponent(card.name+(card.num?' '+card.num:''));
     ch+='<div class="orow" id="ocard-'+o.id+'-'+i+'">';
     ch+='<input type="checkbox" class="chk offer-chk" data-oid="'+o.id+'" data-idx="'+i+'" style="margin-top:4px"/>';
     ch+=card.img?'<img class="othumb" src="'+card.img+'" onerror="this.style.display=\'none\'"/>':'<div class="othumb-blank"></div>';
     ch+='<div style="flex:1;min-width:0">';
     ch+='<div style="font-weight:600;font-size:12px">'+card.name+'</div>';
-    ch+='<div style="font-size:10px;color:#94a3b8">'+(card.num||'')+' • '+(CF[card.cond]||card.cond)+' × '+card.qty+'</div>';
+    ch+='<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#94a3b8">';
+    ch+='<span>'+(card.num||'')+' • '+(CF[card.cond]||card.cond)+' ×</span>';
+    ch+='<input type="number" min="1" value="'+card.qty+'" class="pinp" style="width:42px;font-size:12px;padding:2px 5px" onchange="editCard(\''+o.id+'\','+i+',\'qty\',this.value)"/>';
+    ch+='</div>';
     ch+='<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;align-items:flex-end">';
     ch+='<div><div style="font-size:9px;color:#94a3b8;margin-bottom:2px">Mkt $</div><input type="number" step="0.01" min="0" value="'+(card.mkt!=null?card.mkt:'')+'" placeholder="—" class="pinp pp" style="width:68px" onchange="editCard(\''+o.id+'\','+i+',\'mkt\',this.value)"/></div>';
     ch+='<div><div style="font-size:9px;color:#a78bfa;margin-bottom:2px">Buy%</div><input type="number" min="1" max="100" value="'+(card.perc||'')+'" placeholder="—" class="pinp pperc" style="width:58px" onchange="editCard(\''+o.id+'\','+i+',\'perc\',this.value)"/></div>';
@@ -1075,12 +1139,23 @@ function renderOfferDetail(o){
     ch+='<button onclick="rmCard(\''+o.id+'\','+i+')" style="padding:2px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer;margin-top:2px">✕</button>';
     ch+='</div></div>';
   });
-  var h='<div class="panel">';
-  h+='<div class="row" style="margin-bottom:12px">';
-  h+='<button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:12px;padding:6px 10px" onclick="g(\'offers-list\').style.display=\'\';g(\'offers-detail\').style.display=\'none\';renderOffers()">← Back</button>';
-  h+='<div style="flex:1"><div style="font-weight:700;font-size:15px;color:#f0c040">🏴‍☠️ '+o.seller+'</div><div style="font-size:12px;color:#94a3b8">'+o.date+' • '+tot+' cards • $'+o.total.toFixed(2)+'</div></div>';
-  h+='<button class="btn btn-g" style="font-size:12px;padding:7px 12px" onclick="addToOffer(\''+o.id+'\')">+ Cards</button>';
-  h+='<button class="btn" style="font-size:12px;padding:7px 12px" onclick="pdfOffer(\''+o.id+'\')">📄 PDF</button>';
+  var h='';
+  h+='<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:6px">';
+  h+='<button class="btn btn-g" style="font-size:12px;padding:6px 10px" onclick="addToOffer(\''+ o.id +'\')" >+ Cards</button>';
+  h+='<button class="btn" style="font-size:12px;padding:6px 10px" onclick="pdfOffer(\''+o.id+'\')" >📄 PDF</button>';
+  h+='<button class="btn btn-r" style="font-size:12px;padding:6px 10px" onclick="delOffer(\''+o.id+'\')" >🗑 Delete</button>';
+  h+='</div>';
+  // Editable seller/ship/other
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Seller</div>';
+  h+='<select class="sel" style="width:100%;font-size:12px" onchange="updOfferSeller(\''+o.id+'\',this.value)">';
+  h+='<option value="__ip__"'+(o.seller==='In Person / Vending'?' selected':'')+'>🏪 In Person</option>';
+  app.sellers.forEach(function(s){h+='<option value="'+s.id+'"'+(String(o.sellerId)===String(s.id)?' selected':'')+'>'+s.name+'</option>';});
+  h+='</select></div>';
+  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Ship $</div>';
+  h+='<input type="number" step="0.01" min="0" value="'+o.ship.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'ship\',this.value)"/></div>';
+  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Other $</div>';
+  h+='<input type="number" step="0.01" min="0" value="'+o.other.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'other\',this.value)"/></div>';
   h+='</div>';
   h+=sh;
   h+='<div class="row" style="margin-bottom:8px;font-size:13px">';
@@ -1091,8 +1166,8 @@ function renderOfferDetail(o){
   h+='</div>';
   h+='<div class="pbar" style="margin-bottom:4px"><div class="pfill" style="width:'+pct+'%"></div></div>';
   h+='<div style="font-size:11px;color:#6b7280;margin-bottom:10px">'+rec+'/'+tot+' received • '+mis+' missing</div>';
-  h+=bh+ch+'</div>';
-  g('offers-detail-inner').innerHTML=h;
+  h+=bh+ch;
+  return h;
 }
 
 // Bulk check/uncheck all in offer detail
@@ -1121,6 +1196,7 @@ function editCard(oid,i,f,v){
   if(f==='perc'){c.perc=parseFloat(v)||null;if(c.mkt!=null&&c.perc)c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));}
   else if(f==='mkt'){c.mkt=parseFloat(v)||null;if(c.mkt!=null&&c.perc)c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));}
   else if(f==='cost'){c.cost=parseFloat(v)||null;if(c.cost!=null&&c.mkt!=null&&c.mkt>0)c.perc=parseFloat(((c.cost/c.mkt)*100).toFixed(1));}
+  else if(f==='qty'){c.qty=parseInt(v)||1;}
   else{c.cost=parseFloat(v)||null;}
   o.ct=0;o.cards.forEach(function(x){o.ct+=(x.cost||0)*x.qty;});o.total=o.ct+o.ship+o.other;
   saveOffers();
@@ -1148,6 +1224,22 @@ function setStatus(oid,i,status){
   saveInv();stats();renderOfferDetail(o);
 }
 
+function updOfferSeller(oid,val){
+  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(oid)){o=app.offers[i];break;}}
+  if(!o)return;
+  if(val==='__ip__'){o.seller='In Person / Vending';o.sellerId=null;}
+  else{for(var j=0;j<app.sellers.length;j++){if(String(app.sellers[j].id)===String(val)){o.seller=app.sellers[j].name;o.sellerId=app.sellers[j].id;break;}}}
+  // Update all inv entries from this offer
+  app.inv.forEach(function(i){if(String(i.offerId)===String(oid)){i.seller=o.seller;i.sellerId=o.sellerId;}});
+  saveOffers();saveInv();renderOffers();
+}
+function updOfferFee(oid,field,val){
+  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(oid)){o=app.offers[i];break;}}
+  if(!o)return;
+  o[field]=parseFloat(val)||0;
+  o.total=o.ct+o.ship+o.other;
+  saveOffers();renderOffers();
+}
 function delOffer(id){
   if(!confirm('Delete this offer sheet and its inventory cards?'))return;
   app.offers=app.offers.filter(function(o){return String(o.id)!==String(id);});
@@ -1222,7 +1314,8 @@ function renderInv(){
     +'<span class="badge bp">Pending: '+byS('pending')+'</span><span class="badge bo">On Hand: '+byS('onhand')+'</span>'
     +'<span class="badge bs">Shipped: '+byS('shipped')+'</span><span class="badge bm">Missing: '+byS('missing')+'</span>'
     +'<span class="badge bw">Whatnot: '+byS('whatnot')+'</span>'
-    +'<button onclick="invSelAll()" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">☑ Select All</button>';
+    +'<button onclick="invSelAll()" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">☑ All</button>'
+    +'<button onclick="clearInvSel()" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #2d2060;color:#6b7280;font-size:11px;cursor:pointer">☐ None</button>';
   if(!ga.length){g('inv-list').innerHTML='<div class="empty">No matches.</div>';return;}
   var h='<div class="ilist">';
   ga.forEach(function(grp){
@@ -1241,7 +1334,7 @@ function renderInv(){
     var ek=encodeURIComponent(grp.name);
     var ft=grp.entries[0]&&grp.entries[0].tcgId?grp.entries[0].tcgId:null;
     var ep=grp.entries[0]&&grp.entries[0].set?grp.entries[0].set:'';
-    var ebayQ=encodeURIComponent(grp.name+' '+(ep||grp.num||''));
+    var ebayQ=encodeURIComponent(grp.name+(grp.num?' '+grp.num:''));
     // Collect all entry IDs for this group for bulk select
     var entryIds=grp.entries.map(function(e){return e.id;}).join(',');
     var isGrpSel=grp.entries.every(function(e){return invSel[e.id];});
@@ -1326,12 +1419,16 @@ function openInvMod(ek){
     rows+='</td>';
     rows+='<td style="padding:7px 5px"><span class="badge '+(SB[e.status]||'bp')+'">'+(SL[e.status]||e.status)+'</span></td>';
     rows+='<td style="padding:7px 5px;font-size:11px">'+(o?'<button onclick="closeInvMod();show(\'offers\');openOffer(\''+o.id+'\')" style="padding:3px 7px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:10px;cursor:pointer">📋 '+o.seller+'</button>':'<span style="color:#6b7280;font-size:10px">—</span>')+'</td>';
+    var isSales=e.status==='whatnot'||e.status==='vend'||e.status==='direct';
     rows+='<td style="padding:7px 5px">';
-    if(iw){rows+='<span style="color:#4b5563;font-size:10px;font-weight:700">📺 In Show</span>';}
+    if(isSales){rows+='<span style="font-size:10px;font-weight:700;color:#d946ef">'+SL[e.status]+'</span>';}
     else{
-      rows+='<div style="display:flex;align-items:center;gap:3px">';
-      rows+='<input type="number" min="1" max="'+e.qty+'" value="1" id="wn-qty-'+e.id+'" class="pinp" style="width:42px;font-size:12px;padding:3px 5px" onclick="event.stopPropagation()"/>';
-      rows+='<button onclick="togWhatnot(\''+e.id+'\',\''+ek+'\',document.getElementById(\'wn-qty-'+e.id+'\').value)" style="padding:3px 7px;border-radius:4px;border:none;font-size:10px;font-weight:700;cursor:pointer;background:#2d0d2d;color:#d946ef">📺</button>';
+      rows+='<div style="display:flex;align-items:center;gap:2px">';
+      rows+='<input type="number" min="1" max="'+e.qty+'" value="1" id="wn-qty-'+e.id+'" class="pinp" style="width:38px;font-size:11px;padding:2px 4px" onclick="event.stopPropagation()"/>';
+      rows+='<select id="wn-ch-'+e.id+'" class="sel" style="font-size:10px;padding:2px 4px" onclick="event.stopPropagation()">';
+      rows+='<option value="whatnot">📺</option><option value="vend">🏪</option><option value="direct">💬</option>';
+      rows+='</select>';
+      rows+='<button onclick="event.stopPropagation();togWhatnot(\''+e.id+'\',\''+ek+'\',document.getElementById(\'wn-qty-'+e.id+'\').value,document.getElementById(\'wn-ch-'+e.id+'\').value)" style="padding:2px 6px;border-radius:3px;border:none;font-size:10px;font-weight:700;cursor:pointer;background:#2d0d2d;color:#d946ef">→</button>';
       rows+='</div>';
     }
     rows+='</td>';
@@ -1379,25 +1476,25 @@ function editCatalogEntry(ek){
 }
 
 function closeInvMod(){g('inv-modal').style.display='none';}
-function togWhatnot(id,ek,partialQty){
+function togWhatnot(id,ek,partialQty,channel){
   var qty=parseInt(partialQty)||1;
+  var ch=channel||'whatnot';
   for(var i=0;i<app.inv.length;i++){
     if(String(app.inv[i].id)===String(id)){
       var entry=app.inv[i];
-      if(entry.status==='whatnot')return;
+      var isSales=entry.status==='whatnot'||entry.status==='vend'||entry.status==='direct';
+      if(isSales)return;
       if(qty>=entry.qty){
-        // Move whole entry to whatnot
-        entry.status='whatnot';
+        entry.status=ch;
       } else {
-        // Split: reduce original qty, add a new whatnot entry
         entry.qty=entry.qty-qty;
-        var newEntry=Object.assign({},entry,{id:uid(),qty:qty,status:'whatnot'});
+        var newEntry=Object.assign({},entry,{id:uid(),qty:qty,status:ch});
         app.inv.splice(i+1,0,newEntry);
       }
       break;
     }
   }
-  saveInv();stats();renderInv();if(ek)openInvMod(ek);toast('📺 Added to show!');
+  saveInv();stats();renderInv();if(ek)openInvMod(ek);toast(SL[ch]+' added!');
 }
 function rmInv(id){
   app.inv=app.inv.filter(function(i){return String(i.id)!==String(id);});
@@ -1406,47 +1503,73 @@ function rmInv(id){
 
 // ─── Whatnot ──────────────────────────────────────────────────────────────────
 function renderWhatnot(){
-  var items=app.inv.filter(function(i){return i.status==='whatnot';});
   var flt=(g('wn-q').value||'').toLowerCase(),srt=g('wn-sort').value||'vd';
-  var tc=0,tv=0;items.forEach(function(i){tc+=(i.cost||0)*i.qty;tv+=(i.mkt||0)*i.qty;});
+  var allSales=app.inv.filter(function(i){return i.status==='whatnot'||i.status==='vend'||i.status==='direct';});
+  // Dashboard stats
+  var tc=0,tv=0;allSales.forEach(function(i){tc+=(i.cost||0)*i.qty;tv+=(i.mkt||0)*i.qty;});
   var pr=tv-tc;
   g('wn-stats').innerHTML=
-    '<div class="wstat"><div class="wstat-l">Cards</div><div class="wstat-v" style="color:#d946ef">'+items.length+'</div></div>'
-    +'<div class="wstat"><div class="wstat-l">Cost</div><div class="wstat-v" style="color:#34d399">'+nm(tc)+'</div></div>'
+    '<div class="wstat"><div class="wstat-l">Total in Queue</div><div class="wstat-v" style="color:#d946ef">'+allSales.length+'</div></div>'
+    +'<div class="wstat"><div class="wstat-l">Total Cost</div><div class="wstat-v" style="color:#34d399">'+nm(tc)+'</div></div>'
     +'<div class="wstat"><div class="wstat-l">Market Value</div><div class="wstat-v" style="color:#f0c040">'+nm(tv)+'</div></div>'
     +'<div class="wstat"><div class="wstat-l">Potential Profit</div><div class="wstat-v" style="color:'+(pr>=0?'#34d399':'#f87171')+'">'+nm(pr)+'</div></div>';
-  var fl=items.filter(function(i){return(i.name||'').toLowerCase().includes(flt);});
-  fl.sort(function(a,b){
-    if(srt==='na')return(a.name||'').localeCompare(b.name||'');
-    if(srt==='cd')return(b.cost||0)*b.qty-(a.cost||0)*a.qty;
-    if(srt==='vd')return(b.mkt||0)*b.qty-(a.mkt||0)*a.qty;
-    if(srt==='va')return(a.mkt||0)*a.qty-(b.mkt||0)*b.qty;
-    return 0;
+  var lanes=[
+    {key:'whatnot',label:'📺 Whatnot Stream',color:'#d946ef',border:'#2d0d2d'},
+    {key:'vend',label:'🏪 Vend / In-Person',color:'#f0c040',border:'#2d1a00'},
+    {key:'direct',label:'💬 Direct Sale',color:'#60a5fa',border:'#0d1a2d'}
+  ];
+  var lanesH='';
+  lanes.forEach(function(lane){
+    var items=allSales.filter(function(i){return i.status===lane.key&&(i.name||'').toLowerCase().includes(flt);});
+    items.sort(function(a,b){
+      if(srt==='na')return(a.name||'').localeCompare(b.name||'');
+      if(srt==='cd')return(b.cost||0)*b.qty-(a.cost||0)*a.qty;
+      if(srt==='vd')return(b.mkt||0)*b.qty-(a.mkt||0)*a.qty;
+      if(srt==='va')return(a.mkt||0)*a.qty-(b.mkt||0)*b.qty;
+      return 0;
+    });
+    var ltc=0,ltv=0;items.forEach(function(i){ltc+=(i.cost||0)*i.qty;ltv+=(i.mkt||0)*i.qty;});
+    lanesH+='<div class="panel" style="border-color:'+lane.border+'">';
+    lanesH+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    lanesH+='<div style="font-weight:700;color:'+lane.color+';font-size:14px">'+lane.label+' <span style="font-size:11px;color:#6b7280">('+items.length+')</span></div>';
+    lanesH+='<button onclick="clearLane(\''+lane.key+'\')" style="padding:3px 9px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">🗑 Clear</button>';
+    lanesH+='</div>';
+    if(items.length){
+      lanesH+='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Cost: '+nm(ltc)+' • Value: '+nm(ltv)+'</div>';
+    }
+    if(!items.length){lanesH+='<div class="empty" style="padding:20px;font-size:12px">No cards here</div>';}
+    items.forEach(function(i){
+      var ep=i.set||'';var ebayQ=encodeURIComponent((i.name||'')+(i.num?' '+i.num:''));
+      lanesH+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1640">';
+      lanesH+=i.img?'<img src="'+i.img+'" style="width:30px;height:41px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:30px;height:41px;background:#2d2060;border-radius:3px;flex-shrink:0"></div>';
+      lanesH+='<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+i.name+'</div>';
+      lanesH+='<div style="font-size:10px;color:#94a3b8">'+(CF[i.cond]||i.cond)+' ×'+i.qty+' • '+(i.seller||'')+'</div>';
+      lanesH+='<div style="font-size:10px;color:#34d399">Cost: '+nm((i.cost||0)*i.qty)+' • Value: '+nm((i.mkt||0)*i.qty)+'</div></div>';
+      lanesH+='<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">';
+      lanesH+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay ↗</a>';
+      lanesH+='<button onclick="restoreWN(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:#0d2010;border:none;color:#34d399;font-size:10px;cursor:pointer">↩</button>';
+      lanesH+='<button onclick="rmInv(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button>';
+      lanesH+='</div></div>';
+    });
+    lanesH+='</div>';
   });
-  if(!fl.length){g('wn-list').innerHTML='<div class="empty">No cards in Whatnot show.</div>';return;}
-  var h='<div class="ilist">';
-  fl.forEach(function(i){
-    var ep=i.set||'';var ebayQ=encodeURIComponent(i.name+' '+(ep||i.num||''));
-    h+='<div class="irow">';
-    h+=i.img?'<img class="ithumb" src="'+i.img+'" onerror="this.style.display=\'none\'"/>':'<div class="inoimg">?</div>';
-    h+='<div class="iname"><div class="iname-m">'+i.name+'</div><div class="iname-s">'+(i.num||'')+' • '+(CF[i.cond]||i.cond)+' × '+i.qty+'</div></div>';
-    h+='<div style="flex:1;font-size:11px;color:#94a3b8">👤 '+(i.seller||'Unknown')+'</div>';
-    // Editable market price in whatnot
-    h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">';
-    h+='<span style="font-size:9px;color:#94a3b8">Mkt $</span>';
-    h+='<input type="number" step="0.01" min="0" value="'+(i.mkt!=null?i.mkt:'')+'" placeholder="—" class="pinp pp" style="width:72px" onchange="updInvMkt(\''+i.id+'\',this.value,\'\')" onclick="event.stopPropagation()"/>';
-    h+='</div>';
-    h+='<div class="icost">Cost: '+nm((i.cost||0)*i.qty)+'</div>';
-    h+='<div class="ival">Value: '+nm((i.mkt||0)*i.qty)+'</div>';
-    h+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay ↗</a>';
-    h+='<div class="row" style="gap:4px">';
-    h+='<button onclick="restoreWN(\''+i.id+'\')" style="padding:4px 8px;border-radius:4px;background:#0d2010;border:none;color:#34d399;font-size:10px;cursor:pointer">↩</button>';
-    h+='<button onclick="rmInv(\''+i.id+'\')" style="padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button>';
-    h+='</div></div>';
-  });
-  g('wn-list').innerHTML=h+'</div>';
+  g('wn-lanes').innerHTML=lanesH;
 }
-function restoreWN(id){for(var i=0;i<app.inv.length;i++){if(String(app.inv[i].id)===String(id)){app.inv[i].status='onhand';break;}}saveInv();stats();renderWhatnot();toast('↩ Restored to On Hand.');}
+function clearLane(status){
+  if(!confirm('Remove all '+SL[status]+' cards from inventory?'))return;
+  app.inv=app.inv.filter(function(i){return i.status!==status;});
+  saveInv();stats();renderWhatnot();toast('✅ '+SL[status]+' queue cleared.');
+}
+function restoreWN(id){
+  for(var i=0;i<app.inv.length;i++){
+    if(String(app.inv[i].id)===String(id)){
+      var prevStatus=app.inv[i].status;
+      app.inv[i].status='onhand';
+      break;
+    }
+  }
+  saveInv();stats();renderWhatnot();toast('↩ Restored to On Hand.');
+}
 function clearShow(){if(!confirm('Remove all Whatnot cards from inventory?'))return;app.inv=app.inv.filter(function(i){return i.status!=='whatnot';});saveInv();stats();renderWhatnot();toast('✅ Show cleared.');}
 
 // ─── Sellers ──────────────────────────────────────────────────────────────────
@@ -1544,27 +1667,43 @@ function drawChart(){
 function recShow(){recSale('whatnot');}
 function recSale(channel){
   var today=new Date();g('sh-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  ['sh-rev','sh-qty','sh-fees','sh-ship','sh-cogs','sh-notes'].forEach(function(id){g(id).value='';});
+  ['sh-rev','sh-ship','sh-qty','sh-pp','sh-bank','sh-cash','sh-notes'].forEach(function(id){var el=g(id);if(el)el.value='';});
   if(channel&&g('sh-channel'))g('sh-channel').value=channel;
+  var sw=g('sh-split-warn');if(sw)sw.style.display='none';
   g('sh-calc').style.display='none';g('show-modal').style.display='';
 }
 function updShowCalc(){
-  var rev=parseFloat(g('sh-rev').value)||0,fees=parseFloat(g('sh-fees').value)||0,ship=parseFloat(g('sh-ship').value)||0,cogs=parseFloat(g('sh-cogs').value)||0;
-  if(rev===0&&fees===0&&ship===0&&cogs===0){g('sh-calc').style.display='none';return;}
-  var net=rev-fees-ship-cogs;
-  g('sh-calc').style.display='';g('sh-c-rev').textContent=nm(rev);g('sh-c-fees').textContent='-'+nm(fees);g('sh-c-ship').textContent='-'+nm(ship);g('sh-c-cogs').textContent='-'+nm(cogs);
-  g('sh-c-net').textContent=nm(net);g('sh-c-net').style.color=net>=0?'#34d399':'#f87171';
+  var rev=parseFloat(g('sh-rev').value)||0,ship=parseFloat(g('sh-ship').value)||0;
+  var net=rev-ship;
+  if(rev===0&&ship===0){g('sh-calc').style.display='none';}
+  else{g('sh-calc').style.display='';g('sh-c-rev').textContent=nm(rev);g('sh-c-ship').textContent='-'+nm(ship);g('sh-c-net').textContent=nm(net);}
+  // Check split
+  var pp=parseFloat(g('sh-pp').value)||0,bk=parseFloat(g('sh-bank').value)||0,ca=parseFloat(g('sh-cash').value)||0;
+  var splitTot=pp+bk+ca;
+  var warn=g('sh-split-warn');
+  if(warn&&net>0&&splitTot>0){warn.style.display=Math.abs(splitTot-net)>0.02?'':'none';}
+  else if(warn){warn.style.display='none';}
 }
 function saveShow(){
   var dateVal=g('sh-date').value;if(!dateVal){toast('⚠️ Date required.');return;}
-  var rev=parseFloat(g('sh-rev').value)||0,qty=parseInt(g('sh-qty').value)||0,fees=parseFloat(g('sh-fees').value)||0;
-  var ship=parseFloat(g('sh-ship').value)||0,cogs=parseFloat(g('sh-cogs').value)||0;
-  var net=rev-fees-ship-cogs;
+  var rev=parseFloat(g('sh-rev').value)||0;
+  var ship=parseFloat(g('sh-ship').value)||0;
+  var qty=parseInt(g('sh-qty').value)||0;
+  var net=rev-ship;
+  var pp=parseFloat(g('sh-pp')?g('sh-pp').value||0:0)||0;
+  var bk=parseFloat(g('sh-bank')?g('sh-bank').value||0:0)||0;
+  var ca=parseFloat(g('sh-cash')?g('sh-cash').value||0:0)||0;
   var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
-  if(!fin.shows)fin.shows=[];
   var ch=g('sh-channel')?g('sh-channel').value:'whatnot';
-  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,rev:rev,qty:qty,fees:fees,ship:ship,cogs:cogs,net:net,notes:g('sh-notes').value.trim()});
-  saveFin();closeShowMod();renderShows();toast('📺 Show recorded! Net: '+nm(net));
+  if(pp>0)fin.paypal=(fin.paypal||0)+pp;
+  if(bk>0)fin.bank=(fin.bank||0)+bk;
+  if(ca>0)fin.cash=(fin.cash||0)+ca;
+  if(g('f-pp'))g('f-pp').value=(fin.paypal||0).toFixed(2);
+  if(g('f-bank'))g('f-bank').value=(fin.bank||0).toFixed(2);
+  if(g('f-cash'))g('f-cash').value=(fin.cash||0).toFixed(2);
+  if(!fin.shows)fin.shows=[];
+  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,rev:rev,ship:ship,qty:qty,net:net,pp:pp,bank:bk,cash:ca,notes:g('sh-notes').value.trim()});
+  saveFin();closeShowMod();renderShows();toast('🏪 Sale recorded! Net: '+nm(net));
 }
 function closeShowMod(){g('show-modal').style.display='none';}
 function renderShows(){
@@ -1584,6 +1723,13 @@ function renderShows(){
     var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct'};
     h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:#d946ef;font-size:11px">'+(chLabels[s.channel]||'📺')+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:#a78bfa;font-size:12px">'+s.date+'</div></div>';
+    if(s.pp||s.bank||s.cash){
+      var splitStr=[];
+      if(s.pp)splitStr.push('💳'+nm(s.pp));
+      if(s.bank)splitStr.push('🏦'+nm(s.bank));
+      if(s.cash)splitStr.push('💵'+nm(s.cash));
+      h+='<div style="font-size:10px;color:#94a3b8;flex-basis:100%">Split: '+splitStr.join(' + ')+'</div>';
+    }
     h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:#34d399">'+nm(s.rev)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Net Profit</div><div class="show-stat-v" style="color:'+(s.net>=0?'#f0c040':'#f87171')+'">'+nm(s.net)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Margin</div><div class="show-stat-v" style="color:#60a5fa;font-size:14px">'+margin+'%</div></div>';
@@ -1679,6 +1825,27 @@ function openManualModById(id){
   if(c)openManualMod(c);
 }
 function delCatCard(id){var cat=ll('catalog',[]);cat=cat.filter(function(c){return c.id!==id;});ls('catalog',cat);saveCatalog(cat);renderCatalog();toast('🗑 Removed from catalog.');}
+
+// ─── Seller Tooltip ──────────────────────────────────────────────────────────
+var _tipT=null;
+function showSelTip(el,sid){
+  var s=null;for(var i=0;i<app.sellers.length;i++){if(String(app.sellers[i].id)===String(sid)){s=app.sellers[i];break;}}
+  if(!s)return;
+  var tip=g('sel-tooltip');if(!tip)return;
+  var h='<div style="font-weight:700;color:#f0c040;margin-bottom:6px">👤 '+s.name+'</div>';
+  if(s.fb)h+='<div style="color:#60a5fa;margin-bottom:3px">💬 <a href="'+s.fb+'" target="_blank" style="color:#60a5fa">Messenger</a></div>';
+  if(s.ph)h+='<div style="color:#94a3b8;margin-bottom:3px">📞 '+s.ph+'</div>';
+  if(s.addr)h+='<div style="color:#94a3b8;margin-bottom:3px">📍 '+s.addr+'</div>';
+  if(s.notes)h+='<div style="color:#94a3b8">📝 '+s.notes+'</div>';
+  tip.innerHTML=h;tip.style.display='';
+  var rect=el.getBoundingClientRect();
+  var top=rect.bottom+window.scrollY+4;
+  var left=Math.min(rect.left+window.scrollX,window.innerWidth-290);
+  tip.style.top=top+'px';tip.style.left=left+'px';
+}
+function hideSelTip(){
+  _tipT=setTimeout(function(){var tip=g('sel-tooltip');if(tip)tip.style.display='none';},200);
+}
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 (async function init(){
