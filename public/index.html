@@ -180,7 +180,7 @@ a{text-decoration:none}
       <button class="search-btn" id="search-btn" onclick="doSearch()">Search</button>
     </div>
     <div id="search-status"></div>
-    <div id="search-sort-bar" style="display:none;margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <div id="search-sort-bar" style="display:none;margin-top:10px;flex-wrap:wrap;gap:8px;align-items:center">
       <select id="search-sort" class="toolbar-select" onchange="sortAndRenderResults()" style="font-size:12px">
         <option value="default">Sort: Default</option>
         <option value="price-asc">Price Low→High</option>
@@ -584,7 +584,8 @@ async function doSearch(){
   setStatus('<div style="color:#a78bfa;font-size:13px;margin-top:7px">⏳ Searching...</div>');
   g('results-grid').innerHTML='';
   allSearchResults=[];
-  g('search-sort-bar').style.display='none';
+  var sortBar=g('search-sort-bar');
+  if(sortBar)sortBar.style.display='none';
   st.selectedCard=null;g('selected-panel').style.display='none';
   try{
     var allCards=[],page=1,totalPages=1;
@@ -639,7 +640,8 @@ function populateSearchFilters(cards){
   var colEl=g('search-filter-color');
   colEl.innerHTML='<option value="">All Colors</option>';
   Object.keys(colors).sort().forEach(function(c){colEl.innerHTML+='<option value="'+c+'">'+c+'</option>';});
-  g('search-sort-bar').style.display='flex';
+  var bar=g('search-sort-bar');
+  bar.style.display='flex';
 }
 
 function sortAndRenderResults(){
