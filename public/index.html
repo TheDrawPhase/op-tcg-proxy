@@ -150,7 +150,7 @@ button{cursor:pointer}a{text-decoration:none}
   <button class="tab on" onclick="show('buylist')">💰 Buylist</button>
   <button class="tab" onclick="show('offers')">📋 Offers</button>
   <button class="tab" onclick="show('inventory')">📦 Inventory</button>
-  <button class="tab" onclick="show('whatnot')">📺 Whatnot</button>
+  <button class="tab" onclick="show('whatnot')">🏪 Sales</button>
   <button class="tab" onclick="show('sellers')">👥 Sellers</button>
   <button class="tab" onclick="show('finance')">💵 Finances</button>
   <button class="tab" onclick="show('settings')">⚙️ Settings</button>
@@ -279,16 +279,31 @@ button{cursor:pointer}a{text-decoration:none}
   <div id="inv-list"></div>
 </div>
 
-<!-- WHATNOT -->
+<!-- SALES / WHATNOT -->
 <div id="p-whatnot" class="page">
-  <div class="wgrid" id="wn-stats"></div>
+  <!-- Sales summary & channel toggle -->
+  <div class="panel" style="padding:12px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+      <div style="font-weight:700;color:#a78bfa;font-size:14px">🏪 Current Show / Sale Queue</div>
+      <div class="row" style="gap:7px">
+        <select class="sel" id="wn-channel" onchange="renderWhatnot()" style="font-size:12px">
+          <option value="">All Channels</option>
+          <option value="whatnot">📺 Whatnot</option>
+          <option value="vend">🏪 Vend/In-Person</option>
+          <option value="direct">💬 Direct Sale</option>
+        </select>
+        <button class="btn" style="font-size:12px;padding:6px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="recSale()">+ Record Sale</button>
+        <button class="btn btn-r" style="font-size:12px;padding:6px 12px" onclick="clearShow()">🗑 Clear Queue</button>
+      </div>
+    </div>
+    <div class="wgrid" id="wn-stats" style="margin-bottom:0"></div>
+  </div>
   <div class="tbar">
     <input class="inp" id="wn-q" placeholder="Filter..." oninput="renderWhatnot()" style="flex:1"/>
     <select class="sel" id="wn-sort" onchange="renderWhatnot()">
       <option value="vd">Value High→Low</option><option value="va">Value Low→High</option>
       <option value="na">Name A→Z</option><option value="cd">Cost High→Low</option>
     </select>
-    <button class="btn btn-r" onclick="clearShow()">🗑 Clear Show</button>
   </div>
   <div id="wn-list"></div>
 </div>
@@ -329,7 +344,7 @@ button{cursor:pointer}a{text-decoration:none}
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="pt" style="margin:0">📺 Whatnot Show History</div>
-      <button class="btn" style="font-size:12px;padding:7px 14px;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="recShow()">+ Record Show</button>
+      <button class="btn" style="font-size:12px;padding:7px 14px;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="recSale()">+ Record Sale</button>
     </div>
     <div id="show-hist"></div>
   </div>
@@ -446,7 +461,14 @@ button{cursor:pointer}a{text-decoration:none}
 <!-- Record Show modal -->
 <div class="overlay" id="show-modal" style="display:none" onclick="if(event.target===this)closeShowMod()">
   <div class="modal" style="max-width:420px">
-    <div style="font-weight:700;font-size:15px;color:#d946ef;margin-bottom:14px">📺 Record Whatnot Show</div>
+    <div style="font-weight:700;font-size:15px;color:#d946ef;margin-bottom:14px" id="show-modal-title">📺 Record Sale / Show</div>
+    <div style="margin-bottom:10px"><div class="ml">Sale Channel</div>
+      <select class="inp full" id="sh-channel">
+        <option value="whatnot">📺 Whatnot Stream</option>
+        <option value="vend">🏪 Vend / In-Person Show</option>
+        <option value="direct">💬 Direct Sale</option>
+      </select>
+    </div>
     <div style="margin-bottom:10px"><div class="ml">Date</div><input class="inp full" id="sh-date" type="date"/></div>
     <div style="margin-bottom:10px"><div class="ml">Gross Revenue ($)</div><input type="number" class="inp full" id="sh-rev" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
     <div style="margin-bottom:10px"><div class="ml">Cards Sold (qty)</div><input type="number" class="inp full" id="sh-qty" placeholder="0" min="0"/></div>
@@ -665,6 +687,12 @@ function pickCard(card){
   renderSel();
 }
 
+function backToResults(){
+  app.selCard=null;
+  g('sel-panel').style.display='none';
+  if(allRes.length){applySort();}
+}
+
 function tieredPerc(mkt,cond){
   var t=null;
   for(var i=0;i<app.tiers.length;i++){if(mkt>=app.tiers[i].min&&mkt<=app.tiers[i].max){t=app.tiers[i];break;}}
@@ -695,7 +723,10 @@ function renderSel(){
   var cardNum=c.card_number||'';
   // eBay query: name + set, no "one piece card"
   var ebayQ=encodeURIComponent(name+' '+(ep||cardNum));
-  var h='<button onclick="app.selCard=null;g(\'sel-panel\').style.display=\'none\'" style="float:right;background:none;border:none;color:#f87171;font-size:20px;cursor:pointer">×</button>';
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+  h+='<button onclick="backToResults()" style="background:#1a1640;border:1px solid #3d2080;color:#a78bfa;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer">← Results</button>';
+  h+='<button onclick="app.selCard=null;g(\'sel-panel\').style.display=\'none\'" style="background:none;border:none;color:#f87171;font-size:20px;cursor:pointer">×</button>';
+  h+='</div>';
   h+='<div style="display:flex;gap:16px;flex-wrap:wrap">';
   h+='<div>'+(c.image?'<img src="'+c.image+'" onerror="this.style.display=\'none\'" style="width:120px;border-radius:8px;box-shadow:0 4px 20px rgba(124,58,237,.5)"/>'
     :'<div style="width:120px;height:168px;background:#2d2060;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:11px">No Image</div>')+'</div>';
@@ -738,8 +769,14 @@ function sessCard(c){
 
 function addToSess(){
   var c=app.selCard;if(!c)return;
-  app.sess.unshift(sessCard(c)); // newest on top
-  renderOffer();toast('Added '+(c.name||'card')+' to offer');
+  var name=c.name||c.name_numbered||'';
+  var cond=app.selCond;
+  var dup=app.sess.find(function(e){return e.name===name&&e.cond===cond;});
+  if(dup){
+    if(!confirm('⚠️ '+name+' ('+cond+') is already in this offer. Add another anyway?'))return;
+  }
+  app.sess.unshift(sessCard(c));
+  renderOffer();toast('Added '+name+' to offer');
 }
 
 function addDirect(){
@@ -775,7 +812,11 @@ function renderOffer(){
     var im=e.img?'<img class="othumb" src="'+e.img+'" onerror="this.style.display=\'none\'"/>':'<div class="othumb-blank"></div>';
     h+='<div class="orow">'+im+'<div style="flex:1;min-width:0">';
     h+='<div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.name+'</div>';
-    h+='<div style="font-size:10px;color:#94a3b8">'+(CF[e.cond]||e.cond)+' × '+e.qty+'</div>';
+    h+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#94a3b8">';
+    h+='<span>'+(CF[e.cond]||e.cond)+'</span>';
+    h+='<span>×</span>';
+    h+='<input type="number" min="1" value="'+e.qty+'" class="pinp" style="width:42px;font-size:12px;padding:3px 5px;color:#e2e8f0" onchange="updSessQty('+i+',this.value)"/>';
+    h+='</div>';
     // Bigger price inputs, no cursor-loss: use onchange not oninput for recalculate
     h+='<div style="display:flex;gap:4px;margin-top:5px;align-items:center;flex-wrap:wrap">';
     h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px">';
@@ -788,7 +829,7 @@ function renderOffer(){
     h+='</div>';
     h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px">';
     h+='<span style="font-size:9px;color:#f0c040">Offer</span>';
-    h+='<input type="number" step="0.01" min="0" value="'+(e.cost!=null?e.cost:'')+'" placeholder="—" class="pinp pcost" style="width:62px" onchange="updSess('+i+',\'cost\',this.value);renderOffer()"/>';
+    h+='<input type="number" step="0.01" min="0" value="'+(e.cost!=null?e.cost:'')+'" placeholder="—" class="pinp pcost" style="width:62px" onchange="updSessCost('+i+',this.value)"/>'
     h+='</div>';
     h+='<span style="font-size:10px;color:#a78bfa;white-space:nowrap">='+nm(e.cost!=null?e.cost*e.qty:null)+'</span>';
     h+='</div></div>';
@@ -807,7 +848,21 @@ function updSessPerc(i,v){
   renderOffer();
 }
 function recalc(i){var e=app.sess[i];if(!e||e.mkt==null||!e.perc)return;e.cost=parseFloat(((e.mkt*e.perc)/100).toFixed(2));}
+function updSessCost(i,v){
+  if(!app.sess[i])return;
+  var cost=parseFloat(v)||null;
+  app.sess[i].cost=cost;
+  // Back-calc percentage if we have a market price
+  if(cost!=null&&app.sess[i].mkt!=null&&app.sess[i].mkt>0){
+    app.sess[i].perc=parseFloat(((cost/app.sess[i].mkt)*100).toFixed(1));
+  }
+  renderOffer();
+}
 function rmSess(id){app.sess=app.sess.filter(function(e){return e.id!==id;});renderOffer();}
+function updSessQty(i,v){
+  var q=parseInt(v);if(!app.sess[i]||isNaN(q)||q<1)return;
+  app.sess[i].qty=q;renderOffer();
+}
 
 function clearSess(){
   if(app.sess.length&&!confirm('Clear current offer?'))return;
@@ -842,7 +897,11 @@ function saveOffer(){
   var oid=uid();
   var sheet={id:oid,seller:sn,sellerId:sid,date:day,ship:sh,other:ot,ct:ct,total:ct+sh+ot,cards:app.sess.map(function(e){return Object.assign({},e,{status:'pending'});})};
   app.offers.unshift(sheet);saveOffers();
-  app.sess.forEach(function(e){app.inv.push(Object.assign({},e,{id:uid(),date:day,offerId:oid,seller:sn,sellerId:sid,status:'pending'}));});
+  app.sess.forEach(function(e){
+    // Remove any stale duplicate with same offerId + name + cond before re-adding
+    app.inv=app.inv.filter(function(x){return!(String(x.offerId)===String(oid)&&x.name===e.name&&x.cond===e.cond);});
+    app.inv.push(Object.assign({},e,{id:uid(),date:day,offerId:oid,seller:sn,sellerId:sid,status:'pending'}));
+  });
   saveInv();clearSess();stats();toast('✅ Offer saved!');show('offers');
 }
 
@@ -1061,6 +1120,7 @@ function editCard(oid,i,f,v){
   var c=o.cards[i];
   if(f==='perc'){c.perc=parseFloat(v)||null;if(c.mkt!=null&&c.perc)c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));}
   else if(f==='mkt'){c.mkt=parseFloat(v)||null;if(c.mkt!=null&&c.perc)c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));}
+  else if(f==='cost'){c.cost=parseFloat(v)||null;if(c.cost!=null&&c.mkt!=null&&c.mkt>0)c.perc=parseFloat(((c.cost/c.mkt)*100).toFixed(1));}
   else{c.cost=parseFloat(v)||null;}
   o.ct=0;o.cards.forEach(function(x){o.ct+=(x.cost||0)*x.qty;});o.total=o.ct+o.ship+o.other;
   saveOffers();
@@ -1142,10 +1202,16 @@ function renderInv(){
   filtered.forEach(function(i){var k=i.name;if(!grps[k])grps[k]={name:i.name,num:i.num,set:i.set,img:i.img,entries:[]};grps[k].entries.push(i);});
   var ga=Object.values(grps);
   ga.forEach(function(g2){g2.tc=0;g2.tv=0;g2.ld='';g2.entries.forEach(function(e){g2.tc+=(e.cost||0)*e.qty;g2.tv+=(e.mkt||0)*e.qty;if(e.date>g2.ld)g2.ld=e.date;});});
+  // Compute per-card (not per-group) mkt for sorting
+  ga.forEach(function(g2){
+    // Use the highest individual card mkt among entries as the sort key
+    g2.maxMkt=0;g2.maxCost=0;
+    g2.entries.forEach(function(e){if((e.mkt||0)>g2.maxMkt)g2.maxMkt=e.mkt||0;if((e.cost||0)>g2.maxCost)g2.maxCost=e.cost||0;});
+  });
   ga.sort(function(a,b){
     if(srt==='na')return a.name.localeCompare(b.name);if(srt==='nd')return b.name.localeCompare(a.name);
-    if(srt==='cd')return b.tc-a.tc;if(srt==='ca')return a.tc-b.tc;
-    if(srt==='vd')return b.tv-a.tv;if(srt==='va')return a.tv-b.tv;
+    if(srt==='cd')return b.maxCost-a.maxCost;if(srt==='ca')return a.maxCost-b.maxCost;
+    if(srt==='vd')return b.maxMkt-a.maxMkt;if(srt==='va')return a.maxMkt-b.maxMkt;
     if(srt==='dd')return b.ld.localeCompare(a.ld);if(srt==='da')return a.ld.localeCompare(b.ld);
     return 0;
   });
@@ -1188,8 +1254,16 @@ function renderInv(){
     h+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay Sold ↗</a>';
     h+='</div></div>';
     h+='<div class="iconds" onclick="openInvMod(\''+ek+'\')">'+chips+'</div>';
-    h+='<div class="icost" onclick="openInvMod(\''+ek+'\')">'+nm(grp.tc)+'</div>';
-    h+='<div class="ival" onclick="openInvMod(\''+ek+'\')">'+nm(grp.tv)+'</div>';
+    var _fe=grp.entries[0];
+    var _im=_fe?_fe.mkt:null,_ic=_fe?_fe.cost:null;
+    h+='<div style="flex:1;text-align:right;min-width:80px" onclick="openInvMod(\''+ek+'\')">';
+    h+='<div style="font-size:12px;color:#34d399;font-weight:600">'+nm(_ic)+'/ea</div>';
+    h+='<div style="font-size:10px;color:#6b7280">'+nm(grp.tc)+' tot</div>';
+    h+='</div>';
+    h+='<div style="flex:1;text-align:right;min-width:80px" onclick="openInvMod(\''+ek+'\')">';
+    h+='<div style="font-size:12px;color:#f0c040;font-weight:600">'+nm(_im)+'/ea</div>';
+    h+='<div style="font-size:10px;color:#6b7280">'+nm(grp.tv)+' tot</div>';
+    h+='</div>';
     if(hw)h+='<div style="font-size:10px;color:#d946ef;font-weight:700;white-space:nowrap">📺 Show</div>';
     h+='</div>';
   });
@@ -1203,7 +1277,14 @@ function togInvGrp(chk){
   updBulkBar();
 }
 function invSelAll(){
-  app.inv.forEach(function(i){invSel[i.id]=true;});renderInv();}
+  // Collect IDs first, then mark after render
+  var ids=app.inv.map(function(i){return i.id;});
+  renderInv(); // this resets invSel, so re-apply after
+  ids.forEach(function(id){invSel[id]=true;});
+  // Check all checkboxes
+  document.querySelectorAll('.inv-grp-chk').forEach(function(chk){chk.checked=true;});
+  updBulkBar();
+}
 function clearInvSel(){invSel={};renderInv();}
 function updBulkBar(){
   var n=Object.keys(invSel).length;
@@ -1245,7 +1326,15 @@ function openInvMod(ek){
     rows+='</td>';
     rows+='<td style="padding:7px 5px"><span class="badge '+(SB[e.status]||'bp')+'">'+(SL[e.status]||e.status)+'</span></td>';
     rows+='<td style="padding:7px 5px;font-size:11px">'+(o?'<button onclick="closeInvMod();show(\'offers\');openOffer(\''+o.id+'\')" style="padding:3px 7px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:10px;cursor:pointer">📋 '+o.seller+'</button>':'<span style="color:#6b7280;font-size:10px">—</span>')+'</td>';
-    rows+='<td style="padding:7px 5px"><button onclick="togWhatnot(\''+e.id+'\',\''+ek+'\')" style="padding:3px 8px;border-radius:4px;border:none;font-size:10px;font-weight:700;cursor:pointer;background:'+(iw?'#1a1640':'#2d0d2d')+';color:'+(iw?'#4b5563':'#d946ef')+'">'+(iw?'📺 In Show':'📺 Add')+'</button></td>';
+    rows+='<td style="padding:7px 5px">';
+    if(iw){rows+='<span style="color:#4b5563;font-size:10px;font-weight:700">📺 In Show</span>';}
+    else{
+      rows+='<div style="display:flex;align-items:center;gap:3px">';
+      rows+='<input type="number" min="1" max="'+e.qty+'" value="1" id="wn-qty-'+e.id+'" class="pinp" style="width:42px;font-size:12px;padding:3px 5px" onclick="event.stopPropagation()"/>';
+      rows+='<button onclick="togWhatnot(\''+e.id+'\',\''+ek+'\',document.getElementById(\'wn-qty-'+e.id+'\').value)" style="padding:3px 7px;border-radius:4px;border:none;font-size:10px;font-weight:700;cursor:pointer;background:#2d0d2d;color:#d946ef">📺</button>';
+      rows+='</div>';
+    }
+    rows+='</td>';
     rows+='<td style="padding:7px 5px"><button onclick="rmInv(\''+e.id+'\');openInvMod(\''+ek+'\')" style="padding:3px 7px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button></td>';
     rows+='</tr>';
   });
@@ -1290,9 +1379,25 @@ function editCatalogEntry(ek){
 }
 
 function closeInvMod(){g('inv-modal').style.display='none';}
-function togWhatnot(id,ek){
-  for(var i=0;i<app.inv.length;i++){if(String(app.inv[i].id)===String(id)){if(app.inv[i].status==='whatnot')return;app.inv[i].status='whatnot';break;}}
-  saveInv();stats();renderInv();openInvMod(ek);toast('📺 Added to show!');
+function togWhatnot(id,ek,partialQty){
+  var qty=parseInt(partialQty)||1;
+  for(var i=0;i<app.inv.length;i++){
+    if(String(app.inv[i].id)===String(id)){
+      var entry=app.inv[i];
+      if(entry.status==='whatnot')return;
+      if(qty>=entry.qty){
+        // Move whole entry to whatnot
+        entry.status='whatnot';
+      } else {
+        // Split: reduce original qty, add a new whatnot entry
+        entry.qty=entry.qty-qty;
+        var newEntry=Object.assign({},entry,{id:uid(),qty:qty,status:'whatnot'});
+        app.inv.splice(i+1,0,newEntry);
+      }
+      break;
+    }
+  }
+  saveInv();stats();renderInv();if(ek)openInvMod(ek);toast('📺 Added to show!');
 }
 function rmInv(id){
   app.inv=app.inv.filter(function(i){return String(i.id)!==String(id);});
@@ -1436,9 +1541,11 @@ function drawChart(){
 }
 
 // ─── Show History ─────────────────────────────────────────────────────────────
-function recShow(){
+function recShow(){recSale('whatnot');}
+function recSale(channel){
   var today=new Date();g('sh-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   ['sh-rev','sh-qty','sh-fees','sh-ship','sh-cogs','sh-notes'].forEach(function(id){g(id).value='';});
+  if(channel&&g('sh-channel'))g('sh-channel').value=channel;
   g('sh-calc').style.display='none';g('show-modal').style.display='';
 }
 function updShowCalc(){
@@ -1455,7 +1562,8 @@ function saveShow(){
   var net=rev-fees-ship-cogs;
   var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
   if(!fin.shows)fin.shows=[];
-  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),rev:rev,qty:qty,fees:fees,ship:ship,cogs:cogs,net:net,notes:g('sh-notes').value.trim()});
+  var ch=g('sh-channel')?g('sh-channel').value:'whatnot';
+  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,rev:rev,qty:qty,fees:fees,ship:ship,cogs:cogs,net:net,notes:g('sh-notes').value.trim()});
   saveFin();closeShowMod();renderShows();toast('📺 Show recorded! Net: '+nm(net));
 }
 function closeShowMod(){g('show-modal').style.display='none';}
@@ -1473,6 +1581,8 @@ function renderShows(){
   shows.forEach(function(s){
     var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):0;
     h+='<div class="show-row">';
+    var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct'};
+    h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:#d946ef;font-size:11px">'+(chLabels[s.channel]||'📺')+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:#a78bfa;font-size:12px">'+s.date+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:#34d399">'+nm(s.rev)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Net Profit</div><div class="show-stat-v" style="color:'+(s.net>=0?'#f0c040':'#f87171')+'">'+nm(s.net)+'</div></div>';
