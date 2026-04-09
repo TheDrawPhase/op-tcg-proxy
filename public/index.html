@@ -1421,7 +1421,7 @@ function editCatalogById(id){
   if(c)openManualMod(c);else toast('⚠️ Card not found in catalog');
 }
 function editCatalogEntry(ek){
-  var name=decodeURIComponent(ek).split('||')[0];
+  var name=decodeURIComponent(ek.split('~')[0]);
   var e=app.inv.find(function(i){return i.name===name;});
   if(!e)return;
   closeInvMod();
@@ -1542,6 +1542,9 @@ function buildOfferDetailHTML(o){
     ch+='</div></div>';
     ch+='<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0">';
     ch+='<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:flex-end">'+sbtns+'</div>';
+    // Show → Inv button only if this card is NOT currently in inventory
+    var _inInv=app.inv.some(function(iv){return String(iv.offerId)===String(o.id)&&iv.name===card.name&&iv.cond===card.cond;});
+    if(!_inInv)ch+='<button onclick="restoreCardToInv(\''+o.id+'\','+i+')" style="padding:2px 8px;border-radius:4px;background:#0d2010;border:1px solid #1a4030;color:#34d399;font-size:10px;cursor:pointer;margin-top:2px">→ Inv</button>';
     ch+='<button onclick="rmCard(\''+o.id+'\','+i+')" style="padding:2px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer;margin-top:2px">✕</button>';
     ch+='</div></div>';
   });
@@ -1623,6 +1626,48 @@ function editCard(oid,i,f,v){
   saveInv();
 }
 
+function restoreCardToInv(oid,idx){
+  var o=findOffer(oid);if(!o||!o.cards[idx])return;
+  var card=o.cards[idx];
+  // Check it's not already in inventory
+  var exists=app.inv.some(function(iv){return String(iv.offerId)===String(oid)&&iv.name===card.name&&iv.cond===card.cond;});
+  if(exists){toast('⚠️ Already in inventory.');return;}
+  var entry={
+    id:uid(),
+    catalogId:card.catalogId||null,
+    name:card.name,
+    num:card.num||'',
+    set:card.set||'',
+    color:card.color||'',
+    rarity:card.rarity||'',
+    img:card.img||null,
+    tcgId:card.tcgId||null,
+    cond:card.cond,
+    qty:card.qty||1,
+    mkt:card.mkt||null,
+    cost:card.cost||0,
+    perc:card.perc||null,
+    seller:o.seller||'',
+    sellerId:o.sellerId||null,
+    status:card.status||'pending',
+    offerId:oid,
+    date:td(),
+    manual:false
+  };
+  app.inv.push(entry);
+  saveInv();stats();renderOffers();
+  toast('✅ '+card.name+' restored to inventory!');
+}
+
+function restoreCardToInv(oid,idx){
+  var o=findOffer(oid);if(!o||!o.cards[idx])return;
+  var card=o.cards[idx];
+  var exists=app.inv.some(function(iv){return String(iv.offerId)===String(oid)&&iv.name===card.name&&iv.cond===card.cond;});
+  if(exists){toast('⚠️ Already in inventory.');return;}
+  app.inv.push({id:uid(),catalogId:card.catalogId||null,name:card.name,num:card.num||'',set:card.set||'',color:card.color||'',rarity:card.rarity||'',img:card.img||null,tcgId:card.tcgId||null,cond:card.cond,qty:card.qty||1,mkt:card.mkt||null,cost:card.cost||0,perc:card.perc||null,seller:o.seller||'',sellerId:o.sellerId||null,status:card.status||'pending',offerId:oid,date:td(),manual:false});
+  saveInv();stats();renderOffers();
+  toast('✅ '+card.name+' restored to inventory!');
+}
 function rmCard(oid,i){
   var o=findOffer(oid);if(!o)return;
   if(!confirm('Remove "'+o.cards[i].name+'" from this offer?'))return;
@@ -1784,7 +1829,7 @@ function renderInv(){
       chips+='<span class="badge '+badgeCls+'" style="padding:1px 3px;font-size:8px;margin:0">'+badgeTxt+'</span></span>';
     });
     var variant=grp.entries[0]?grp.entries[0].variant||'':'';
-    var ek=encodeURIComponent(grp.name+'||'+(grp.num||'')+'||'+(grp.set||'')+'||'+variant);
+    var ek=encodeURIComponent(grp.name)+'~'+encodeURIComponent(grp.num||'')+'~'+encodeURIComponent(grp.set||'')+'~'+encodeURIComponent(variant);
     var ft=grp.entries[0]&&grp.entries[0].tcgId?grp.entries[0].tcgId:null;
     var ebayQ=encodeURIComponent(grp.name+(grp.num?' '+grp.num:''));
     var entryIds=grp.entries.map(function(e){return e.id;}).join(',');
@@ -1846,9 +1891,9 @@ function bulkDeleteInv(){
 }
 
 function openInvMod(ek){
-  var decoded=decodeURIComponent(ek);
-  var parts=decoded.split('||');
-  var name=parts[0],num=parts[1]||'',set=parts[2]||'',variant=parts[3]||'';
+  // ek is encoded as: encName~encNum~encSet~encVariant
+  var parts=ek.split('~');
+  var name=decodeURIComponent(parts[0]||''),num=decodeURIComponent(parts[1]||''),set=decodeURIComponent(parts[2]||''),variant=decodeURIComponent(parts[3]||'');
   var entries=app.inv.filter(function(i){
     return i.name===name&&(i.num||'')==num&&(i.set||'')==set&&(i.variant||'')==variant;
   });
