@@ -939,6 +939,8 @@ function pickCard(card){
   app.selCard=card;app.selCond='NM';app.selQty=1;
   g('q').value=card.name||card.name_numbered||'';
   renderSel();
+  // Scroll sel-panel to top of viewport
+  setTimeout(function(){var p=g('sel-panel');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},50);
 }
 
 function backToResults(){
