@@ -1097,6 +1097,11 @@ function fixInvEntry(id){
 function addDirect(){
   var c=app.selCard;if(!c)return;
   readSelInputs();
+  console.log('[addDirect] raw card:', JSON.stringify({
+    name:c.name, name_numbered:c.name_numbered,
+    card_number:c.card_number, cardNumber:c.cardNumber, number:c.number,
+    episode:c.episode, set:c.set, set_name:c.set_name
+  }));
   var entry=makeInvEntry(c,{seller:'Direct Add',sellerId:null,status:'onhand'});
   // Apply manual overrides
   if(app.selMkt!=null)entry.mkt=app.selMkt;
