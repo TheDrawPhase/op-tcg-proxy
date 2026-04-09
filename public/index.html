@@ -1112,7 +1112,7 @@ function addDirect(){
   // Reset inventory filters so the new card is visible immediately
   var iq=g('inv-q');if(iq)iq.value='';
   var isf=g('inv-sf');if(isf)isf.value='';
-  if(app.tab==='inventory')renderInv();
+  renderInv();
   toast('✅ '+entry.name+' → Inventory ('+CF[entry.cond]+' ×'+entry.qty+')');
 }
 
@@ -1906,20 +1906,23 @@ function updInvMkt(id,val,ek){
   e.mkt=parseFloat(val)||null;
   if(e.mkt!=null&&e.perc)e.cost=parseFloat(((e.mkt*e.perc)/100).toFixed(2));
   saveInv();stats();
+  renderInv();
 }
 function updInvCost(id,val,ek){
   var e=findInv(id);if(!e)return;
   e.cost=parseFloat(val)||0;
   if(e.cost>0&&e.mkt!=null&&e.mkt>0)e.perc=parseFloat(((e.cost/e.mkt)*100).toFixed(1));
   saveInv();stats();
+  renderInv();
 }
 function updInvMeta(el){
   var id=el.dataset.id,field=el.dataset.f,val=el.value.trim();
   var e=findInv(id);if(!e)return;
   e[field]=val;
   saveInv();
+  renderInv();
   // Re-open modal with updated key so grouping reflects the change
-  var newEk=encodeURIComponent(e.name+'||'+(e.num||'')+'||'+(e.set||''));
+  var newEk=encodeURIComponent(e.name+'||'+(e.num||'')+'||'+(e.set||'')+'||'+(e.variant||''));
   openInvMod(newEk);
 }
 function closeInvMod(){g('inv-modal').style.display='none';}
