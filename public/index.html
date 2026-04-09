@@ -974,7 +974,7 @@ function renderSel(){
   var _selMkt=cardPrice(c,app.selCond);
   var _selPerc=nmPrice!=null?tieredPerc(nmPrice,app.selCond):null;
   var _selCost=_selMkt!=null&&_selPerc!=null?parseFloat((_selMkt*_selPerc/100).toFixed(2)):null;
-  if(app.selMkt==null||app._lastCond!==app.selCond){app.selMkt=_selMkt;app.selCost=_selCost;app._lastCond=app.selCond;}
+  // Always show fresh calculated values — read from DOM at click time
   if(nmPrice!=null)h+='<div style="font-size:13px;margin-bottom:8px">NM Market: <b style="color:#34d399">'+nm(nmPrice)+'</b></div>';
   h+='<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap">';
   h+='<select class="sel" style="font-size:12px" onchange="app.selCond=this.value;app._lastCond=null;renderSel()">'+opts+'</select>';
@@ -983,11 +983,11 @@ function renderSel(){
   // Editable Mkt / Cost row
   h+='<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:8px;flex-wrap:wrap">';
   h+='<div><div style="font-size:9px;color:#34d399;margin-bottom:2px">Value $</div>';
-  h+='<input type="number" step="0.01" min="0" id="sel-mkt" value="'+(app.selMkt!=null?app.selMkt:'')+'" placeholder="—" class="pinp pp" style="width:80px;font-size:13px" oninput="app.selMkt=parseFloat(this.value)||null;var cp=g(\'sel-cost\');if(cp&&app.selMkt&&app.selPerc)cp.value=parseFloat((app.selMkt*app.selPerc/100).toFixed(2));"/></div>';
+  h+='<input type="number" step="0.01" min="0" id="sel-mkt" value="'+(app.selMkt!=null?app.selMkt:(_selMkt!=null?_selMkt:''))+'" placeholder="—" class="pinp pp" style="width:80px;font-size:13px" oninput="app.selMkt=parseFloat(this.value)||null;var cp=g(\'sel-cost\');if(cp&&app.selMkt&&app.selPerc)cp.value=parseFloat((app.selMkt*app.selPerc/100).toFixed(2));"/></div>';
   h+='<div><div style="font-size:9px;color:#a78bfa;margin-bottom:2px">Buy %</div>';
   h+='<input type="number" step="1" min="1" max="100" id="sel-perc" value="'+(_selPerc!=null?_selPerc:'')+'" placeholder="—" class="pinp pperc" style="width:60px;font-size:13px" oninput="app.selPerc=parseFloat(this.value)||null;var cc=g(\'sel-cost\');if(cc&&app.selMkt&&app.selPerc)cc.value=parseFloat((app.selMkt*app.selPerc/100).toFixed(2));"/></div>';
   h+='<div><div style="font-size:9px;color:#f0c040;margin-bottom:2px">Cost $</div>';
-  h+='<input type="number" step="0.01" min="0" id="sel-cost" value="'+(app.selCost!=null?app.selCost:'')+'" placeholder="—" class="pinp pcost" style="width:80px;font-size:13px" oninput="app.selCost=parseFloat(this.value)||null;if(app.selMkt&&app.selCost)app.selPerc=parseFloat((app.selCost/app.selMkt*100).toFixed(1));"/></div>';
+  h+='<input type="number" step="0.01" min="0" id="sel-cost" value="'+(app.selCost!=null?app.selCost:(_selCost!=null?_selCost:''))+'" placeholder="—" class="pinp pcost" style="width:80px;font-size:13px" oninput="app.selCost=parseFloat(this.value)||null;if(app.selMkt&&app.selCost)app.selPerc=parseFloat((app.selCost/app.selMkt*100).toFixed(1));"/></div>';
   h+='</div>';
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
   h+='<button class="btn" onclick="addToSess()">+ Add to Offer</button>';
@@ -1004,9 +1004,10 @@ function readSelInputs(){
   var qEl=g('sel-qty');
   if(qEl)app.selQty=Math.max(1,parseInt(qEl.value)||1);
   var mEl=g('sel-mkt'),cEl=g('sel-cost'),pEl=g('sel-perc');
-  if(mEl)app.selMkt=parseFloat(mEl.value)||null;
-  if(cEl)app.selCost=parseFloat(cEl.value)||null;
-  if(pEl)app.selPerc=parseFloat(pEl.value)||null;
+  // Use trimmed value — only null if field is genuinely empty
+  if(mEl)app.selMkt=mEl.value.trim()!==''?parseFloat(mEl.value):null;
+  if(cEl)app.selCost=cEl.value.trim()!==''?parseFloat(cEl.value):null;
+  if(pEl)app.selPerc=pEl.value.trim()!==''?parseFloat(pEl.value):null;
 }
 function addToSess(){
   var c=app.selCard;if(!c)return;
@@ -1015,10 +1016,14 @@ function addToSess(){
   var dup=app.sess.find(function(e){return e.name===name&&e.cond===app.selCond;});
   if(dup&&!confirm('⚠️ '+name+' ('+CF[app.selCond]+') is already in this offer. Add another?'))return;
   var sc=makeSessCard(c);
-  // Apply manual overrides from the price inputs
-  if(app.selMkt!=null)sc.mkt=app.selMkt;
-  if(app.selCost!=null)sc.cost=app.selCost;
-  if(app.selPerc!=null)sc.perc=app.selPerc;
+  // Apply user-typed overrides only if they typed a value
+  if(app.selMkt!=null){
+    sc.mkt=app.selMkt;
+    if(app.selCost==null&&sc.perc!=null)
+      sc.cost=parseFloat((sc.mkt*sc.perc/100).toFixed(2));
+  }
+  if(app.selCost!=null){sc.cost=app.selCost;}
+  if(app.selPerc!=null){sc.perc=app.selPerc;}
   app.sess.unshift(sc);
   saveSess();renderOffer();
   toast('Added '+name+' to offer');
@@ -1097,16 +1102,18 @@ function fixInvEntry(id){
 function addDirect(){
   var c=app.selCard;if(!c)return;
   readSelInputs();
-  console.log('[addDirect] raw card:', JSON.stringify({
-    name:c.name, name_numbered:c.name_numbered,
-    card_number:c.card_number, cardNumber:c.cardNumber, number:c.number,
-    episode:c.episode, set:c.set, set_name:c.set_name
-  }));
+  // Build entry with base calculated values first
   var entry=makeInvEntry(c,{seller:'Direct Add',sellerId:null,status:'onhand'});
-  // Apply manual overrides
-  if(app.selMkt!=null)entry.mkt=app.selMkt;
-  if(app.selCost!=null)entry.cost=app.selCost;
-  if(app.selPerc!=null)entry.perc=app.selPerc;
+  // Then apply user-typed overrides — only if they actually typed a value
+  if(app.selMkt!=null){
+    entry.mkt=app.selMkt;
+    // Recalc cost from new mkt + existing perc if cost wasn't also overridden
+    if(app.selCost==null&&entry.perc!=null)
+      entry.cost=parseFloat((entry.mkt*entry.perc/100).toFixed(2));
+  }
+  if(app.selCost!=null){entry.cost=app.selCost;}
+  if(app.selPerc!=null){entry.perc=app.selPerc;}
+  console.log('[addDirect] mkt:',entry.mkt,'cost:',entry.cost,'perc:',entry.perc);
   app.inv.push(entry);
   saveInv();stats();
   // Reset inventory filters so the new card is visible immediately
