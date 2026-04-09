@@ -161,11 +161,14 @@ a{text-decoration:none}
 <div class="header">
   <div style="font-size:24px">🏴‍☠️</div>
   <div><div class="header-title">One Piece TCG Reseller</div><div class="header-sub">Buylist &amp; Inventory Manager</div></div>
-  <div class="stats">
-    <div class="stat"><div class="stat-label">Cards</div><div class="stat-val" id="stat-cards" style="color:#a78bfa">0</div></div>
-    <div class="stat"><div class="stat-label">Cost</div><div class="stat-val" id="stat-cost" style="color:#34d399">$0.00</div></div>
-    <div class="stat"><div class="stat-label">Value</div><div class="stat-val" id="stat-value" style="color:#f0c040">$0.00</div></div>
-    <div class="stat"><div class="stat-label">Net Worth</div><div class="stat-val" id="stat-networth" style="color:#60a5fa">$0.00</div></div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div id="sync-indicator" style="font-size:12px;color:#94a3b8">☁️ Loading...</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Cards</div><div class="stat-val" id="stat-cards" style="color:#a78bfa">0</div></div>
+      <div class="stat"><div class="stat-label">Cost</div><div class="stat-val" id="stat-cost" style="color:#34d399">$0.00</div></div>
+      <div class="stat"><div class="stat-label">Value</div><div class="stat-val" id="stat-value" style="color:#f0c040">$0.00</div></div>
+      <div class="stat"><div class="stat-label">Net Worth</div><div class="stat-val" id="stat-networth" style="color:#60a5fa">$0.00</div></div>
+    </div>
   </div>
 </div>
 
@@ -393,8 +396,28 @@ a{text-decoration:none}
       </div>
       <div id="key-ok" class="key-ok" style="display:none"></div>
     </div>
+
     <div class="panel">
-      <div class="panel-title">⚙️ Tiered Buy Percentages</div>
+      <div class="panel-title">💾 Backup &amp; Restore</div>
+      <p style="font-size:13px;color:#94a3b8;margin-bottom:16px">Export all your data as a JSON file to back up on your PC. Import it any time to restore everything — inventory, offers, sellers, finances, and settings.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <button onclick="exportData()" style="padding:10px 20px;border-radius:8px;background:#059669;color:#fff;border:none;font-weight:600;font-size:13px;cursor:pointer">📥 Export Backup</button>
+        <button onclick="el('import-file').click()" style="padding:10px 20px;border-radius:8px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:13px;cursor:pointer">📤 Import Backup</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)"/>
+      </div>
+      <div style="background:#0d0820;border-radius:8px;padding:12px;font-size:12px;color:#94a3b8">
+        ⚠️ <strong style="color:#f0c040">Important:</strong> Export a backup after every buying session or Whatnot show. Store the file on your PC, Google Drive, or iCloud so you can always restore it.
+      </div>
+      <div id="backup-status" style="margin-top:10px;font-size:12px"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">📁 My Card Catalog</div>
+      <p style="font-size:13px;color:#94a3b8;margin-bottom:12px">Cards you've manually entered are saved here and show up in search results automatically.</p>
+      <div id="custom-catalog-list"></div>
+    </div>
+
+    <div class="panel">
       <p style="font-size:12px;color:#94a3b8;margin-bottom:12px">Set buy % based on card market price. First matching tier wins.</p>
       <div style="display:grid;grid-template-columns:80px 80px 65px 65px auto;gap:4px;font-size:12px;color:#94a3b8;margin-bottom:6px">
         <div>Min ($)</div><div>Max ($)</div><div>NM %</div><div>LP %</div><div></div>
@@ -484,7 +507,7 @@ function switchTab(tab){
   if(tab==='whatnot')renderWhatnot();
   if(tab==='sellers')renderSellers();
   if(tab==='finance')updateFinances();
-  if(tab==='settings')renderTiers();
+  if(tab==='settings')renderTiers();renderCustomCatalog();
 }
 
 function updateBanner(){el('no-key-banner').style.display=(!st.apiKey&&st.currentTab!=='settings')?'':'';}
@@ -512,8 +535,18 @@ async function doSearch(){
       allCards=allCards.concat(cards);
       if(data.paging){totalPages=data.paging.total||1;if(!cards.length)break;page++;}else break;
     }while(page<=totalPages);
-    if(!allCards.length)setStatus('<div class="err">No cards found for "'+cardName+'".</div>');
-    else{setStatus('<div style="font-size:11px;color:#6b7280;margin-top:5px">'+allCards.length+' cards found</div>');renderResults(allCards);}
+    if(!allCards.length)setStatus('<div class="err">No cards found for "'+cardName+'" in TCGgo.</div>');
+    // Merge custom catalog results
+    const customMatches=searchCustomCatalog(cardName);
+    const allResults=customMatches.concat(allCards.filter(function(c){
+      return!customMatches.find(function(x){return x.name.toLowerCase()===(c.name||'').toLowerCase()&&x.cardNumber===(c.card_number||'');});
+    }));
+    if(!allResults.length)setStatus('<div class="err">No cards found for "'+cardName+'".</div>');
+    else{
+      const customCount=customMatches.length;
+      setStatus('<div style="font-size:11px;color:#6b7280;margin-top:5px">'+allResults.length+' cards found'+(customCount?' ('+customCount+' from your catalog)':'')+'</div>');
+      renderResults(allResults);
+    }
   }catch(e){setStatus('<div class="err">Search failed: '+e.message+'</div>');}
   btn.disabled=false;btn.textContent='Search';
 }
@@ -523,15 +556,938 @@ function setStatus(h){el('search-status').innerHTML=h;}
 function renderResults(cards){
   const grid=el('results-grid');grid.innerHTML='';
   cards.forEach(function(card){
+    const isCustom=card.isCustom===true;
     const nmEur=card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
     const nmUsd=nmEur!=null?(nmEur*EUR_USD).toFixed(2):null;
     const d=document.createElement('div');d.className='result-card';
-    d.innerHTML=(card.image?'<img src="'+card.image+'" onerror="this.style.display=\'none\'"/>'
-      :'<div class="no-img-sm">No image</div>')
+    if(isCustom)d.style.borderColor='#7c3aed';
+    d.innerHTML=(card.image?'<img src="'+card.image+'" onerror="this.style.display=\'none\'"/>':'<div class="no-img-sm">No image</div>')
+      +(isCustom?'<div style="font-size:9px;color:#a78bfa;font-weight:700;margin-bottom:2px">📁 My Catalog</div>':'')
       +'<div class="result-name">'+(card.name||card.name_numbered||'')+'</div>'
-      +'<div class="result-num">'+(card.card_number||'')+'</div>'
-      +'<div class="result-num">'+(card.episode&&card.episode.name?card.episode.name:'')+'</div>'
-      +(nmUsd?'<div class="result-price">$'+nmUsd+' NM</div>':'');
+      +'<div class="result-num">'+(card.card_number||card.cardNumber||'')+'</div>'
+      +'<div class="result-num">'+(card.episode&&card.episode.name?card.episode.name:card.set||'')+'</div>'
+      +(nmUsd?'<div class="result-price">
+
+function selectCard(card){
+  // Normalize custom catalog cards to match TCGgo format
+  if(card.isCustom){
+    card.card_number=card.card_number||card.cardNumber||'';
+    card.episode=card.episode||{name:card.set||''};
+    card.tcgplayer_id=card.tcgplayer_id||card.tcgplayerId||null;
+    card.prices=card.prices||null;
+  }
+  st.selectedCard=card;
+  el('results-grid').innerHTML='';
+  el('search-input').value=card.name||card.name_numbered||'';
+  renderSelectedCard();
+}
+
+function getTieredPerc(nmPrice,cond){
+  const tier=st.tiers.find(function(t){return nmPrice>=t.min&&nmPrice<=t.max;});
+  if(!tier)return 50;
+  const map={NM:'nm',LP:'lp',MP:'mp',HP:'hp',DMG:'dmg'};
+  return tier[map[cond]]||50;
+}
+
+function getPrice(card,cond){
+  const nmEur=card&&card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
+  if(nmEur==null)return null;
+  return parseFloat((nmEur*EUR_USD*COND_MULT[cond]).toFixed(2));
+}
+
+function renderSelectedCard(){
+  const card=st.selectedCard;if(!card)return;
+  el('selected-panel').style.display='';
+  const nmEur=card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
+  const nmUsd=nmEur!=null?nmEur*EUR_USD:null;
+  let rows='';
+  CONDITIONS.forEach(function(cond){
+    const mp=getPrice(card,cond);
+    const perc=nmUsd!=null?getTieredPerc(nmUsd,cond):'—';
+    const bp=mp!=null?((mp*perc)/100).toFixed(2):null;
+    rows+='<div class="td '+(st.selectedCond===cond?'active-row':'')+'">'+COND_FULL[cond]+'</div>'
+      +'<div class="td green">'+(mp!=null?'$'+mp:'—')+'</div>'
+      +'<div class="td purple">'+perc+'%</div>'
+      +'<div class="td yellow">'+(bp!=null?'$'+bp:'—')+'</div>';
+  });
+  let condOpts='';
+  CONDITIONS.forEach(function(c){condOpts+='<option value="'+c+'"'+(c===st.selectedCond?' selected':'')+'>'+COND_FULL[c]+'</option>';});
+  el('selected-content').innerHTML=
+    '<button onclick="st.selectedCard=null;el(\'selected-panel\').style.display=\'none\'" style="float:right;background:none;border:none;color:#f87171;font-size:20px;cursor:pointer;margin-top:-2px">×</button>'
+    +'<div class="selected-wrap">'
+    +'<div>'+(card.image?'<img class="selected-img" src="'+card.image+'" onerror="this.style.display=\'none\'"/>':'<div class="selected-no-img">No Image</div>')+'</div>'
+    +'<div class="selected-info">'
+    +'<div class="selected-name">'+(card.name||card.name_numbered||'')+'</div>'
+    +'<div class="selected-set">'+(card.episode&&card.episode.name?card.episode.name:'')+' • '+(card.card_number||'')+'</div>'
+    +'<div class="selected-meta">'+(card.rarity||'')+' • '+(card.color||'')+'</div>'
+    +'<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">TCGPlayer Prices • % by price tier</div>'
+    +'<div class="price-table"><div class="th">Condition</div><div class="th">TCGPlayer</div><div class="th">Buy %</div><div class="th">Offer</div>'+rows+'</div>'
+    +'<div class="add-row">'
+    +'<select class="cond-select" onchange="st.selectedCond=this.value;renderSelectedCard()">'+condOpts+'</select>'
+    +'<input type="number" class="qty-input" min="1" value="'+st.selectedQty+'" onchange="st.selectedQty=Math.max(1,parseInt(this.value)||1)"/>'
+    +'<button class="add-btn" onclick="addToSession()">+ Add to Offer</button>'
+    +'<button class="add-btn" style="background:#0d6640" onclick="addDirectToInventory()">+ Direct to Inventory</button>'
+    +(card.tcggo_url?'<a class="ext-link" style="color:#a78bfa;border:1px solid #3d2080" href="'+card.tcggo_url+'" target="_blank">TCGgo ↗</a>':'')
+    +(card.tcgplayer_id?'<a class="ext-link" style="color:#34d399;border:1px solid #1a4030" href="https://www.tcgplayer.com/product/'+card.tcgplayer_id+'" target="_blank">TCGPlayer ↗</a>':'')
+    +'</div></div></div>';
+}
+
+// ── SESSION ──────────────────────────────────────────────────────────────────
+function addToSession(){
+  const card=st.selectedCard;if(!card)return;
+  const mp=getPrice(card,st.selectedCond);
+  const nmEur=card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
+  const nmUsd=nmEur!=null?nmEur*EUR_USD:null;
+  const perc=nmUsd!=null?getTieredPerc(nmUsd,st.selectedCond):50;
+  const bp=mp!=null?parseFloat(((mp*perc)/100).toFixed(2)):null;
+  st.session.push({id:uid(),name:card.name||card.name_numbered||'',cardNumber:card.card_number||'',set:card.episode&&card.episode.name?card.episode.name:'',image:card.image||null,tcgplayerId:card.tcgplayer_id||null,condition:st.selectedCond,qty:st.selectedQty,marketPrice:mp,buyPrice:bp,buyPerc:perc});
+  renderOfferSheet();
+  showToast('Added '+(card.name||'card')+' ('+st.selectedCond+') to offer');
+}
+
+function addDirectToInventory(){
+  const card=st.selectedCard;if(!card)return;
+  const mp=getPrice(card,st.selectedCond);
+  st.inventory.push({id:uid(),name:card.name||card.name_numbered||'',cardNumber:card.card_number||'',set:card.episode&&card.episode.name?card.episode.name:'',image:card.image||null,tcgplayerId:card.tcgplayer_id||null,condition:st.selectedCond,qty:st.selectedQty,marketPrice:mp,buyPrice:0,buyPerc:0,sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null,dateAdded:today()});
+  save('op-inventory',st.inventory);updateStats();showToast('✅ Added directly to inventory!');
+}
+
+function onSellerSelectChange(){
+  el('new-seller-name-wrap').style.display=el('offer-seller-select').value==='__new__'?'':'none';
+}
+
+function updateSessionCard(idx,field,val){if(st.session[idx])st.session[idx][field]=val;}
+
+function updateSessionCardPerc(idx,perc){
+  if(!st.session[idx]||isNaN(perc)||perc<1)return;
+  st.session[idx].buyPerc=perc;
+  if(st.session[idx].marketPrice!=null)st.session[idx].buyPrice=parseFloat(((st.session[idx].marketPrice*perc)/100).toFixed(2));
+  renderOfferSheet();
+}
+
+function recalcSessionCard(idx){
+  const e=st.session[idx];
+  if(!e||e.marketPrice==null||e.buyPerc==null)return;
+  e.buyPrice=parseFloat(((e.marketPrice*e.buyPerc)/100).toFixed(2));
+}
+
+function renderOfferTotals(){
+  const cardTotal=st.session.reduce(function(s,e){return s+(e.buyPrice||0)*e.qty;},0);
+  const ship=parseFloat((el('fee-shipping')&&el('fee-shipping').value)||0)||0;
+  const other=parseFloat((el('fee-other')&&el('fee-other').value)||0)||0;
+  const grand=cardTotal+ship+other;
+  if(el('offer-total'))el('offer-total').textContent='$'+grand.toFixed(2);
+  if(el('fee-note'))el('fee-note').textContent='Cards: $'+cardTotal.toFixed(2)+' + Ship: $'+ship.toFixed(2)+' + Other: $'+other.toFixed(2)+' = $'+grand.toFixed(2);
+  const count=st.session.length;
+  const badge=el('session-badge');
+  if(badge){badge.style.display=count?'':'none';badge.textContent=count+' card'+(count!==1?'s':'')+' in offer';}
+  const ce=el('offer-card-count');if(ce)ce.textContent='('+count+' card'+(count!==1?'s':'')+')';
+}
+
+function renderOfferSheet(){
+  const panel=el('offer-panel');
+  if(!st.session.length){panel.style.display='none';return;}
+  panel.style.display='';
+  const sel=el('offer-seller-select');
+  const curVal=sel.value;
+  sel.innerHTML='<option value="">— Select Seller —</option><option value="__inperson__">🏪 In Person / Vending</option><option value="__new__">➕ New Seller...</option>';
+  st.sellers.forEach(function(s){const o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
+  sel.value=curVal||'';
+  renderOfferTotals();
+  let html='';
+  st.session.forEach(function(e,i){
+    html+='<div class="offer-row">'
+      +(e.image?'<img class="offer-thumb" src="'+e.image+'" onerror="this.style.display=\'none\'"/>':'<div class="offer-thumb-blank"></div>')
+      +'<div style="flex:1">'
+      +'<div class="offer-card-name">'+e.name+'</div>'
+      +'<div class="offer-card-sub">'+e.cardNumber+' • '+e.set+' • '+(COND_FULL[e.condition]||e.condition)+' × '+e.qty+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center">'
+      +'<span style="font-size:10px;color:#94a3b8">Mkt $</span>'
+      +'<input type="number" step="0.01" min="0" value="'+(e.marketPrice!=null?e.marketPrice:'')+'" placeholder="—" style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#34d399;font-size:11px" oninput="updateSessionCard('+i+',\'marketPrice\',parseFloat(this.value)||null);recalcSessionCard('+i+');renderOfferTotals()"/>'
+      +'<span style="font-size:10px;color:#94a3b8">Buy%</span>'
+      +'<input type="number" step="1" min="1" max="100" value="'+(e.buyPerc!=null?e.buyPerc:'')+'" placeholder="—" style="width:48px;padding:3px 5px;border-radius:4px;border:1px solid #7c3aed;background:#1a1040;color:#a78bfa;font-size:11px;font-weight:700" oninput="updateSessionCardPerc('+i+',parseInt(this.value))"/>'
+      +'<span style="font-size:10px;color:#94a3b8">Offer $</span>'
+      +'<input type="number" step="0.01" min="0" value="'+(e.buyPrice!=null?e.buyPrice:'')+'" placeholder="—" style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#f0c040;font-size:11px;font-weight:600" oninput="updateSessionCard('+i+',\'buyPrice\',parseFloat(this.value)||null);renderOfferTotals()"/>'
+      +'<span style="font-size:10px;color:#a78bfa">× '+e.qty+' = $'+(e.buyPrice!=null?(e.buyPrice*e.qty).toFixed(2):'—')+'</span>'
+      +'</div></div>'
+      +'<button class="remove-btn" onclick="removeFromSession('+e.id+')">×</button>'
+      +'</div>';
+  });
+  el('offer-rows').innerHTML=html;
+}
+
+function removeFromSession(id){st.session=st.session.filter(function(e){return e.id!==id;});renderOfferSheet();}
+
+function clearSession(){
+  if(st.session.length&&!confirm('Start a new offer sheet? Current cards will be cleared.'))return;
+  st.session=[];st.editingOfferId=null;
+  if(el('fee-shipping'))el('fee-shipping').value=0;
+  if(el('fee-other'))el('fee-other').value=0;
+  if(el('offer-seller-select'))el('offer-seller-select').value='';
+  if(el('new-seller-name-wrap'))el('new-seller-name-wrap').style.display='none';
+  el('offer-panel').style.display='none';
+  renderOfferTotals();
+}
+
+function acceptOffer(){
+  if(!st.session.length)return;
+  const selVal=el('offer-seller-select').value;
+  let sellerName='Unknown',sellerId=null;
+  if(selVal==='__inperson__'){sellerName='In Person / Vending';}
+  else if(selVal==='__new__'){
+    const nm=el('new-seller-name').value.trim();
+    if(!nm){showToast('⚠️ Please enter a seller name.');return;}
+    const ns={id:uid(),name:nm,fb:'',phone:'',address:'',notes:''};
+    st.sellers.push(ns);save('op-sellers',st.sellers);sellerId=ns.id;sellerName=nm;
+  }else if(selVal){const s=st.sellers.find(function(x){return String(x.id)===String(selVal);});if(s){sellerName=s.name;sellerId=s.id;}}
+  const ship=parseFloat(el('fee-shipping').value||0)||0;
+  const other=parseFloat(el('fee-other').value||0)||0;
+  const cardTotal=st.session.reduce(function(s,e){return s+(e.buyPrice||0)*e.qty;},0);
+  const d=today();
+
+  if(st.editingOfferId){
+    const existing=st.offers.find(function(o){return String(o.id)===String(st.editingOfferId);});
+    if(existing){
+      const newCards=st.session.map(function(e){return Object.assign({},e,{status:'pending'});});
+      existing.cards=existing.cards.concat(newCards);
+      existing.cardTotal=existing.cards.reduce(function(s,c){return s+(c.buyPrice||0)*c.qty;},0);
+      existing.shipping=ship;existing.otherFees=other;
+      existing.total=existing.cardTotal+ship+other;
+      save('op-offers',st.offers);
+      const newInv=st.session.map(function(e){return Object.assign({},e,{id:uid(),dateAdded:d,offerId:existing.id,sellerName:existing.sellerName,sellerId:existing.sellerId,status:'pending'});});
+      st.inventory=st.inventory.concat(newInv);
+      save('op-inventory',st.inventory);
+      const eid=existing.id;
+      clearSession();updateStats();
+      showToast('✅ Cards added to offer sheet!');
+      switchTab('offers');
+      setTimeout(function(){openOfferDetail(eid);},100);
+      return;
+    }
+  }
+
+  const offerId=uid();
+  const offerSheet={id:offerId,sellerName:sellerName,sellerId:sellerId,date:d,shipping:ship,otherFees:other,cardTotal:cardTotal,total:cardTotal+ship+other,cards:st.session.map(function(e){return Object.assign({},e,{status:'pending'});})};
+  st.offers.unshift(offerSheet);saveOffers();
+  const invCards=st.session.map(function(e){return Object.assign({},e,{id:uid(),dateAdded:d,offerId:offerId,sellerName:sellerName,sellerId:sellerId,status:'pending'});});
+  st.inventory=st.inventory.concat(invCards);
+  saveInventory();
+  clearSession();updateStats();
+  showToast('✅ Offer sheet saved!');switchTab('offers');
+}
+
+// ── MANUAL ENTRY ─────────────────────────────────────────────────────────────
+function toggleManual(){
+  const form=el('manual-entry-form');const icon=el('manual-toggle-icon');
+  const open=form.style.display==='none';form.style.display=open?'':'none';
+  icon.textContent=open?'▲ collapse':'▼ expand';
+}
+function getManualEntry(){
+  const name=el('me-name').value.trim();if(!name){showToast('⚠️ Card name is required.');return null;}
+  return{id:uid(),name:name,cardNumber:el('me-num').value.trim(),set:el('me-set').value.trim(),condition:el('me-cond').value,qty:Math.max(1,parseInt(el('me-qty').value)||1),marketPrice:parseFloat(el('me-market').value)||null,buyPrice:parseFloat(el('me-cost').value)||0,buyPerc:null,image:el('me-image').value.trim()||null,tcgplayerId:null,manual:true};
+}
+function clearManualForm(){['me-name','me-set','me-num','me-market','me-cost','me-image'].forEach(function(id){el(id).value='';});el('me-qty').value=1;el('me-cond').value='NM';}
+function addManualToOffer(){
+  const e=getManualEntry();if(!e)return;
+  saveCustomCard(e);
+  st.session.push(e);renderOfferSheet();clearManualForm();
+  el('offer-panel').style.display='';showToast('✅ '+e.name+' added to offer & saved to catalog!');
+}
+function addManualToInventory(){
+  const e=getManualEntry();if(!e)return;
+  saveCustomCard(e);
+  st.inventory.push(Object.assign({},e,{id:uid(),dateAdded:today(),sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null}));
+  save('op-inventory',st.inventory);updateStats();clearManualForm();
+  showToast('✅ '+e.name+' added to inventory & saved to catalog!');
+}
+
+// ── OFFER SHEETS ─────────────────────────────────────────────────────────────
+function showOffersListView(){el('offers-list-view').style.display='';el('offers-detail-view').style.display='none';}
+
+function renderOffersList(){
+  const filter=(el('offers-filter')&&el('offers-filter').value||'').toLowerCase();
+  const sort=el('offers-sort')&&el('offers-sort').value||'date-desc';
+  let list=st.offers.filter(function(o){return o.sellerName.toLowerCase().includes(filter)||o.date.includes(filter);});
+  list.sort(function(a,b){
+    if(sort==='date-desc')return b.id-a.id;if(sort==='date-asc')return a.id-b.id;
+    if(sort==='total-desc')return b.total-a.total;if(sort==='total-asc')return a.total-b.total;
+    if(sort==='seller-asc')return a.sellerName.localeCompare(b.sellerName);return 0;
+  });
+  let html='';
+  list.forEach(function(o){
+    const total=o.cards.length;
+    const received=o.cards.filter(function(c){return c.status==='onhand'||c.status==='shipped';}).length;
+    const missing=o.cards.filter(function(c){return c.status==='missing';}).length;
+    const pct=total?Math.round((received/total)*100):0;
+    const statusBadge=received===0?'<span class="badge badge-pending">Pending</span>':received<total?'<span class="badge badge-partial">Partial</span>':'<span class="badge badge-complete">Complete</span>';
+    html+='<div class="sheet-card" onclick="openOfferDetail(\''+o.id+'\')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">'
+      +'<div><div class="sheet-seller">🏴‍☠️ '+o.sellerName+'</div><div class="sheet-date">'+o.date+'</div></div>'
+      +'<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
+      +'<button onclick="event.stopPropagation();deleteOffer(\''+o.id+'\')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>'
+      +statusBadge+'<div style="font-size:13px;color:#34d399;font-weight:700">$'+o.total.toFixed(2)+'</div></div></div>'
+      +'<div style="font-size:11px;color:#94a3b8;margin-top:5px">'+total+' cards • $'+o.cardTotal.toFixed(2)+' • Ship: $'+o.shipping.toFixed(2)+(missing?' • <span style="color:#f87171">'+missing+' missing</span>':'')+'</div>'
+      +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+      +'<div style="font-size:10px;color:#6b7280;margin-top:3px">'+received+'/'+total+' received ('+pct+'%)</div>'
+      +'</div>';
+  });
+  el('offers-list').innerHTML=html||'<div class="empty">No offer sheets yet.</div>';
+}
+
+function openOfferDetail(id){
+  const o=st.offers.find(function(x){return String(x.id)===String(id);});if(!o)return;
+  el('offers-list-view').style.display='none';el('offers-detail-view').style.display='';
+  renderOfferDetail(o);
+}
+
+function renderOfferDetail(o){
+  const total=o.cards.length;
+  const received=o.cards.filter(function(c){return c.status==='onhand'||c.status==='shipped';}).length;
+  const missing=o.cards.filter(function(c){return c.status==='missing';}).length;
+  const pct=total?Math.round((received/total)*100):0;
+  const seller=st.sellers.find(function(s){return String(s.id)===String(o.sellerId);});
+  let sellerHtml='';
+  if(seller){
+    sellerHtml='<div style="background:#0d0820;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px">'
+      +'<div style="font-weight:600;color:#a78bfa;margin-bottom:5px">Seller Contact</div>'
+      +(seller.fb?'<div class="seller-field">💬 <a href="'+seller.fb+'" target="_blank" style="color:#60a5fa">Facebook Messenger</a></div>':'')
+      +(seller.phone?'<div class="seller-field">📞 '+seller.phone+'</div>':'')
+      +(seller.address?'<div class="seller-field">📍 '+seller.address+'</div>':'')
+      +(seller.notes?'<div class="seller-field">📝 '+seller.notes+'</div>':'')
+      +'</div>';
+  }
+  let cardsHtml='';
+  o.cards.forEach(function(card,i){
+    let statusBtns='';
+    STATUS_CYCLE.forEach(function(s){
+      statusBtns+='<button class="status-btn '+STATUS_CLASS[s]+'" style="opacity:'+(card.status===s?1:0.3)+'" onclick="setCardStatus(\''+o.id+'\','+i+',\''+s+'\')">'+STATUS_LABELS[s]+'</button>';
+    });
+    cardsHtml+='<div class="checklist-row">'
+      +(card.image?'<img class="checklist-thumb" src="'+card.image+'" onerror="this.style.display=\'none\'"/>':'<div class="checklist-thumb-blank"></div>')
+      +'<div style="flex:1">'
+      +'<div style="font-weight:600;font-size:13px">'+card.name+'</div>'
+      +'<div style="font-size:10px;color:#94a3b8">'+card.cardNumber+' • '+(COND_FULL[card.condition]||card.condition)+' × '+card.qty+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap;align-items:center">'
+      +'<span style="font-size:10px;color:#94a3b8">Buy%</span>'
+      +'<input type="number" min="1" max="100" value="'+(card.buyPerc||'')+'" placeholder="—" style="width:50px;padding:3px 5px;border-radius:4px;border:1px solid #7c3aed;background:#1a1040;color:#a78bfa;font-size:11px;font-weight:700" oninput="editOfferCard(\''+o.id+'\','+i+',\'perc\',parseFloat(this.value))"/>'
+      +'<span style="font-size:10px;color:#94a3b8">Offer $</span>'
+      +'<input type="number" step="0.01" min="0" value="'+(card.buyPrice!=null?card.buyPrice:'')+'" placeholder="—" style="width:65px;padding:3px 5px;border-radius:4px;border:1px solid #3d2080;background:#1a1640;color:#f0c040;font-size:11px;font-weight:600" oninput="editOfferCard(\''+o.id+'\','+i+',\'price\',parseFloat(this.value))"/>'
+      +'<span style="font-size:10px;color:#a78bfa">× '+card.qty+' = $'+(card.buyPrice!=null?(card.buyPrice*card.qty).toFixed(2):'—')+'</span>'
+      +(card.tcgplayerId?'<a href="https://www.tcgplayer.com/product/'+card.tcgplayerId+'" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 6px">TCGPlayer ↗</a>':'')
+      +'</div></div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">'
+      +'<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end">'+statusBtns+'</div>'
+      +'<button onclick="removeCardFromOffer(\''+o.id+'\','+i+')" style="padding:3px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer;margin-top:2px">✕ Remove</button>'
+      +'</div></div>';
+  });
+  el('offers-detail-content').innerHTML='<div class="panel">'
+    +'<div class="sheet-detail-header">'
+    +'<button class="back-btn" onclick="showOffersListView();renderOffersList()">← Back</button>'
+    +'<div style="flex:1"><div style="font-weight:700;font-size:16px;color:#f0c040">🏴‍☠️ '+o.sellerName+'</div><div style="font-size:12px;color:#94a3b8">'+o.date+' • '+total+' cards • $'+o.total.toFixed(2)+'</div></div>'
+    +'<button onclick="addCardsToExistingOffer(\''+o.id+'\')" style="padding:8px 14px;border-radius:6px;background:#059669;color:#fff;border:none;font-weight:600;font-size:12px;cursor:pointer">+ Add Cards</button>'
+    +'<button onclick="exportOfferPDF(\''+o.id+'\')" style="padding:8px 14px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:12px;cursor:pointer">📄 Export PDF</button>'
+    +'</div>'
+    +sellerHtml
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:13px">'
+    +'<div>Cards: <span style="color:#34d399">$'+o.cardTotal.toFixed(2)+'</span></div>'
+    +'<div>Shipping: <span style="color:#94a3b8">$'+o.shipping.toFixed(2)+'</span></div>'
+    +'<div>Other: <span style="color:#94a3b8">$'+o.otherFees.toFixed(2)+'</span></div>'
+    +'<div>Total: <span style="color:#f0c040;font-weight:700">$'+o.total.toFixed(2)+'</span></div>'
+    +'</div>'
+    +'<div class="progress-bar" style="margin-bottom:4px"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+    +'<div style="font-size:11px;color:#6b7280;margin-bottom:12px">'+received+'/'+total+' received • '+missing+' missing</div>'
+    +cardsHtml
+    +'</div>';
+}
+
+function editOfferCard(offerId,cardIdx,field,val){
+  const o=st.offers.find(function(x){return String(x.id)===String(offerId);});
+  if(!o||!o.cards[cardIdx])return;
+  const card=o.cards[cardIdx];
+  if(field==='perc'){card.buyPerc=val;if(card.marketPrice!=null)card.buyPrice=parseFloat(((card.marketPrice*val)/100).toFixed(2));}
+  else if(field==='price'){card.buyPrice=val;}
+  o.cardTotal=o.cards.reduce(function(s,c){return s+(c.buyPrice||0)*c.qty;},0);
+  o.total=o.cardTotal+o.shipping+o.otherFees;
+  save('op-offers',st.offers);
+  const inv=st.inventory.find(function(i){return String(i.offerId)===String(offerId)&&i.name===card.name&&i.condition===card.condition;});
+  if(inv){inv.buyPrice=card.buyPrice;inv.buyPerc=card.buyPerc;save('op-inventory',st.inventory);}
+  renderOfferDetail(o);
+}
+
+function removeCardFromOffer(offerId,cardIdx){
+  const o=st.offers.find(function(x){return String(x.id)===String(offerId);});if(!o)return;
+  if(!confirm('Remove "'+o.cards[cardIdx].name+'" from this offer sheet?'))return;
+  const removed=o.cards.splice(cardIdx,1)[0];
+  o.cardTotal=o.cards.reduce(function(s,c){return s+(c.buyPrice||0)*c.qty;},0);
+  o.total=o.cardTotal+o.shipping+o.otherFees;
+  save('op-offers',st.offers);
+  st.inventory=st.inventory.filter(function(i){return!(String(i.offerId)===String(offerId)&&i.name===removed.name&&i.condition===removed.condition);});
+  save('op-inventory',st.inventory);
+  updateStats();renderOfferDetail(o);
+  showToast('🗑 '+removed.name+' removed from offer.');
+}
+
+function setCardStatus(offerId,cardIdx,status){
+  const o=st.offers.find(function(x){return String(x.id)===String(offerId);});if(!o)return;
+  o.cards[cardIdx].status=status;save('op-offers',st.offers);
+  const card=o.cards[cardIdx];
+  const inv=st.inventory.find(function(i){return String(i.offerId)===String(offerId)&&i.name===card.name&&i.condition===card.condition;});
+  if(inv){inv.status=status;save('op-inventory',st.inventory);}
+  updateStats();renderOfferDetail(o);
+}
+
+function deleteOffer(id){
+  if(!confirm('Delete this offer sheet? Linked inventory cards will also be removed.'))return;
+  st.offers=st.offers.filter(function(o){return String(o.id)!==String(id);});
+  st.inventory=st.inventory.filter(function(i){return String(i.offerId)!==String(id);});
+  save('op-offers',st.offers);save('op-inventory',st.inventory);
+  updateStats();renderOffersList();showToast('🗑 Offer sheet deleted.');
+}
+
+function addCardsToExistingOffer(id){
+  const o=st.offers.find(function(x){return String(x.id)===String(id);});if(!o)return;
+  if(st.session.length&&!confirm('You have an unsaved offer in progress. Clear it and load this offer instead?'))return;
+  st.editingOfferId=id;st.session=[];
+  switchTab('buylist');
+  setTimeout(function(){
+    renderOfferSheet();
+    const sel=el('offer-seller-select');
+    if(sel){
+      sel.innerHTML='<option value="">— Select Seller —</option><option value="__inperson__">🏪 In Person / Vending</option><option value="__new__">➕ New Seller...</option>';
+      st.sellers.forEach(function(s){const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.name;sel.appendChild(opt);});
+      sel.value=o.sellerId||'__inperson__';
+    }
+    el('fee-shipping').value=o.shipping||0;
+    el('fee-other').value=o.otherFees||0;
+    const badge=el('session-badge');
+    if(badge){badge.style.display='';badge.textContent='Adding to: '+o.sellerName+' ('+o.date+')';}
+    showToast('📋 Adding cards to '+o.sellerName+'\'s offer. Search and add, then Save.');
+  },100);
+}
+
+function exportOfferPDF(id){
+  const o=st.offers.find(function(x){return String(x.id)===String(id);});if(!o)return;
+  let cardRows='';
+  o.cards.forEach(function(c,i){
+    cardRows+='<tr style="border-bottom:1px solid #ddd;'+(i%2===0?'background:#f9f9f9':'')+'">'
+      +'<td style="padding:8px 6px;text-align:center">'+(c.image?'<img src="'+c.image+'" style="width:38px;border-radius:3px;display:block;margin:auto" onerror="this.style.display=\'none\'"/>':'')+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;font-weight:600">'+c.name+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px">'+c.cardNumber+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:center">'+c.qty+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:right">$'+(c.marketPrice!=null?c.marketPrice.toFixed(2):'—')+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:right;font-weight:700">$'+(c.buyPrice!=null?c.buyPrice.toFixed(2):'—')+'</td>'
+      +'<td style="padding:8px 6px;font-size:12px;text-align:right;color:#059669;font-weight:700">$'+(c.buyPrice!=null?(c.buyPrice*c.qty).toFixed(2):'—')+'</td>'
+      +'</tr>';
+  });
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offer Sheet</title>'
+    +'<style>body{font-family:Arial,sans-serif;margin:0;padding:30px;color:#111;font-size:13px}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #111}table{width:100%;border-collapse:collapse;margin-bottom:16px}thead tr{background:#111;color:#fff}thead td{padding:8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}tbody tr{border-bottom:1px solid #ddd}tbody tr:nth-child(even){background:#f9f9f9}tbody td{padding:7px 6px;font-size:12px;vertical-align:middle}.totals{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.totals-row{display:flex;gap:40px;font-size:13px}.totals-row.grand{font-weight:900;font-size:15px;border-top:2px solid #111;padding-top:6px;margin-top:3px}@media print{body{padding:20px}}</style>'
+    +'</head><body>'
+    +'<div class="header"><div style="font-size:22px;font-weight:900">Offer Sheet</div><div style="font-size:13px;color:#555">'+o.date+'</div></div>'
+    +'<table><thead><tr><td style="width:50px">Photo</td><td>Card Name</td><td>Card #</td><td style="text-align:center">Qty</td><td style="text-align:right">Market</td><td style="text-align:right">Buy/ea</td><td style="text-align:right">Subtotal</td></tr></thead>'
+    +'<tbody>'+cardRows+'</tbody></table>'
+    +'<div class="totals">'
+    +'<div class="totals-row"><span style="color:#555">Cards Subtotal:</span><span>$'+o.cardTotal.toFixed(2)+'</span></div>'
+    +(o.shipping>0?'<div class="totals-row"><span style="color:#555">Shipping:</span><span>$'+o.shipping.toFixed(2)+'</span></div>':'')
+    +(o.otherFees>0?'<div class="totals-row"><span style="color:#555">Other Fees:</span><span>$'+o.otherFees.toFixed(2)+'</span></div>':'')
+    +'<div class="totals-row grand"><span>Total:</span><span style="color:#059669">$'+o.total.toFixed(2)+'</span></div>'
+    +'</div></body></html>';
+  const win=window.open('','_blank');win.document.write(html);win.document.close();win.focus();
+  setTimeout(function(){win.print();},500);
+}
+
+// ── INVENTORY ────────────────────────────────────────────────────────────────
+function renderInventory(){
+  const filter=(el('inv-filter')&&el('inv-filter').value||'').toLowerCase();
+  const statusF=el('inv-status-filter')&&el('inv-status-filter').value||'';
+  const sort=el('inv-sort')&&el('inv-sort').value||'name-asc';
+  const filtered=st.inventory.filter(function(i){
+    return((i.name||'').toLowerCase().includes(filter)||(i.set||'').toLowerCase().includes(filter)||(i.sellerName||'').toLowerCase().includes(filter))
+      &&(!statusF||i.status===statusF);
+  });
+  const groups={};
+  filtered.forEach(function(i){
+    const k=i.name;
+    if(!groups[k])groups[k]={name:i.name,cardNumber:i.cardNumber,set:i.set,image:i.image,entries:[]};
+    groups[k].entries.push(i);
+  });
+  let groupArr=Object.values(groups);
+  groupArr.forEach(function(g){
+    g.totalQty=g.entries.reduce(function(s,e){return s+e.qty;},0);
+    g.totalCost=g.entries.reduce(function(s,e){return s+(e.buyPrice||0)*e.qty;},0);
+    g.totalVal=g.entries.reduce(function(s,e){return s+(e.marketPrice||0)*e.qty;},0);
+    g.avgPerc=g.entries.filter(function(e){return e.buyPerc;}).length?g.entries.reduce(function(s,e){return s+(e.buyPerc||0);},0)/g.entries.filter(function(e){return e.buyPerc;}).length:0;
+    g.latestDate=g.entries.map(function(e){return e.dateAdded||'';}).sort().reverse()[0]||'';
+  });
+  groupArr.sort(function(a,b){
+    if(sort==='name-asc')return a.name.localeCompare(b.name);
+    if(sort==='name-desc')return b.name.localeCompare(a.name);
+    if(sort==='cost-desc')return b.totalCost-a.totalCost;
+    if(sort==='cost-asc')return a.totalCost-b.totalCost;
+    if(sort==='value-desc')return b.totalVal-a.totalVal;
+    if(sort==='value-asc')return a.totalVal-b.totalVal;
+    if(sort==='date-desc')return b.latestDate.localeCompare(a.latestDate);
+    if(sort==='date-asc')return a.latestDate.localeCompare(b.latestDate);
+    if(sort==='perc-desc')return b.avgPerc-a.avgPerc;
+    if(sort==='perc-asc')return a.avgPerc-b.avgPerc;
+    return 0;
+  });
+  const totalCost=st.inventory.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const totalVal=st.inventory.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  function byStatus(s){return st.inventory.filter(function(i){return i.status===s;}).length;}
+  el('inv-stats-bar').innerHTML='<span>'+groupArr.length+' unique • '+filtered.length+' entries</span>'
+    +'<span style="color:#34d399">Cost: $'+totalCost.toFixed(2)+'</span>'
+    +'<span style="color:#f0c040">Value: $'+totalVal.toFixed(2)+'</span>'
+    +'<span class="badge badge-pending">Pending: '+byStatus('pending')+'</span>'
+    +'<span class="badge badge-onhand">On Hand: '+byStatus('onhand')+'</span>'
+    +'<span class="badge badge-shipped">Shipped: '+byStatus('shipped')+'</span>'
+    +'<span class="badge badge-missing">Missing: '+byStatus('missing')+'</span>'
+    +'<span class="badge badge-whatnot">Whatnot: '+byStatus('whatnot')+'</span>';
+  if(!groupArr.length){el('inv-list').innerHTML='<div class="empty">No inventory matches.</div>';return;}
+  let html='<div class="inv-list">';
+  groupArr.forEach(function(g){
+    const condGroups={};
+    g.entries.forEach(function(e){if(!condGroups[e.condition])condGroups[e.condition]=[];condGroups[e.condition].push(e);});
+    let condChips='';
+    CONDITIONS.forEach(function(c){
+      if(!condGroups[c])return;
+      const qty=condGroups[c].reduce(function(s,e){return s+e.qty;},0);
+      const statuses=[...new Set(condGroups[c].map(function(e){return e.status;}))];
+      condChips+='<span style="background:#0d0820;border:1px solid #2d2060;border-radius:4px;padding:2px 5px;font-size:9px;display:inline-flex;gap:3px;align-items:center">'
+        +'<span style="color:#a78bfa;font-weight:700">'+c+'</span><span style="color:#e2e8f0">×'+qty+'</span>'
+        +'<span class="badge '+(STATUS_BADGE[statuses[0]]||'badge-pending')+'" style="padding:1px 4px;font-size:8px;margin:0">'+(statuses.length>1?'Mix':(STATUS_LABELS[statuses[0]]||statuses[0]).slice(0,4))+'</span>'
+        +'</span>';
+    });
+    const hasWhatnot=g.entries.some(function(e){return e.status==='whatnot';});
+    const encodedKey=encodeURIComponent(g.name);
+    html+='<div class="inv-row" onclick="openInvDetail(\''+encodedKey+'\')">'
+      +(g.image?'<img class="inv-row-thumb" src="'+g.image+'" onerror="this.style.display=\'none\'"/>':'<div class="inv-row-no-img">?</div>')
+      +'<div class="inv-row-name">'
+      +'<div class="inv-row-name-main">'+g.name+'</div>'
+      +'<div class="inv-row-name-sub">'+g.cardNumber+' • '+g.set+'</div>'
+      +(g.entries[0]&&g.entries[0].tcgplayerId?'<a href="https://www.tcgplayer.com/product/'+g.entries[0].tcgplayerId+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block">TCGPlayer ↗</a>':'')
+      +'</div>'
+      +'<div class="inv-row-conds">'+condChips+'</div>'
+      +'<div class="inv-row-cost">$'+g.totalCost.toFixed(2)+'</div>'
+      +'<div class="inv-row-val">$'+g.totalVal.toFixed(2)+'</div>'
+      +(hasWhatnot?'<div style="font-size:10px;color:#d946ef;font-weight:700;white-space:nowrap">📺 In Show</div>':'')
+      +'</div>';
+  });
+  html+='</div>';
+  el('inv-list').innerHTML=html;
+}
+
+function openInvDetail(encodedKey){
+  const name=decodeURIComponent(encodedKey);
+  const entries=st.inventory.filter(function(i){return i.name===name;});if(!entries.length)return;
+  const g=entries[0];
+  const totalQty=entries.reduce(function(s,e){return s+e.qty;},0);
+  const totalCost=entries.reduce(function(s,e){return s+(e.buyPrice||0)*e.qty;},0);
+  el('inv-detail-title').innerHTML='<div>'+g.name+'</div><div style="font-size:11px;color:#a78bfa;font-weight:400">'+g.cardNumber+' • ×'+totalQty+' total • $'+totalCost.toFixed(2)+' cost</div>';
+  let tableRows='';
+  entries.forEach(function(e){
+    const offer=st.offers.find(function(o){return String(o.id)===String(e.offerId);});
+    const inWhatnot=e.status==='whatnot';
+    tableRows+='<tr style="border-bottom:1px solid #1a1640">'
+      +'<td style="padding:8px 6px;font-size:11px;color:#a78bfa;font-weight:700">'+e.condition+'</td>'
+      +'<td style="padding:8px 6px;font-size:11px;text-align:center">'+e.qty+'</td>'
+      +'<td style="padding:8px 6px;font-size:11px;color:#34d399">$'+(e.buyPrice!=null?(e.buyPrice*e.qty).toFixed(2):'—')+'<br><span style="font-size:10px;color:#6b7280">$'+(e.buyPrice||0)+'/ea</span></td>'
+      +'<td style="padding:8px 6px;font-size:11px"><span class="badge '+(STATUS_BADGE[e.status]||'badge-pending')+'">'+(STATUS_LABELS[e.status]||e.status)+'</span></td>'
+      +'<td style="padding:8px 6px;font-size:11px">'+(offer?'<button onclick="closeInvDetail();switchTab(\'offers\');openOfferDetail(\''+offer.id+'\')" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:10px;cursor:pointer;white-space:nowrap">📋 '+offer.sellerName+'</button>':'<span style="color:#6b7280;font-size:10px">No sheet</span>')+'</td>'
+      +'<td style="padding:8px 6px">'
+      +'<button onclick="toggleWhatnot('+e.id+',\''+encodedKey+'\')" style="padding:3px 10px;border-radius:4px;border:none;font-size:10px;font-weight:700;cursor:'+(inWhatnot?'default':'pointer')+';white-space:nowrap;background:'+(inWhatnot?'#1a1640':'#2d0d2d')+';color:'+(inWhatnot?'#4b5563':'#d946ef')+';opacity:'+(inWhatnot?0.6:1)+'">'+(inWhatnot?'📺 In Show':'📺 Add to Show')+'</button>'
+      +'</td>'
+      +'<td style="padding:8px 6px"><button onclick="removeFromInventory('+e.id+');openInvDetail(\''+encodedKey+'\')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button></td>'
+      +'</tr>';
+  });
+  el('inv-detail-content').innerHTML=
+    '<div style="display:flex;gap:12px;margin-bottom:14px;align-items:flex-start">'
+    +(g.image?'<img src="'+g.image+'" style="width:80px;border-radius:6px;flex-shrink:0" onerror="this.style.display=\'none\'"/>':'')
+    +'<div style="font-size:13px"><div style="color:#94a3b8;margin-bottom:3px">'+g.set+'</div><div style="color:#34d399">Total Cost: $'+totalCost.toFixed(2)+'</div><div style="color:#f0c040">Total Qty: ×'+totalQty+'</div><div style="color:#94a3b8;font-size:11px;margin-top:3px">'+entries.length+' purchase'+(entries.length!==1?'s':'')+'</div></div>'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr style="border-bottom:1px solid #2d2060">'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Cond</th>'
+    +'<th style="padding:6px;text-align:center;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Qty</th>'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Price Paid</th>'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Status</th>'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Offer Sheet</th>'
+    +'<th style="padding:6px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">Whatnot</th>'
+    +'<th style="padding:6px"></th>'
+    +'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+  el('inv-detail-modal').style.display='';
+}
+
+function closeInvDetail(){el('inv-detail-modal').style.display='none';}
+
+function toggleWhatnot(id,encodedKey){
+  const item=st.inventory.find(function(i){return i.id===id;});
+  if(!item||item.status==='whatnot')return;
+  item.status='whatnot';save('op-inventory',st.inventory);
+  updateStats();renderInventory();openInvDetail(encodedKey);showToast('📺 Added to Whatnot show!');
+}
+
+function removeFromInventory(id){
+  st.inventory=st.inventory.filter(function(i){return i.id!==id;});
+  saveInventory();updateStats();renderInventory();
+}
+
+// ── WHATNOT ──────────────────────────────────────────────────────────────────
+function renderWhatnot(){
+  const items=st.inventory.filter(function(i){return i.status==='whatnot';});
+  const filter=(el('wn-filter')&&el('wn-filter').value||'').toLowerCase();
+  const sort=el('wn-sort')&&el('wn-sort').value||'name-asc';
+  const totalCost=items.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const totalVal=items.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  const profit=totalVal-totalCost;
+  el('whatnot-summary').innerHTML=
+    '<div class="whatnot-stat"><div class="whatnot-stat-label">Cards in Show</div><div class="whatnot-stat-val" style="color:#d946ef">'+items.length+'</div></div>'
+    +'<div class="whatnot-stat"><div class="whatnot-stat-label">Total Cost Paid</div><div class="whatnot-stat-val" style="color:#34d399">$'+totalCost.toFixed(2)+'</div></div>'
+    +'<div class="whatnot-stat"><div class="whatnot-stat-label">Total Market Value</div><div class="whatnot-stat-val" style="color:#f0c040">$'+totalVal.toFixed(2)+'</div></div>'
+    +'<div class="whatnot-stat"><div class="whatnot-stat-label">Potential Profit</div><div class="whatnot-stat-val" style="color:'+(profit>=0?'#34d399':'#f87171')+'">$'+profit.toFixed(2)+'</div></div>';
+  const filtered=items.filter(function(i){return(i.name||'').toLowerCase().includes(filter);});
+  filtered.sort(function(a,b){
+    if(sort==='name-asc')return(a.name||'').localeCompare(b.name||'');
+    if(sort==='cost-desc')return(b.buyPrice||0)*b.qty-(a.buyPrice||0)*a.qty;
+    if(sort==='value-desc')return(b.marketPrice||0)*b.qty-(a.marketPrice||0)*a.qty;
+    return 0;
+  });
+  if(!filtered.length){el('whatnot-list').innerHTML='<div class="empty">No cards in Whatnot show yet.</div>';return;}
+  let html='<div class="inv-list">';
+  filtered.forEach(function(i){
+    html+='<div class="inv-row">'
+      +(i.image?'<img class="inv-row-thumb" src="'+i.image+'" onerror="this.style.display=\'none\'"/>':'<div class="inv-row-no-img">?</div>')
+      +'<div class="inv-row-name"><div class="inv-row-name-main">'+i.name+'</div><div class="inv-row-name-sub">'+i.cardNumber+' • '+(COND_FULL[i.condition]||i.condition)+' × '+i.qty+'</div></div>'
+      +'<div style="flex:1;font-size:11px;color:#94a3b8">👤 '+(i.sellerName||'Unknown')+'</div>'
+      +'<div class="inv-row-cost">Cost: $'+((i.buyPrice||0)*i.qty).toFixed(2)+'</div>'
+      +'<div class="inv-row-val">Value: $'+((i.marketPrice||0)*i.qty).toFixed(2)+'</div>'
+      +'<div style="display:flex;gap:4px">'
+      +'<button onclick="restoreFromWhatnot('+i.id+')" style="padding:4px 8px;border-radius:4px;background:#0d2010;border:none;color:#34d399;font-size:10px;cursor:pointer">↩ Restore</button>'
+      +'<button onclick="removeFromInventory('+i.id+')" style="padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button>'
+      +'</div></div>';
+  });
+  el('whatnot-list').innerHTML=html+'</div>';
+}
+
+function restoreFromWhatnot(id){
+  const i=st.inventory.find(function(x){return x.id===id;});
+  if(i){i.status='onhand';save('op-inventory',st.inventory);updateStats();renderWhatnot();showToast('↩ Restored to On Hand.');}
+}
+
+function clearWhatnot(){
+  if(!confirm('Remove all Whatnot cards from the show list? They will be marked Shipped.'))return;
+  st.inventory.filter(function(i){return i.status==='whatnot';}).forEach(function(i){i.status='shipped';});
+  save('op-inventory',st.inventory);updateStats();renderWhatnot();showToast('✅ Whatnot show cleared.');
+}
+
+// ── SELLERS ──────────────────────────────────────────────────────────────────
+function renderSellers(){
+  const list=el('sellers-list');
+  if(!st.sellers.length){list.innerHTML='<div class="empty">No sellers yet.</div>';return;}
+  let html='';
+  st.sellers.forEach(function(s){
+    html+='<div class="seller-card">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      +'<div class="seller-card-name">👤 '+s.name+'</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button style="padding:4px 10px;border-radius:5px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer" onclick="openSellerModal(\''+s.id+'\')">Edit</button>'
+      +'<button style="padding:4px 10px;border-radius:5px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer" onclick="deleteSeller(\''+s.id+'\')">Delete</button>'
+      +'</div></div>'
+      +(s.fb?'<div class="seller-field">💬 <a href="'+s.fb+'" target="_blank">Facebook Messenger</a></div>':'')
+      +(s.phone?'<div class="seller-field">📞 '+s.phone+'</div>':'')
+      +(s.address?'<div class="seller-field">📍 '+s.address+'</div>':'')
+      +(s.notes?'<div class="seller-field">📝 '+s.notes+'</div>':'')
+      +'<div style="font-size:10px;color:#6b7280;margin-top:6px">'+st.inventory.filter(function(i){return String(i.sellerId)===String(s.id);}).length+' cards in inventory</div>'
+      +'</div>';
+  });
+  list.innerHTML=html;
+}
+
+function openSellerModal(id){
+  st.editingSellerId=id||null;
+  el('seller-modal-title').textContent=id?'Edit Seller':'Add Seller';
+  if(id){const s=st.sellers.find(function(x){return String(x.id)===String(id);});if(s){el('sm-name').value=s.name||'';el('sm-fb').value=s.fb||'';el('sm-phone').value=s.phone||'';el('sm-address').value=s.address||'';el('sm-notes').value=s.notes||'';}}
+  else{['sm-name','sm-fb','sm-phone','sm-address','sm-notes'].forEach(function(f){el(f).value='';});}
+  el('seller-modal').style.display='';
+}
+function closeSellerModal(){el('seller-modal').style.display='none';}
+function saveSeller(){
+  const name=el('sm-name').value.trim();if(!name){showToast('⚠️ Seller name is required.');return;}
+  const data={name:name,fb:el('sm-fb').value.trim(),phone:el('sm-phone').value.trim(),address:el('sm-address').value.trim(),notes:el('sm-notes').value.trim()};
+  if(st.editingSellerId){const idx=st.sellers.findIndex(function(x){return String(x.id)===String(st.editingSellerId);});if(idx>-1)st.sellers[idx]=Object.assign({},st.sellers[idx],data);}
+  else{st.sellers.push(Object.assign({id:uid()},data));}
+  save('op-sellers',st.sellers);save('op-sellers',st.sellers);scheduleSave('sellers',st.sellers);closeSellerModal();renderSellers();showToast('✅ Seller saved!');
+}
+function deleteSeller(id){
+  if(!confirm('Delete this seller?'))return;
+  st.sellers=st.sellers.filter(function(s){return String(s.id)!==String(id);});
+  save('op-sellers',st.sellers);renderSellers();
+}
+
+// ── FINANCES ─────────────────────────────────────────────────────────────────
+function saveFinances(){
+  finances={paypal:parseFloat(el('fin-paypal').value)||0,bank:parseFloat(el('fin-bank').value)||0,cash:parseFloat(el('fin-cash').value)||0,history:finances.history||[],whatnotShows:finances.whatnotShows||[]};
+  saveFinancesDB();
+}
+
+function updateFinances(){
+  const invVal=st.inventory.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  const invCost=st.inventory.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const paypal=parseFloat(el('fin-paypal').value)||0;
+  const bank=parseFloat(el('fin-bank').value)||0;
+  const cash=parseFloat(el('fin-cash').value)||0;
+  const net=invVal+paypal+bank+cash;
+  el('finance-net-worth').textContent='$'+net.toFixed(2);
+  el('fin-inv-val').textContent='$'+invVal.toFixed(2);
+  el('fin-inv-cost').textContent='Cost basis: $'+invCost.toFixed(2)+' • Unrealized gain: $'+(invVal-invCost).toFixed(2);
+  el('finance-breakdown').textContent='Inventory $'+invVal.toFixed(2)+' + PayPal $'+paypal.toFixed(2)+' + Bank $'+bank.toFixed(2)+' + Cash $'+cash.toFixed(2);
+  function byStatus(s){return st.inventory.filter(function(i){return i.status===s;});}
+  const onhand=byStatus('onhand'),pending=byStatus('pending'),whatnot=byStatus('whatnot');
+  el('fin-inv-detail').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">'
+    +'<div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#34d399;font-weight:700;font-size:13px">On Hand: '+onhand.length+'</div><div>Value: $'+onhand.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0).toFixed(2)+'</div><div>Cost: $'+onhand.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0).toFixed(2)+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#f0a040;font-weight:700;font-size:13px">Pending: '+pending.length+'</div><div>Value: $'+pending.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0).toFixed(2)+'</div><div>Cost: $'+pending.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0).toFixed(2)+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:10px"><div style="color:#d946ef;font-weight:700;font-size:13px">Whatnot: '+whatnot.length+'</div><div>Value: $'+whatnot.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0).toFixed(2)+'</div><div>Cost: $'+whatnot.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0).toFixed(2)+'</div></div>'
+    +'</div>';
+  renderFinanceChart();
+  renderWhatnotHistory();
+}
+
+function snapshotNetWorth(){
+  const invVal=st.inventory.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  const paypal=parseFloat(el('fin-paypal').value)||0;
+  const bank=parseFloat(el('fin-bank').value)||0;
+  const cash=parseFloat(el('fin-cash').value)||0;
+  const net=invVal+paypal+bank+cash;
+  if(!finances.history)finances.history=[];
+  finances.history.push({date:today(),ts:Date.now(),net:net,invVal:invVal,paypal:paypal,bank:bank,cash:cash});
+  save('op-finances',finances);renderFinanceChart();showToast('📸 Net worth snapshot saved!');
+}
+
+function renderFinanceChart(){
+  const canvas=el('networth-chart');const empty=el('chart-empty');if(!canvas)return;
+  const hist=finances.history||[];
+  const range=el('chart-range')&&el('chart-range').value||'all';
+  let data=hist.slice();
+  if(range!=='all'){const cutoff=Date.now()-parseInt(range)*86400000;data=data.filter(function(d){return d.ts>=cutoff;});}
+  if(!data.length){canvas.style.display='none';empty.style.display='';return;}
+  canvas.style.display='';empty.style.display='none';
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth-36,H=220;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  const pad={t:20,r:20,b:40,l:70};
+  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const vals=data.map(function(d){return d.net;});
+  const minV=Math.min.apply(null,vals)*0.97,maxV=Math.max.apply(null,vals)*1.03;
+  const rng=maxV-minV||1;
+  function px(i){return pad.l+i*(cw/(data.length-1||1));}
+  function py(v){return pad.t+ch-((v-minV)/rng)*ch;}
+  ctx.strokeStyle='#2d2060';ctx.lineWidth=1;
+  for(var gi=0;gi<=4;gi++){
+    const gy=pad.t+(ch/4)*gi;
+    ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke();
+    const gv=maxV-((rng/4)*gi);
+    ctx.fillStyle='#94a3b8';ctx.font='11px system-ui';ctx.textAlign='right';
+    ctx.fillText('$'+gv.toFixed(0),pad.l-6,gy+4);
+  }
+  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+  grad.addColorStop(0,'rgba(124,58,237,0.4)');grad.addColorStop(1,'rgba(124,58,237,0.02)');
+  ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));
+  data.forEach(function(d,i){if(i>0)ctx.lineTo(px(i),py(d.net));});
+  ctx.lineTo(px(data.length-1),pad.t+ch);ctx.lineTo(px(0),pad.t+ch);
+  ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));
+  data.forEach(function(d,i){if(i>0)ctx.lineTo(px(i),py(d.net));});
+  ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  data.forEach(function(d,i){
+    const x=px(i),y=py(d.net);
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#f0c040';ctx.fill();
+    const nth=Math.ceil(data.length/8);
+    if(i%nth===0||i===data.length-1){ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText(d.date,x,H-pad.b+14);}
+  });
+  if(data.length>1){
+    const first=data[0].net,last=data[data.length-1].net,change=last-first,pct=((change/first)*100).toFixed(1);
+    ctx.fillStyle=change>=0?'#34d399':'#f87171';ctx.font='bold 13px system-ui';ctx.textAlign='left';
+    ctx.fillText((change>=0?'▲ +':'▼ ')+'$'+change.toFixed(2)+' ('+(change>=0?'+':'')+pct+'%)',pad.l,pad.t-4);
+  }
+}
+
+function recordWhatnotShow(){
+  const whatnot=st.inventory.filter(function(i){return i.status==='whatnot';});
+  if(!whatnot.length){showToast('⚠️ No cards in Whatnot tab to record.');return;}
+  const totalCost=whatnot.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const totalVal=whatnot.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  const revenue=parseFloat(prompt('Enter total revenue earned from this Whatnot show ($):')||'0')||0;
+  if(!finances.whatnotShows)finances.whatnotShows=[];
+  finances.whatnotShows.unshift({id:uid(),date:today(),ts:Date.now(),cardCount:whatnot.length,totalCost:totalCost,totalVal:totalVal,revenue:revenue,profit:revenue-totalCost});
+  save('op-finances',finances);renderWhatnotHistory();showToast('📺 Whatnot show recorded!');
+}
+
+function renderWhatnotHistory(){
+  const el2=el('whatnot-history-list');if(!el2)return;
+  const shows=finances.whatnotShows||[];
+  if(!shows.length){el2.innerHTML='<div style="color:#6b7280;font-size:13px;padding:10px 0">No shows recorded yet.</div>';return;}
+  const totalRevenue=shows.reduce(function(s,w){return s+w.revenue;},0);
+  const totalProfit=shows.reduce(function(s,w){return s+w.profit;},0);
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px">'
+    +'<div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Shows</div><div style="font-size:20px;font-weight:700;color:#d946ef">'+shows.length+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Revenue</div><div style="font-size:20px;font-weight:700;color:#34d399">$'+totalRevenue.toFixed(2)+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:#94a3b8;margin-bottom:4px">Total Profit</div><div style="font-size:20px;font-weight:700;color:'+(totalProfit>=0?'#34d399':'#f87171')+'">$'+totalProfit.toFixed(2)+'</div></div>'
+    +'</div>';
+  shows.forEach(function(w){
+    html+='<div style="background:#0d0820;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #2d0d2d;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+      +'<div><div style="font-weight:700;font-size:13px;color:#d946ef">📺 '+w.date+'</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">'+w.cardCount+' cards • Cost: $'+w.totalCost.toFixed(2)+' • Market: $'+w.totalVal.toFixed(2)+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#34d399">Revenue: $'+w.revenue.toFixed(2)+'</div><div style="font-size:12px;color:'+(w.profit>=0?'#34d399':'#f87171')+'">Profit: '+(w.profit>=0?'+':'')+'$'+w.profit.toFixed(2)+'</div></div>'
+      +'<button onclick="deleteWhatnotShow(\''+w.id+'\')" style="padding:4px 10px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>'
+      +'</div>';
+  });
+  el2.innerHTML=html;
+}
+
+function deleteWhatnotShow(id){
+  if(!confirm('Delete this show record?'))return;
+  finances.whatnotShows=(finances.whatnotShows||[]).filter(function(w){return String(w.id)!==String(id);});
+  save('op-finances',finances);renderWhatnotHistory();
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────────────────
+function saveKey(){
+  const k=el('key-input').value.trim();if(!k)return;
+  st.apiKey=k;save('op-apikey',k);
+  el('key-ok').style.display='';el('key-ok').textContent='✅ Key saved: ...'+k.slice(-8);
+  updateBanner();showToast('✅ API key saved!');
+}
+
+function renderTiers(){
+  let html='';
+  st.tiers.forEach(function(t,i){
+    html+='<div class="tier-row">'
+      +'<input type="number" class="tier-input" value="'+t.min+'" step="0.01" onchange="updateTier('+i+',\'min\',parseFloat(this.value))"/>'
+      +'<input type="number" class="tier-input" value="'+t.max+'" step="0.01" onchange="updateTier('+i+',\'max\',parseFloat(this.value))"/>'
+      +'<input type="number" class="tier-input" value="'+t.nm+'" min="1" max="100" onchange="updateTier('+i+',\'nm\',parseInt(this.value))"/>'
+      +'<input type="number" class="tier-input" value="'+t.lp+'" min="1" max="100" onchange="updateTier('+i+',\'lp\',parseInt(this.value))"/>'
+      +'<button class="remove-tier-btn" onclick="removeTier('+i+')">✕</button>'
+      +'</div>';
+  });
+  el('tier-rows').innerHTML=html;
+}
+function updateTier(i,f,v){st.tiers[i][f]=v;save('op-tiers',st.tiers);}
+function removeTier(i){st.tiers.splice(i,1);save('op-tiers',st.tiers);renderTiers();}
+function addTier(){st.tiers.push({id:uid(),min:0,max:9999,nm:50,lp:40,mp:32,hp:20,dmg:12});save('op-tiers',st.tiers);renderTiers();}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function updateStats(){
+  el('stat-cards').textContent=st.inventory.length;
+  const cost=st.inventory.reduce(function(s,i){return s+(i.buyPrice||0)*i.qty;},0);
+  const val=st.inventory.reduce(function(s,i){return s+(i.marketPrice||0)*i.qty;},0);
+  el('stat-cost').textContent='$'+cost.toFixed(2);
+  el('stat-value').textContent='$'+val.toFixed(2);
+  const net=val+(finances.paypal||0)+(finances.bank||0)+(finances.cash||0);
+  el('stat-networth').textContent='$'+net.toFixed(2);
+}
+
+// ── CUSTOM CARD CATALOG ───────────────────────────────────────────────────────
+function saveCustomCard(entry){
+  const catalog=load('op-custom-catalog',[]);
+  const existing=catalog.findIndex(function(c){return c.name.toLowerCase()===entry.name.toLowerCase()&&c.cardNumber===entry.cardNumber;});
+  const card={
+    id:entry.id||uid(),
+    name:entry.name,cardNumber:entry.cardNumber||'',
+    set:entry.set||'',image:entry.image||null,
+    tcgplayerId:entry.tcgplayerId||null,
+    isCustom:true
+  };
+  if(existing>-1)catalog[existing]=card;
+  else catalog.unshift(card);
+  save('op-custom-catalog',catalog);
+}
+
+function searchCustomCatalog(query){
+  const catalog=load('op-custom-catalog',[]);
+  const q=query.toLowerCase();
+  return catalog.filter(function(c){
+    return c.name.toLowerCase().includes(q)||(c.cardNumber||'').toLowerCase().includes(q)||(c.set||'').toLowerCase().includes(q);
+  });
+}
+function exportData(){
+  const backup={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    inventory:st.inventory,
+    offers:st.offers,
+    sellers:st.sellers,
+    tiers:st.tiers,
+    finances:finances,
+    apiKey:st.apiKey,
+    customCatalog:load('op-custom-catalog',[])
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const dateStr=today().replace(/\//g,'-');
+  a.href=url;a.download='optcg-backup-'+dateStr+'.json';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  el('backup-status').innerHTML='<span style="color:#34d399">✅ Backup exported! Save this file somewhere safe.</span>';
+  showToast('📥 Backup exported successfully!');
+}
+
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const backup=JSON.parse(e.target.result);
+      if(!backup.version||!backup.inventory){
+        el('backup-status').innerHTML='<span style="color:#f87171">❌ Invalid backup file.</span>';return;
+      }
+      if(!confirm('This will replace ALL your current data with the backup from '+backup.exportedAt+'. Are you sure?'))return;
+      if(backup.inventory)st.inventory=backup.inventory;
+      if(backup.offers)st.offers=backup.offers;
+      if(backup.sellers)st.sellers=backup.sellers;
+      if(backup.tiers)st.tiers=backup.tiers;
+      if(backup.finances)finances=backup.finances;
+      if(backup.apiKey)st.apiKey=backup.apiKey;
+      if(backup.customCatalog)save('op-custom-catalog',backup.customCatalog);
+      save('op-inventory',st.inventory);
+      save('op-offers',st.offers);
+      save('op-sellers',st.sellers);
+      save('op-tiers',st.tiers);
+      save('op-finances',finances);
+      save('op-apikey',st.apiKey);
+      if(st.apiKey){el('key-input').value=st.apiKey;el('key-ok').style.display='';el('key-ok').textContent='✅ Key saved: ...'+st.apiKey.slice(-8);}
+      el('fin-paypal').value=finances.paypal||0;
+      el('fin-bank').value=finances.bank||0;
+      el('fin-cash').value=finances.cash||0;
+      updateStats();updateBanner();renderTiers();
+      el('backup-status').innerHTML='<span style="color:#34d399">✅ Backup restored from '+backup.exportedAt+'. '+st.inventory.length+' cards, '+st.offers.length+' offers loaded.</span>';
+      showToast('📤 Backup restored successfully!');
+    }catch(err){
+      el('backup-status').innerHTML='<span style="color:#f87171">❌ Failed to read backup: '+err.message+'</span>';
+    }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+loadAll();
+updateStats();
+updateBanner();
+// Load from Supabase (overrides localStorage if cloud has newer/more data)
+dbLoad().then(function(loaded){
+  if(loaded){
+    updateStats();
+    updateBanner();
+    if(st.currentTab==='inventory') renderInventory();
+    if(st.currentTab==='offers') renderOffersList();
+    if(st.currentTab==='finance') updateFinances();
+    setSyncIndicator('synced');
+  }
+});
+</script>
+</body>
+</html>
++nmUsd+' NM</div>':'');
     d.onclick=function(){selectCard(card);};
     grid.appendChild(d);
   });
@@ -749,8 +1705,19 @@ function getManualEntry(){
   return{id:uid(),name:name,cardNumber:el('me-num').value.trim(),set:el('me-set').value.trim(),condition:el('me-cond').value,qty:Math.max(1,parseInt(el('me-qty').value)||1),marketPrice:parseFloat(el('me-market').value)||null,buyPrice:parseFloat(el('me-cost').value)||0,buyPerc:null,image:el('me-image').value.trim()||null,tcgplayerId:null,manual:true};
 }
 function clearManualForm(){['me-name','me-set','me-num','me-market','me-cost','me-image'].forEach(function(id){el(id).value='';});el('me-qty').value=1;el('me-cond').value='NM';}
-function addManualToOffer(){const e=getManualEntry();if(!e)return;st.session.push(e);renderOfferSheet();clearManualForm();el('offer-panel').style.display='';showToast('✅ '+e.name+' added to offer!');}
-function addManualToInventory(){const e=getManualEntry();if(!e)return;st.inventory.push(Object.assign({},e,{id:uid(),dateAdded:today(),sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null}));save('op-inventory',st.inventory);updateStats();clearManualForm();showToast('✅ '+e.name+' added to inventory!');}
+function addManualToOffer(){
+  const e=getManualEntry();if(!e)return;
+  saveCustomCard(e);
+  st.session.push(e);renderOfferSheet();clearManualForm();
+  el('offer-panel').style.display='';showToast('✅ '+e.name+' added to offer & saved to catalog!');
+}
+function addManualToInventory(){
+  const e=getManualEntry();if(!e)return;
+  saveCustomCard(e);
+  st.inventory.push(Object.assign({},e,{id:uid(),dateAdded:today(),sellerName:'Direct Add',sellerId:null,status:'onhand',offerId:null}));
+  save('op-inventory',st.inventory);updateStats();clearManualForm();
+  showToast('✅ '+e.name+' added to inventory & saved to catalog!');
+}
 
 // ── OFFER SHEETS ─────────────────────────────────────────────────────────────
 function showOffersListView(){el('offers-list-view').style.display='';el('offers-detail-view').style.display='none';}
@@ -1334,6 +2301,88 @@ function updateStats(){
   el('stat-value').textContent='$'+val.toFixed(2);
   const net=val+(finances.paypal||0)+(finances.bank||0)+(finances.cash||0);
   el('stat-networth').textContent='$'+net.toFixed(2);
+}
+
+// ── CUSTOM CARD CATALOG ───────────────────────────────────────────────────────
+function saveCustomCard(entry){
+  const catalog=load('op-custom-catalog',[]);
+  const existing=catalog.findIndex(function(c){return c.name.toLowerCase()===entry.name.toLowerCase()&&c.cardNumber===entry.cardNumber;});
+  const card={
+    id:entry.id||uid(),
+    name:entry.name,cardNumber:entry.cardNumber||'',
+    set:entry.set||'',image:entry.image||null,
+    tcgplayerId:entry.tcgplayerId||null,
+    isCustom:true
+  };
+  if(existing>-1)catalog[existing]=card;
+  else catalog.unshift(card);
+  save('op-custom-catalog',catalog);
+}
+
+function searchCustomCatalog(query){
+  const catalog=load('op-custom-catalog',[]);
+  const q=query.toLowerCase();
+  return catalog.filter(function(c){
+    return c.name.toLowerCase().includes(q)||(c.cardNumber||'').toLowerCase().includes(q)||(c.set||'').toLowerCase().includes(q);
+  });
+}
+function exportData(){
+  const backup={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    inventory:st.inventory,
+    offers:st.offers,
+    sellers:st.sellers,
+    tiers:st.tiers,
+    finances:finances,
+    apiKey:st.apiKey
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const dateStr=today().replace(/\//g,'-');
+  a.href=url;a.download='optcg-backup-'+dateStr+'.json';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  el('backup-status').innerHTML='<span style="color:#34d399">✅ Backup exported! Save this file somewhere safe.</span>';
+  showToast('📥 Backup exported successfully!');
+}
+
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const backup=JSON.parse(e.target.result);
+      if(!backup.version||!backup.inventory){
+        el('backup-status').innerHTML='<span style="color:#f87171">❌ Invalid backup file.</span>';return;
+      }
+      if(!confirm('This will replace ALL your current data with the backup from '+backup.exportedAt+'. Are you sure?'))return;
+      if(backup.inventory)st.inventory=backup.inventory;
+      if(backup.offers)st.offers=backup.offers;
+      if(backup.sellers)st.sellers=backup.sellers;
+      if(backup.tiers)st.tiers=backup.tiers;
+      if(backup.finances)finances=backup.finances;
+      if(backup.apiKey)st.apiKey=backup.apiKey;
+      save('op-inventory',st.inventory);
+      save('op-offers',st.offers);
+      save('op-sellers',st.sellers);
+      save('op-tiers',st.tiers);
+      save('op-finances',finances);
+      save('op-apikey',st.apiKey);
+      if(st.apiKey){el('key-input').value=st.apiKey;el('key-ok').style.display='';el('key-ok').textContent='✅ Key saved: ...'+st.apiKey.slice(-8);}
+      el('fin-paypal').value=finances.paypal||0;
+      el('fin-bank').value=finances.bank||0;
+      el('fin-cash').value=finances.cash||0;
+      updateStats();updateBanner();renderTiers();
+      el('backup-status').innerHTML='<span style="color:#34d399">✅ Backup restored from '+backup.exportedAt+'. '+st.inventory.length+' cards, '+st.offers.length+' offers loaded.</span>';
+      showToast('📤 Backup restored successfully!');
+    }catch(err){
+      el('backup-status').innerHTML='<span style="color:#f87171">❌ Failed to read backup: '+err.message+'</span>';
+    }
+  };
+  reader.readAsText(file);
+  input.value='';
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
