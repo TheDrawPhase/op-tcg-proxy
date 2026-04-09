@@ -75,7 +75,7 @@ button{cursor:pointer}a{text-decoration:none}
 .inoimg{width:34px;height:47px;background:#2d2060;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#6b7280}
 .iname{flex:2;min-width:120px}.iname-m{font-weight:600;font-size:13px}.iname-s{font-size:10px;color:#7c6fcd}
 .iconds{flex:2;display:flex;flex-wrap:wrap;gap:3px}
-.icost{flex:1;font-size:12px;color:#34d399;text-align:right;white-space:nowrap}
+.icost{flex:1;font-size:12px;color:#f0c040;text-align:right;white-space:nowrap}
 .ival{flex:1;font-size:12px;color:#f0c040;text-align:right;white-space:nowrap}
 
 /* Checkboxes for bulk actions */
@@ -140,8 +140,8 @@ button{cursor:pointer}a{text-decoration:none}
     <span id="sync-ui" style="font-size:11px;color:#94a3b8">☁️ Loading...</span>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <div class="stat"><div class="stat-l">Cards</div><div class="stat-v" id="s-cards" style="color:#a78bfa">0</div></div>
-      <div class="stat"><div class="stat-l">Cost</div><div class="stat-v" id="s-cost" style="color:#34d399">$0.00</div></div>
-      <div class="stat"><div class="stat-l">Value</div><div class="stat-v" id="s-val" style="color:#f0c040">$0.00</div></div>
+      <div class="stat"><div class="stat-l">Cost</div><div class="stat-v" id="s-cost" style="color:#f0c040">$0.00</div></div>
+      <div class="stat"><div class="stat-l">Value</div><div class="stat-v" id="s-val" style="color:#34d399">$0.00</div></div>
       <div class="stat"><div class="stat-l">Net Worth</div><div class="stat-v" id="s-net" style="color:#60a5fa">$0.00</div></div>
     </div>
   </div>
@@ -1051,8 +1051,21 @@ function renderOffers(){
     h+='<div>'+selNameHtml+'<div style="font-size:11px;color:#94a3b8">'+o.date+'</div></div>';
     h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">';
     h+='<button onclick="event.stopPropagation();delOffer(\''+o.id+'\')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>';
-    h+=sb+'<div style="font-size:13px;color:#34d399;font-weight:700"><input type="number" step="0.01" min="0" value="'+o.total.toFixed(2)+'" class="pinp pcost" style="width:80px;font-size:13px" onclick="event.stopPropagation()" data-oid="'+ o.id +'" onchange="updOfferTotal(this.dataset.oid,this.value)"/></div></div></div>';
-    h+='<div style="font-size:11px;color:#94a3b8;margin-top:5px">'+tot+' cards • $'+o.ct.toFixed(2)+' • Ship: $'+o.ship.toFixed(2)+(mis?' • <span style="color:#f87171">'+mis+' missing</span>':'')+'</div>';
+    var offerMktTot=0;o.cards.forEach(function(cx){offerMktTot+=(cx.mkt||0)*cx.qty;});
+    h+=sb+'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">';
+    h+='<div style="font-size:11px;color:#34d399;font-weight:600">Value: $'+offerMktTot.toFixed(2)+'</div>';
+    h+='<div style="display:flex;align-items:center;gap:4px">';
+    h+='<span style="font-size:11px;color:#f0c040">Paid:</span>';
+    h+='<input type="number" step="0.01" min="0" value="'+o.total.toFixed(2)+'" class="pinp pcost" style="width:72px;font-size:12px" onclick="event.stopPropagation()" data-oid="'+o.id+'" onchange="updOfferTotal(this.dataset.oid,this.value)"/>';
+    h+='</div>';
+    h+='</div>';
+    h+='<div style="font-size:11px;color:#94a3b8;margin-top:5px">';
+    h+=tot+' cards';
+    h+=' • <span style="color:#34d399">Mkt: $'+offerMktTot.toFixed(2)+'</span>';
+    h+=' • <span style="color:#f0c040">Paid: $'+o.ct.toFixed(2)+'</span>';
+    if(o.ship>0)h+=' • Ship: $'+o.ship.toFixed(2);
+    if(mis)h+=' • <span style="color:#f87171">'+mis+' missing</span>';
+    h+='</div>';
   var onhand_n=o.cards.filter(function(c){return c.status==='onhand';}).length;
   var ship_n=o.cards.filter(function(c){return c.status==='shipped';}).length;
   var miss_n=o.cards.filter(function(c){return c.status==='missing';}).length;
@@ -1154,11 +1167,13 @@ function buildOfferDetailHTML(o){
   h+='<input type="number" step="0.01" min="0" value="'+o.other.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'other\',this.value)"/></div>';
   h+='</div>';
   h+=sh;
-  h+='<div class="row" style="margin-bottom:8px;font-size:13px">';
-  h+='<span>Cards: <b style="color:#34d399">$'+o.ct.toFixed(2)+'</b></span>';
-  h+='<span>Ship: <b style="color:#94a3b8">$'+o.ship.toFixed(2)+'</b></span>';
-  h+='<span>Other: <b style="color:#94a3b8">$'+o.other.toFixed(2)+'</b></span>';
-  h+='<span>Total: <b style="color:#f0c040">$'+o.total.toFixed(2)+'</b></span>';
+  var detMktTot=0;o.cards.forEach(function(cx){detMktTot+=(cx.mkt||0)*cx.qty;});
+  h+='<div class="row" style="margin-bottom:8px;font-size:13px;flex-wrap:wrap;gap:10px">';
+  h+='<span>Value: <b style="color:#34d399">$'+detMktTot.toFixed(2)+'</b></span>';
+  h+='<span>Paid: <b style="color:#f0c040">$'+o.ct.toFixed(2)+'</b></span>';
+  h+='<span style="color:#94a3b8">Ship: <b>$'+o.ship.toFixed(2)+'</b></span>';
+  h+='<span style="color:#94a3b8">Other: <b>$'+o.other.toFixed(2)+'</b></span>';
+  h+='<span>Total Cost: <b style="color:#f0c040">$'+o.total.toFixed(2)+'</b></span>';
   h+='</div>';
     var oh_n=o.cards.filter(function(c2){return c2.status==='onhand';}).length;
     var sh_n=o.cards.filter(function(c2){return c2.status==='shipped';}).length;
@@ -1358,11 +1373,11 @@ function renderInv(){
     var _fe=grp.entries[0];
     var _im=_fe?_fe.mkt:null,_ic=_fe?_fe.cost:null;
     h+='<div style="flex:1;text-align:right;min-width:80px" onclick="openInvMod(\''+ek+'\')">';
-    h+='<div style="font-size:12px;color:#34d399;font-weight:600">'+nm(_ic)+'/ea</div>';
+    h+='<div style="font-size:12px;color:#f0c040;font-weight:600">'+nm(_ic)+'/ea</div>';
     h+='<div style="font-size:10px;color:#6b7280">'+nm(grp.tc)+' tot</div>';
     h+='</div>';
     h+='<div style="flex:1;text-align:right;min-width:80px" onclick="openInvMod(\''+ek+'\')">';
-    h+='<div style="font-size:12px;color:#f0c040;font-weight:600">'+nm(_im)+'/ea</div>';
+    h+='<div style="font-size:12px;color:#34d399;font-weight:600">'+nm(_im)+'/ea</div>';
     h+='<div style="font-size:10px;color:#6b7280">'+nm(grp.tv)+' tot</div>';
     h+='</div>';
     if(hw)h+='<div style="font-size:10px;color:#d946ef;font-weight:700;white-space:nowrap">📺 Show</div>';
@@ -1447,7 +1462,7 @@ function openInvMod(ek){
   h+=f.img?'<img src="'+f.img+'" style="width:75px;border-radius:6px;flex-shrink:0" onerror="this.style.display=\'none\'"/>':'';
   h+='<div style="font-size:12px">';
   h+='<div style="color:#94a3b8;margin-bottom:2px">'+(f.set||'')+(f.color?' • '+f.color:'')+(f.rarity?' • '+f.rarity:'')+'</div>';
-  h+='<div style="color:#34d399">Total Cost: '+nm(tc)+'</div><div style="color:#f0c040">Qty: ×'+tq+'</div>';
+  h+='<div style="color:#f0c040">Total Cost: '+nm(tc)+'</div><div style="color:#f0c040">Qty: ×'+tq+'</div>';
   if(f.manual)h+='<div style="color:#a78bfa;font-size:11px;margin-top:3px">📁 Manual / Catalog card</div>';
   h+='<button onclick="editCatalogEntry(\''+ek+'\')" style="margin-top:6px;padding:4px 9px;border-radius:4px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">✏️ Edit Card Info</button>';
   h+='</div></div>';
@@ -1552,7 +1567,7 @@ function renderWhatnot(){
       lanesH+=i.img?'<img src="'+i.img+'" style="width:30px;height:41px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:30px;height:41px;background:#2d2060;border-radius:3px;flex-shrink:0"></div>';
       lanesH+='<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+i.name+'</div>';
       lanesH+='<div style="font-size:10px;color:#94a3b8">'+(CF[i.cond]||i.cond)+' ×'+i.qty+' • '+(i.seller||'')+'</div>';
-      lanesH+='<div style="font-size:10px;color:#34d399">Cost: '+nm((i.cost||0)*i.qty)+' • Value: '+nm((i.mkt||0)*i.qty)+'</div></div>';
+      lanesH+='<div style="font-size:10px;color:#f0c040">Cost: <b>'+nm((i.cost||0)*i.qty)+'</b></div><div style="font-size:10px;color:#34d399">Value: <b>'+nm((i.mkt||0)*i.qty)+'</b></div></div>';
       lanesH+='<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">';
       lanesH+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay ↗</a>';
       lanesH+='<button onclick="restoreWN(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:#0d2010;border:none;color:#34d399;font-size:10px;cursor:pointer">↩</button>';
@@ -1622,7 +1637,7 @@ function updFin(){
   var pp=parseFloat(g('f-pp').value)||0,bk=parseFloat(g('f-bank').value)||0,ca=parseFloat(g('f-cash').value)||0;
   var net=iv+pp+bk+ca;
   g('f-net').textContent=nm(net);g('f-inv').textContent=nm(iv);
-  g('f-inv-sub').textContent='Cost: '+nm(ic)+' • Gain: '+nm(iv-ic);
+  g('f-inv-sub').innerHTML='<span style="color:#f0c040">Cost: '+nm(ic)+'</span> • <span style="color:#34d399">Gain: '+nm(iv-ic)+'</span>';
   g('f-break').textContent='Inv '+nm(iv)+' + PayPal '+nm(pp)+' + Bank '+nm(bk)+' + Cash '+nm(ca);
   g('s-net').textContent=nm(net);
   function bS(statuses){var r=[];app.inv.forEach(function(i){if(statuses.indexOf(i.status)>-1)r.push(i);});return r;}
@@ -1634,11 +1649,11 @@ function updFin(){
   function sv(a){var s=0;a.forEach(function(i){s+=(i.mkt||0)*i.qty;});return s;}
   function sc(a){var s=0;a.forEach(function(i){s+=(i.cost||0)*i.qty;});return s;}
   g('f-breakdown').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:7px;margin-top:7px">'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#34d399;font-weight:700;font-size:12px">On Hand: '+oh.length+'</div><div>Value: '+nm(sv(oh))+'</div><div>Cost: '+nm(sc(oh))+'</div></div>'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0a040;font-weight:700;font-size:12px">Pending/Ship/Missing: '+pe.length+'</div><div>Value: '+nm(sv(pe))+'</div><div>Cost: '+nm(sc(pe))+'</div></div>'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#d946ef;font-weight:700;font-size:12px">📺 Whatnot: '+wn.length+'</div><div>Value: '+nm(sv(wn))+'</div><div>Cost: '+nm(sc(wn))+'</div></div>'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0c040;font-weight:700;font-size:12px">🏪 Vend: '+vn.length+'</div><div>Value: '+nm(sv(vn))+'</div><div>Cost: '+nm(sc(vn))+'</div></div>'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#60a5fa;font-weight:700;font-size:12px">💬 Direct: '+dr.length+'</div><div>Value: '+nm(sv(dr))+'</div><div>Cost: '+nm(sc(dr))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#34d399;font-weight:700;font-size:12px">On Hand: '+oh.length+'</div><div>Value: '+nm(sv(oh))+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(sc(oh))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0a040;font-weight:700;font-size:12px">Pending/Ship/Missing: '+pe.length+'</div><div><span style="color:#34d399">Value: </span>'+nm(sv(pe))+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(sc(pe))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#d946ef;font-weight:700;font-size:12px">📺 Whatnot: '+wn.length+'</div><div><span style="color:#34d399">Value: </span>'+nm(sv(wn))+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(sc(wn))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0c040;font-weight:700;font-size:12px">🏪 Vend: '+vn.length+'</div><div><span style="color:#34d399">Value: </span>'+nm(sv(vn))+'</div><div>Cost: '+nm(sc(vn))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#60a5fa;font-weight:700;font-size:12px">💬 Direct: '+dr.length+'</div><div><span style="color:#34d399">Value: </span>'+nm(sv(dr))+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(sc(dr))+'</div></div>'
     +'</div>';
   drawChart();renderShows();
 }
