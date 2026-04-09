@@ -180,6 +180,24 @@ a{text-decoration:none}
       <button class="search-btn" id="search-btn" onclick="doSearch()">Search</button>
     </div>
     <div id="search-status"></div>
+    <div id="search-sort-bar" style="display:none;margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="search-sort" class="toolbar-select" onchange="sortAndRenderResults()" style="font-size:12px">
+        <option value="default">Sort: Default</option>
+        <option value="price-asc">Price Low→High</option>
+        <option value="price-desc">Price High→Low</option>
+        <option value="name-asc">Name A→Z</option>
+        <option value="name-desc">Name Z→A</option>
+        <option value="set-asc">Set A→Z</option>
+        <option value="rarity">Rarity</option>
+      </select>
+      <select id="search-filter-set" class="toolbar-select" onchange="sortAndRenderResults()" style="font-size:12px">
+        <option value="">All Sets</option>
+      </select>
+      <select id="search-filter-color" class="toolbar-select" onchange="sortAndRenderResults()" style="font-size:12px">
+        <option value="">All Colors</option>
+      </select>
+      <span id="search-result-count" style="font-size:11px;color:#6b7280;margin-left:4px"></span>
+    </div>
     <div id="results-grid" class="results-grid"></div>
   </div>
 
@@ -565,6 +583,8 @@ async function doSearch(){
   var btn=g('search-btn');btn.disabled=true;btn.textContent='⏳...';
   setStatus('<div style="color:#a78bfa;font-size:13px;margin-top:7px">⏳ Searching...</div>');
   g('results-grid').innerHTML='';
+  allSearchResults=[];
+  g('search-sort-bar').style.display='none';
   st.selectedCard=null;g('selected-panel').style.display='none';
   try{
     var allCards=[],page=1,totalPages=1;
@@ -587,17 +607,66 @@ async function doSearch(){
     var allResults=customMatches.concat(allCards.filter(function(c){
       return!customMatches.find(function(x){return x.name.toLowerCase()===(c.name||'').toLowerCase()&&x.cardNumber===(c.card_number||'');});
     }));
-    if(!allResults.length)setStatus('<div style="color:#f87171;font-size:13px;margin-top:7px">No cards found for "'+cardName+'".</div>');
-    else{
-      var cc=customMatches.length;
-      setStatus('<div style="font-size:11px;color:#6b7280;margin-top:5px">'+allResults.length+' cards found'+(cc?' ('+cc+' from your catalog)':'')+'</div>');
-      renderResults(allResults);
+    if(!allResults.length){
+      setStatus('<div style="color:#f87171;font-size:13px;margin-top:7px">No cards found for "'+cardName+'".</div>');
+      g('search-sort-bar').style.display='none';
+    }else{
+      allSearchResults=allResults;
+      populateSearchFilters(allResults);
+      g('search-sort').value='default';
+      g('search-filter-set').value='';
+      g('search-filter-color').value='';
+      setStatus('');
+      sortAndRenderResults();
     }
   }catch(e){setStatus('<div style="color:#f87171;font-size:13px;margin-top:7px">Search failed: '+e.message+'</div>');}
   btn.disabled=false;btn.textContent='Search';
 }
 
-function renderResults(cards){
+var allSearchResults = [];
+
+function populateSearchFilters(cards){
+  var sets={},colors={};
+  cards.forEach(function(c){
+    var s=c.episode&&c.episode.name?c.episode.name:(c.set_name||c.set||'');
+    var col=c.color||'';
+    if(s)sets[s]=1;
+    if(col)colors[col]=1;
+  });
+  var setEl=g('search-filter-set');
+  setEl.innerHTML='<option value="">All Sets</option>';
+  Object.keys(sets).sort().forEach(function(s){setEl.innerHTML+='<option value="'+s+'">'+s+'</option>';});
+  var colEl=g('search-filter-color');
+  colEl.innerHTML='<option value="">All Colors</option>';
+  Object.keys(colors).sort().forEach(function(c){colEl.innerHTML+='<option value="'+c+'">'+c+'</option>';});
+  g('search-sort-bar').style.display='flex';
+}
+
+function sortAndRenderResults(){
+  var sort=g('search-sort').value;
+  var filterSet=g('search-filter-set').value;
+  var filterColor=g('search-filter-color').value;
+  var filtered=allSearchResults.filter(function(c){
+    var s=c.episode&&c.episode.name?c.episode.name:(c.set_name||c.set||'');
+    var col=c.color||'';
+    return(!filterSet||s===filterSet)&&(!filterColor||col===filterColor);
+  });
+  filtered.sort(function(a,b){
+    var aEur=a.prices&&a.prices.tcgplayer?a.prices.tcgplayer.market_price:null;
+    var bEur=b.prices&&b.prices.tcgplayer?b.prices.tcgplayer.market_price:null;
+    var aPrice=aEur!=null?aEur*EUR_USD:null;
+    var bPrice=bEur!=null?bEur*EUR_USD:null;
+    if(sort==='price-asc'){if(aPrice==null)return 1;if(bPrice==null)return -1;return aPrice-bPrice;}
+    if(sort==='price-desc'){if(aPrice==null)return 1;if(bPrice==null)return -1;return bPrice-aPrice;}
+    if(sort==='name-asc')return(a.name||'').localeCompare(b.name||'');
+    if(sort==='name-desc')return(b.name||'').localeCompare(a.name||'');
+    if(sort==='set-asc'){var as2=a.episode&&a.episode.name?a.episode.name:(a.set_name||'');var bs2=b.episode&&b.episode.name?b.episode.name:(b.set_name||'');return as2.localeCompare(bs2);}
+    if(sort==='rarity'){var rarityOrder={'LEADER':0,'SECRET RARE':1,'SUPER RARE':2,'R':3,'Rare':3,'Common':4,'UC':5};var ar=rarityOrder[a.rarity]!=null?rarityOrder[a.rarity]:99;var br=rarityOrder[b.rarity]!=null?rarityOrder[b.rarity]:99;return ar-br;}
+    return 0;
+  });
+  g('search-result-count').textContent=filtered.length+' of '+allSearchResults.length+' cards';
+  renderResults(filtered);
+}
   var grid=g('results-grid');grid.innerHTML='';
   cards.forEach(function(card){
     var isCustom=card.isCustom===true;
@@ -682,6 +751,8 @@ function renderSelectedCard(){
   html+='<button class="add-btn" style="background:#0d6640" onclick="addDirectToInventory()">+ Direct to Inventory</button>';
   if(card.tcggo_url)html+='<a class="ext-link" style="color:#a78bfa" href="'+card.tcggo_url+'" target="_blank">TCGgo ↗</a>';
   if(card.tcgplayer_id)html+='<a class="ext-link" style="color:#34d399" href="https://www.tcgplayer.com/product/'+card.tcgplayer_id+'" target="_blank">TCGPlayer ↗</a>';
+  var ebayName=encodeURIComponent((card.name||card.name_numbered||'')+(card.card_number?' '+card.card_number:'')+' One Piece Card');
+  html+='<a class="ext-link" style="color:#f0c040;border-color:#4a3800" href="https://www.ebay.com/sch/i.html?_nkw='+ebayName+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank">eBay Sold ↗</a>';
   html+='</div></div></div>';
   g('selected-content').innerHTML=html;
 }
@@ -951,6 +1022,8 @@ function renderOfferDetail(o){
     cardsHtml+='<input type="number" step="0.01" min="0" value="'+(card.buyPrice!=null?card.buyPrice:'')+'" placeholder="—" class="mini-input" style="width:65px;color:#f0c040" oninput="editOfferCard(\''+o.id+'\','+i+',\'price\',parseFloat(this.value))"/>';
     cardsHtml+='<span style="font-size:10px;color:#a78bfa">× '+card.qty+' = $'+(card.buyPrice!=null?(card.buyPrice*card.qty).toFixed(2):'—')+'</span>';
     if(card.tcgplayerId)cardsHtml+='<a href="https://www.tcgplayer.com/product/'+card.tcgplayerId+'" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 6px">TCGPlayer ↗</a>';
+    var ebayQ=encodeURIComponent(card.name+' '+card.cardNumber+' One Piece Card');
+    cardsHtml+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:10px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 6px">eBay Sold ↗</a>';
     cardsHtml+='</div></div>';
     cardsHtml+='<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">';
     cardsHtml+='<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end">'+statusBtns+'</div>';
@@ -1146,6 +1219,8 @@ function renderInventory(){
     html+=grp.image?'<img class="inv-row-thumb" src="'+grp.image+'" onerror="this.style.display=\'none\'"/>':'<div class="inv-row-no-img">?</div>';
     html+='<div class="inv-row-name"><div class="inv-row-name-main">'+grp.name+'</div><div class="inv-row-name-sub">'+grp.cardNumber+' • '+grp.set+'</div>';
     if(firstTcg)html+='<a href="https://www.tcgplayer.com/product/'+firstTcg+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block">TCGPlayer ↗</a>';
+    var ebayInv=encodeURIComponent(grp.name+' '+grp.cardNumber+' One Piece Card');
+    html+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayInv+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block">eBay Sold ↗</a>';
     html+='</div>';
     html+='<div class="inv-row-conds">'+condChips+'</div>';
     html+='<div class="inv-row-cost">$'+grp.totalCost.toFixed(2)+'</div>';
@@ -1253,9 +1328,9 @@ function restoreFromWhatnot(id){
 }
 
 function clearWhatnot(){
-  if(!confirm('Mark all Whatnot cards as Shipped and clear the show?'))return;
-  st.inventory.forEach(function(i){if(i.status==='whatnot')i.status='shipped';});
-  saveInventory();updateStats();renderWhatnot();showToast('✅ Whatnot show cleared.');
+  if(!confirm('Remove all Whatnot cards from inventory? This cannot be undone.'))return;
+  st.inventory=st.inventory.filter(function(i){return i.status!=='whatnot';});
+  saveInventory();updateStats();renderWhatnot();showToast('✅ Whatnot show cleared — cards removed from inventory.');
 }
 
 // ── SELLERS ───────────────────────────────────────────────────────────────────
