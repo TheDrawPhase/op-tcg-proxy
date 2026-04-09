@@ -309,7 +309,10 @@ button{cursor:pointer}a{text-decoration:none}
 
 <!-- SELLERS -->
 <div id="p-sellers" class="page">
-  <button class="btn" style="margin-bottom:14px" onclick="openSelMod()">➕ Add Seller</button>
+  <div class="tbar" style="margin-bottom:14px">
+    <button class="btn" onclick="openSelMod()">➕ Add Seller</button>
+    <input class="inp" id="sel-search" placeholder="Search sellers..." oninput="renderSellers()" style="flex:1"/>
+  </div>
   <div id="sel-list"></div>
 </div>
 
@@ -371,9 +374,15 @@ button{cursor:pointer}a{text-decoration:none}
       <div id="bak-status" style="margin-top:8px;font-size:12px"></div>
     </div>
     <div class="panel">
-      <div class="pt">📁 My Card Catalog</div>
-      <p style="font-size:13px;color:#94a3b8;margin-bottom:10px">Manually entered cards appear in search results. Click a catalog card to edit it.</p>
-      <div id="catalog-list"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:0" onclick="togCatalogPanel()">
+        <div class="pt" style="margin:0">📁 My Card Catalog</div>
+        <span id="catalog-toggle-icon" style="font-size:11px;color:#6b7280">▼ show</span>
+      </div>
+      <div id="catalog-panel-inner" style="display:none;margin-top:12px">
+        <p style="font-size:13px;color:#94a3b8;margin-bottom:10px">Manually entered cards appear in search results. Click ✏️ to edit.</p>
+        <input class="inp full" id="catalog-search" placeholder="Search catalog..." oninput="renderCatalog()" style="margin-bottom:10px;font-size:12px"/>
+        <div id="catalog-list"></div>
+      </div>
     </div>
     <div class="panel">
       <div class="pt">⚙️ Tiered Buy Percentages</div>
@@ -985,20 +994,35 @@ function saveCat(e){
   for(var _ri=0;_ri<allRes.length;_ri++){
     var _r=allRes[_ri];
     if(_r.isCustom&&(_r.id===c.id||(_r.name||'').toLowerCase()===c.name.toLowerCase())){
-      // Patch the live result with updated fields
       _r.card_number=c.cardNumber||_r.card_number||'';
       _r.set=c.set||_r.set||'';
       _r.color=c.color||_r.color||'';
       _r.rarity=c.rarity||_r.rarity||'';
       _r.image=c.image||_r.image||null;
       _r.tcgplayer_id=c.tcgplayerUrl||_r.tcgplayer_id||null;
+      _r.name=c.name||_r.name||'';
       _r.id=c.id;
       break;
-  // Update matching inventory entries too
-  app.inv.forEach(function(inv){if(inv.name.toLowerCase()===c.name.toLowerCase()){inv.img=c.image||inv.img;inv.tcgId=c.tcgplayerUrl||inv.tcgId;inv.set=c.set||inv.set;inv.color=c.color||inv.color;inv.rarity=c.rarity||inv.rarity;}});
-  saveInv();
     }
   }
+  // Update ALL matching inventory entries with every edited field
+  var _oldName=null;
+  // Find old name by looking up by id in existing inv
+  for(var _ii=0;_ii<app.inv.length;_ii++){
+    if(app.inv[_ii].tcgId===c.tcgplayerUrl||app.inv[_ii].name.toLowerCase()===c.name.toLowerCase()){_oldName=app.inv[_ii].name;break;}
+  }
+  app.inv.forEach(function(inv){
+    if(inv.name.toLowerCase()===c.name.toLowerCase()||(_oldName&&inv.name===_oldName)){
+      inv.name=c.name;
+      inv.num=c.cardNumber||inv.num;
+      inv.set=c.set||inv.set;
+      inv.color=c.color||inv.color;
+      inv.rarity=c.rarity||inv.rarity;
+      if(c.image)inv.img=c.image;
+      if(c.tcgplayerUrl)inv.tcgId=c.tcgplayerUrl;
+    }
+  });
+  saveInv();
 }
 
 function clearManual(){g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';g('me-rarity').value='';g('me-img').value='';g('me-qty').value=1;g('me-cond').value='NM';g('me-tcglink').value='';g('me-tcg-url').value='';g('me-edit-id').textContent='';}
@@ -1046,37 +1070,33 @@ function renderOffers(){
     var sellerSid=o.sellerId;
     var sellerObj=null;for(var _si=0;_si<app.sellers.length;_si++){if(String(app.sellers[_si].id)===String(sellerSid)){sellerObj=app.sellers[_si];break;}}
     var selNameHtml='<span style="color:#f0c040;font-weight:700;font-size:14px">🏴‍☠️ '+o.seller+'</span>';
-    h+='<div class="scard" style="'+(isOpen?'border-color:#7c3aed':'')+'"><div data-oid="'+o.id+'" onclick="openOffer(this.dataset.oid)" style="cursor:pointer">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">';
+    h+='<div class="scard" style="'+(isOpen?'border-color:#7c3aed':'')+'">'; 
+    h+='<div data-oid="'+o.id+'" onclick="openOffer(this.dataset.oid)" style="cursor:pointer;padding-bottom:4px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">';
     h+='<div>'+selNameHtml+'<div style="font-size:11px;color:#94a3b8">'+o.date+'</div></div>';
-    h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">';
+    h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">';
     h+='<button onclick="event.stopPropagation();delOffer(\''+o.id+'\')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>';
+    h+=sb;
     var offerMktTot=0;o.cards.forEach(function(cx){offerMktTot+=(cx.mkt||0)*cx.qty;});
-    h+=sb+'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">';
     h+='<div style="font-size:11px;color:#34d399;font-weight:600">Value: $'+offerMktTot.toFixed(2)+'</div>';
-    h+='<div style="display:flex;align-items:center;gap:4px">';
-    h+='<span style="font-size:11px;color:#f0c040">Paid:</span>';
-    h+='<input type="number" step="0.01" min="0" value="'+o.total.toFixed(2)+'" class="pinp pcost" style="width:72px;font-size:12px" onclick="event.stopPropagation()" data-oid="'+o.id+'" onchange="updOfferTotal(this.dataset.oid,this.value)"/>';
-    h+='</div>';
-    h+='</div>';
-    h+='<div style="font-size:11px;color:#94a3b8;margin-top:5px">';
+    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:#f0c040">Paid:</span>';
+    h+='<input type="number" step="0.01" min="0" value="'+o.total.toFixed(2)+'" class="pinp pcost" style="width:72px;font-size:12px" onclick="event.stopPropagation()" data-oid="'+o.id+'" onchange="updOfferTotal(this.dataset.oid,this.value)"/></div>';
+    h+='</div>'; // end right column
+    h+='</div>'; // end top row
+    h+='<div style="font-size:11px;color:#94a3b8;margin-top:4px">';
     h+=tot+' cards';
     h+=' • <span style="color:#34d399">Mkt: $'+offerMktTot.toFixed(2)+'</span>';
     h+=' • <span style="color:#f0c040">Paid: $'+o.ct.toFixed(2)+'</span>';
     if(o.ship>0)h+=' • Ship: $'+o.ship.toFixed(2);
     if(mis)h+=' • <span style="color:#f87171">'+mis+' missing</span>';
     h+='</div>';
-  var onhand_n=o.cards.filter(function(c){return c.status==='onhand';}).length;
-  var ship_n=o.cards.filter(function(c){return c.status==='shipped';}).length;
-  var miss_n=o.cards.filter(function(c){return c.status==='missing';}).length;
-  var pctOH=tot?Math.round((onhand_n/tot)*100):0;
-  var pctSH=tot?Math.round((ship_n/tot)*100):0;
-  var pctMS=tot?Math.round((miss_n/tot)*100):0;
-  h+='<div class="pbar" style="margin-bottom:4px;display:flex;overflow:hidden">';
-  h+='<div style="width:'+pctOH+'%;background:#059669;height:5px"></div>';
-  h+='<div style="width:'+pctSH+'%;background:#3b82f6;height:5px"></div>';
-  h+='<div style="width:'+pctMS+'%;background:#ef4444;height:5px"></div>';
-  h+='</div>';
+    var onhand_n=o.cards.filter(function(c){return c.status==='onhand';}).length;
+    var ship_n=o.cards.filter(function(c){return c.status==='shipped';}).length;
+    var miss_n=o.cards.filter(function(c){return c.status==='missing';}).length;
+    var pctOH=tot?Math.round((onhand_n/tot)*100):0;
+    var pctSH=tot?Math.round((ship_n/tot)*100):0;
+    var pctMS=tot?Math.round((miss_n/tot)*100):0;
+    h+='<div class="pbar" style="margin-top:6px;display:flex;overflow:hidden"><div style="width:'+pctOH+'%;background:#059669;height:5px"></div><div style="width:'+pctSH+'%;background:#3b82f6;height:5px"></div><div style="width:'+pctMS+'%;background:#ef4444;height:5px"></div></div>';
     h+='<div style="font-size:10px;color:#6b7280;margin-top:3px">'+rec+'/'+tot+' received ('+pct+'%) '+(isOpen?'▲ collapse':'▼ expand')+'</div>';
     h+='</div>'; // end clickable header
     if(isOpen){
@@ -1217,7 +1237,7 @@ function editCard(oid,i,f,v){
   else{c.cost=parseFloat(v)||null;}
   o.ct=0;o.cards.forEach(function(x){o.ct+=(x.cost||0)*x.qty;});o.total=o.ct+o.ship+o.other;
   saveOffers();
-  for(var k=0;k<app.inv.length;k++){if(String(app.inv[k].offerId)===String(oid)&&app.inv[k].name===c.name&&app.inv[k].cond===c.cond){app.inv[k].cost=c.cost;app.inv[k].mkt=c.mkt;app.inv[k].perc=c.perc;break;}}
+  for(var k=0;k<app.inv.length;k++){if(String(app.inv[k].offerId)===String(oid)&&app.inv[k].name===c.name&&app.inv[k].cond===c.cond){app.inv[k].cost=c.cost;app.inv[k].mkt=c.mkt;app.inv[k].perc=c.perc;app.inv[k].qty=c.qty;break;}}
   saveInv();
 }
 
@@ -1380,7 +1400,7 @@ function renderInv(){
     h+='<div style="font-size:12px;color:#34d399;font-weight:600">'+nm(_im)+'/ea</div>';
     h+='<div style="font-size:10px;color:#6b7280">'+nm(grp.tv)+' tot</div>';
     h+='</div>';
-    if(hw)h+='<div style="font-size:10px;color:#d946ef;font-weight:700;white-space:nowrap">📺 Show</div>';
+    // Sales status shown in chips — no redundant end-of-row badge needed
     h+='</div>';
   });
   g('inv-list').innerHTML=h+'</div>';
@@ -1597,9 +1617,14 @@ function clearShow(){if(!confirm('Remove all Whatnot cards from inventory?'))ret
 
 // ─── Sellers ──────────────────────────────────────────────────────────────────
 function renderSellers(){
+  var flt=(g('sel-search')?g('sel-search').value||'':'').toLowerCase();
+  var list=app.sellers.filter(function(s){
+    return!flt||(s.name||'').toLowerCase().includes(flt)||(s.ph||'').includes(flt)||(s.notes||'').toLowerCase().includes(flt);
+  });
   if(!app.sellers.length){g('sel-list').innerHTML='<div class="empty">No sellers yet.</div>';return;}
+  if(!list.length){g('sel-list').innerHTML='<div class="empty">No sellers match "'+flt+'".</div>';return;}
   var h='';
-  app.sellers.forEach(function(s){
+  list.forEach(function(s){
     var n=0;app.inv.forEach(function(i){if(String(i.sellerId)===String(s.id))n++;});
     h+='<div class="selcard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">';
     h+='<div style="font-weight:700;font-size:14px;color:#f0c040">👤 '+s.name+'</div>';
@@ -1889,12 +1914,23 @@ function updTier(i,field,val){if(!app.tiers[i])return;app.tiers[i][field]=parseF
 function addTier(){var last=app.tiers[app.tiers.length-1];var newMin=last?last.max+0.01:0;app.tiers.push({id:uid(),min:newMin,max:newMin+9.99,nm:50,lp:40,mp:32,hp:20,dmg:12});saveTiers();renderTiers();}
 function delTier(id){app.tiers=app.tiers.filter(function(t){return t.id!==id;});saveTiers();renderTiers();toast('Tier removed.');}
 
+function togCatalogPanel(){
+  var inner=g('catalog-panel-inner'),icon=g('catalog-toggle-icon');
+  if(!inner)return;
+  var open=inner.style.display==='none';
+  inner.style.display=open?'':'none';
+  if(icon)icon.textContent=open?'▲ hide':'▼ show';
+  if(open)renderCatalog();
+}
 function renderCatalog(){
   var el=g('catalog-list');if(!el)return;
   var cat=ll('catalog',[]);
+  var flt=(g('catalog-search')?g('catalog-search').value||'':'').toLowerCase();
+  var filtered=flt?cat.filter(function(c){return(c.name||'').toLowerCase().includes(flt)||(c.cardNumber||'').toLowerCase().includes(flt)||(c.set||'').toLowerCase().includes(flt);}):cat;
   if(!cat.length){el.innerHTML='<div style="font-size:12px;color:#6b7280">No custom cards yet. Use ✏️ Manual Entry on the Buylist tab.</div>';return;}
-  var h='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">'+cat.length+' card'+(cat.length!==1?'s':'')+' in catalog</div>';
-  cat.forEach(function(c){
+  var h='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">'+filtered.length+(flt?' of ':' ')+cat.length+' card'+(cat.length!==1?'s':'')+' in catalog</div>';
+  if(!filtered.length){el.innerHTML=h+'<div style="font-size:12px;color:#6b7280">No matches.</div>';return;}
+  filtered.forEach(function(c){
     _catCache[c.id]=c;
     h+='<div class="cat-row">';
     h+=c.image?'<img src="'+c.image+'" style="width:28px;height:38px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'"/>':'<div style="width:28px;height:38px;background:#2d2060;border-radius:3px;flex-shrink:0"></div>';
