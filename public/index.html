@@ -191,6 +191,7 @@ button{cursor:pointer}a{text-decoration:none}
           <span id="s-count" style="font-size:11px;color:#6b7280"></span>
         </div>
         <div id="rgrid" class="rgrid"></div>
+        <div id="rgrid" class="rgrid"></div>
       </div>
       <div id="sel-panel" class="panel" style="display:none"><div id="sel-content"></div></div>
     </div>
@@ -459,6 +460,7 @@ button{cursor:pointer}a{text-decoration:none}
       <div><div class="ml">Image URL</div><input class="inp full" id="me-img" placeholder="https://..."/></div>
       <div style="grid-column:1/-1"><div class="ml">TCGPlayer Product URL (for button links)</div><input class="inp full" id="me-tcglink" placeholder="https://www.tcgplayer.com/product/..."/></div>
     </div>
+      <div style="grid-column:1/-1"><div class="ml">Market Price $ (optional — for sorting in search results)</div><input type="number" step="0.01" min="0" class="inp full" id="me-mktprice" placeholder="e.g. 24.99"/></div>
     <div id="me-edit-id" style="display:none"></div>
     <div class="row">
       <button class="btn" style="flex:1" onclick="manualToOffer()">+ Add to Offer</button>
@@ -620,21 +622,19 @@ async function search(){
   var btn=g('sbtn');btn.disabled=true;btn.textContent='⏳';
   g('rgrid').innerHTML='';allRes=[];g('sort-bar').style.display='none';
   app.selCard=null;g('sel-panel').style.display='none';
-  // 1. Show catalog results instantly
+  // 1. Show matching catalog cards instantly in pinned section
   var cat=ll('catalog',[]);
   var q2=name.toLowerCase();
   var custom=cat.filter(function(x){return(x.name||'').toLowerCase().includes(q2)||(x.cardNumber||'').toLowerCase().includes(q2)||(x.set||'').toLowerCase().includes(q2);});
   if(custom.length){
-    allRes=custom.slice();buildFilters(custom);applySort();
-    sstat('<span style="color:#a78bfa;font-size:12px">📁 '+custom.length+' catalog match'+(custom.length!==1?'es':'')+'  •  ⏳ Searching API...</span>');
+    sstat('<span style="color:#a78bfa;font-size:12px">📁 '+custom.length+' catalog  •  ⏳ Searching API...</span>');
   } else {
     sstat('<span style="color:#a78bfa;font-size:12px">⏳ Searching...</span>');
   }
   // 2. Check session cache
   if(searchCache[name]){
     var cached=searchCache[name];
-    var merged2=custom.concat(cached.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.cardNumber===(x.card_number||'');});}));
-    allRes=merged2;buildFilters(merged2);sstat('<span style="color:#34d399;font-size:12px">⚡ '+merged2.length+' results (cached)</span>');applySort();
+    var _mc=custom.concat(cached.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&(y.cardNumber||'')===(x.card_number||'');});}));allRes=_mc;buildFilters(_mc);sstat('<span style="color:#34d399;font-size:12px">⚡ '+_mc.length+' results (cached)</span>');applySort();
     btn.disabled=false;btn.textContent='Search';return;
   }
   try{
@@ -646,8 +646,7 @@ async function search(){
     cards1.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
     var totalPages=(d1.paging&&d1.paging.total)||1;
     // Show page 1 results right away
-    var merge1=custom.concat(cards1.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.cardNumber===(x.card_number||'');});}));
-    allRes=merge1;buildFilters(merge1);applySort();
+    var _m1=custom.concat(cards1.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&(y.cardNumber||'')===(x.card_number||'');});}));allRes=_m1;buildFilters(_m1);applySort();
     if(totalPages>1){
       sstat('<span style="color:#a78bfa;font-size:12px">⏳ Loading '+totalPages+' pages...</span>');
       // 4. Fetch all remaining pages in parallel
@@ -665,8 +664,7 @@ async function search(){
         all=all.concat(cards);
       });
       searchCache[name]=all;
-      var merged=custom.concat(all.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.cardNumber===(x.card_number||'');});}));
-      allRes=merged;buildFilters(merged);applySort();
+      var _ma=custom.concat(all.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&(y.cardNumber||'')===(x.card_number||'');});}));allRes=_ma;buildFilters(_ma);applySort();
       sstat('');
     } else {
       searchCache[name]=cards1;
@@ -711,10 +709,15 @@ function applySort(){
 }
 
 function cardPrice(card,cond){
+  // For catalog cards with a manual price, use that as NM base
+  if(card.isCustom&&card.mktprice){
+    return parseFloat((card.mktprice*CM[cond]).toFixed(2));
+  }
   var e=card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
   if(e==null)return null;
   return parseFloat((e*EU*CM[cond]).toFixed(2));
 }
+
 
 function renderResults(cards){
   var grid=g('rgrid');grid.innerHTML='';
@@ -963,6 +966,7 @@ function openManualMod(catCard){
     g('me-name').value=catCard.name||'';g('me-set').value=catCard.set||'';g('me-num').value=catCard.cardNumber||'';
     g('me-color').value=catCard.color||'';g('me-rarity').value=catCard.rarity||'';
     g('me-img').value=catCard.image||'';g('me-tcglink').value=catCard.tcgplayerUrl||'';
+    if(g('me-mktprice'))g('me-mktprice').value=catCard.mktprice||'';
     g('me-edit-id').textContent=catCard.id||'';
   }
   g('manual-modal').style.display='';
@@ -974,23 +978,34 @@ function autofillTCG(){
   var url=g('me-tcg-url').value.trim();if(!url)return;
   g('me-tcglink').value=url;
   var m=url.match(/\/product\/(\d+)\/?([^?#]*)/);
-  if(m){
-    var pid=m[1];
-    var slug=m[2]||'';
-    if(slug){
-      var parts=slug.split('/');var last=parts[parts.length-1]||'';
-      var name=last.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
-      var setM=slug.match(/(op\d{2}|st\d{2}|eb\d{2})/i);
-      if(setM&&!g('me-set').value)g('me-set').value=setM[1].toUpperCase();
-      if(name&&!g('me-name').value)g('me-name').value=name;
-    }
-    // Auto-populate image from TCGPlayer CDN pattern
-    if(pid&&!g('me-img').value){
-      var imgUrl='https://product-images.tcgplayer.com/fit-in/456x632/'+pid+'.jpg';
-      g('me-img').value=imgUrl;
-    }
+  if(!m){toast('⚠️ Could not parse TCGPlayer URL.');return;}
+  var pid=m[1];
+  var slug=m[2]||'';
+  // Parse name and set from URL slug
+  if(slug){
+    var parts=slug.split('/');var last=parts[parts.length-1]||'';
+    var parsedName=last.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+    var setM=slug.match(/(op\d{2}|st\d{2}|eb\d{2})/i);
+    if(setM&&!g('me-set').value)g('me-set').value=setM[1].toUpperCase();
+    if(parsedName&&!g('me-name').value)g('me-name').value=parsedName;
   }
-  toast('✅ TCGPlayer URL saved. Fill remaining fields.');
+  // Image from TCGPlayer CDN
+  if(!g('me-img').value){
+    g('me-img').value='https://product-images.tcgplayer.com/fit-in/456x632/'+pid+'.jpg';
+  }
+  // Fetch price via proxy
+  toast('⏳ Fetching price...');
+  fetch(P+'/cards/'+pid+'/price').then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(d&&d.market_price!=null){
+      var mkt=parseFloat((d.market_price*EU).toFixed(2));
+      if(g('me-mktprice'))g('me-mktprice').value=mkt;
+      toast('✅ Filled! Market price: $'+mkt);
+    } else {
+      toast('✅ URL saved. Price not found — enter manually.');
+    }
+  }).catch(function(){
+    toast('✅ URL saved. Could not fetch price.');
+  });
 }
 
 function editCatalogCard(encoded){
@@ -1022,7 +1037,7 @@ function getManual(){
     mkt:null,cost:0,perc:null,
     img:g('me-img').value.trim()||null,
     tcgId:g('me-tcglink').value.trim()||null,
-    manual:true
+    manual:true,mktprice:parseFloat(g('me-mktprice')?g('me-mktprice').value||0:0)||null
   };
 }
 
@@ -1030,7 +1045,7 @@ function saveCat(e){
   var cat=ll('catalog',[]);
   var idx=-1;
   for(var i=0;i<cat.length;i++){if(cat[i].id===e.id||(cat[i].name.toLowerCase()===e.name.toLowerCase()&&(cat[i].cardNumber||'')===(e.num||'')&&(cat[i].set||'').toLowerCase()===(e.set||'').toLowerCase())){idx=i;break;}}
-  var c={id:e.id||uid(),name:e.name,cardNumber:e.num||'',set:e.set||'',color:e.color||'',rarity:e.rarity||'',image:e.img||null,tcgplayerUrl:e.tcgId||null,isCustom:true};
+  var c={id:e.id||uid(),name:e.name,cardNumber:e.num||'',set:e.set||'',color:e.color||'',rarity:e.rarity||'',image:e.img||null,tcgplayerUrl:e.tcgId||null,isCustom:true,mktprice:e.mktprice||null};
   if(idx>-1)cat[idx]=c;else cat.unshift(c);
   ls('catalog',cat);saveCatalog(cat);
   // Refresh allRes so search results reflect updated catalog card (e.g. new TCGPlayer URL)
@@ -1065,7 +1080,7 @@ function saveCat(e){
   if(_updated)saveInv();
 }
 
-function clearManual(){g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';g('me-rarity').value='';g('me-img').value='';g('me-qty').value=1;g('me-cond').value='NM';g('me-tcglink').value='';g('me-tcg-url').value='';g('me-edit-id').textContent='';}
+function clearManual(){g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';g('me-rarity').value='';g('me-img').value='';g('me-qty').value=1;g('me-cond').value='NM';g('me-tcglink').value='';g('me-tcg-url').value='';g('me-edit-id').textContent='';if(g('me-mktprice'))g('me-mktprice').value='';}
 
 function saveManualCatalogOnly(){
   var e=getManual();if(!e)return;
