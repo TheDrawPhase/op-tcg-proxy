@@ -517,7 +517,7 @@ async function dbSave(key,value){
 }
 
 function schedSave(key,value){
-  ls('op-'+key.replace('_','-'),value);
+  try{ls('op-'+key.replace(/_/g,'-'),value);}catch(e){}
   setSyncUI('syncing');
   clearTimeout(syncTimer);
   syncTimer=setTimeout(function(){dbSave(key,value);},1500);
@@ -1604,19 +1604,28 @@ function updateStats(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-loadLocal();
-updateStats();
-updateBanner();
-renderTiers();
+try{loadLocal();}catch(e){console.error('loadLocal failed:',e);}
+try{updateStats();}catch(e){console.error('updateStats failed:',e);}
+try{updateBanner();}catch(e){console.error('updateBanner failed:',e);}
+try{renderTiers();}catch(e){console.error('renderTiers failed:',e);}
 
+// Supabase load with timeout so it never blocks the UI
+var dbTimeout=setTimeout(function(){setSyncUI('error');},8000);
 dbLoad().then(function(loaded){
+  clearTimeout(dbTimeout);
   if(loaded){
-    updateStats();updateBanner();
-    g('fin-paypal').value=finances.paypal||0;
-    g('fin-bank').value=finances.bank||0;
-    g('fin-cash').value=finances.cash||0;
+    try{updateStats();}catch(e){}
+    try{updateBanner();}catch(e){}
+    try{
+      g('fin-paypal').value=finances.paypal||0;
+      g('fin-bank').value=finances.bank||0;
+      g('fin-cash').value=finances.cash||0;
+    }catch(e){}
   }
   setSyncUI(loaded?'synced':'error');
+}).catch(function(){
+  clearTimeout(dbTimeout);
+  setSyncUI('error');
 });
 </script>
 </body>
