@@ -1102,14 +1102,13 @@ function addDirect(){
   if(app.selMkt!=null)entry.mkt=app.selMkt;
   if(app.selCost!=null)entry.cost=app.selCost;
   if(app.selPerc!=null)entry.perc=app.selPerc;
-  console.log('[addDirect] entry:', JSON.stringify({id:entry.id,name:entry.name,num:entry.num,set:entry.set,qty:entry.qty,mkt:entry.mkt,status:entry.status}));
   app.inv.push(entry);
   saveInv();stats();
   // Reset inventory filters so the new card is visible immediately
   var iq=g('inv-q');if(iq)iq.value='';
   var isf=g('inv-sf');if(isf)isf.value='';
   if(app.tab==='inventory')renderInv();
-  toast('✅ '+entry.name+' → Inventory ('+CF[entry.cond]+' ×'+entry.qty+') — check Inventory tab');
+  toast('✅ '+entry.name+' → Inventory ('+CF[entry.cond]+' ×'+entry.qty+')');
 }
 
 function onSelChg(){g('new-sname-wrap').style.display=g('o-seller').value==='__new__'?'':'none';}
