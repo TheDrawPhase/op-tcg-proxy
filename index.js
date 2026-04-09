@@ -1,143 +1,2082 @@
-const express = require("express");
-const fetch = (...args) => import("node-fetch").then(({ default: f }) => f(...args));
-const path = require("path");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>OP TCG Reseller</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0a0a12;color:#e2e8f0;font-size:15px;min-height:100vh}
+button,input,select,textarea{font-family:inherit;outline:none}
+button{cursor:pointer}a{text-decoration:none}
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+#header{background:linear-gradient(135deg,#1a1040,#0d0820);border-bottom:1px solid #2d2060;padding:13px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.htitle{font-weight:700;font-size:19px;color:#f0c040}.hsub{font-size:12px;color:#a78bfa}
+.hright{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stat{background:#1a1040;border-radius:8px;padding:6px 12px;text-align:center;min-width:78px}
+.stat-l{font-size:10px;color:#94a3b8}.stat-v{font-weight:700;font-size:14px}
 
-const RAPIDAPI_KEY  = process.env.RAPIDAPI_KEY;
-const RAPIDAPI_HOST = "one-piece-tcg-prices.p.rapidapi.com";
-const SUPA_URL      = "https://qbmvilndblltfwuqovlq.supabase.co";
-const SUPA_KEY      = process.env.SUPABASE_KEY;
+#tabs{display:flex;background:#0d0820;border-bottom:1px solid #2d2060;overflow-x:auto}
+.tab{padding:12px 16px;background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;font-size:13px;white-space:nowrap}
+.tab.on{color:#f0c040;border-bottom-color:#f0c040;font-weight:700}
 
-app.use(express.json({ limit: "10mb" }));
+#banner{background:#2d1500;border-bottom:1px solid #f0a040;padding:9px 18px;font-size:13px;color:#fbbf24;text-align:center;display:none}
+#banner button{background:none;border:none;color:#f0c040;font-weight:700;text-decoration:underline;cursor:pointer;font-size:13px}
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.sendStatus(200);
-  next();
-});
+.page{padding:16px;max-width:1280px;margin:0 auto;display:none}
+.page.on{display:block}
+.panel{background:#13102a;border-radius:10px;padding:16px;border:1px solid #2d2060;margin-bottom:14px}
+.pt{font-weight:700;color:#a78bfa;font-size:14px;margin-bottom:10px}
 
-app.use(express.static(path.join(__dirname, "public")));
+/* ── Buylist two-column layout ── */
+#buylist-layout{display:grid;grid-template-columns:1fr 380px;gap:14px;align-items:start}
+#buylist-left{min-width:0}
+#offer-sidebar{position:sticky;top:8px}
+@media(max-width:820px){#buylist-layout{grid-template-columns:1fr}#offer-sidebar{position:static}}
 
-// ── Health ────────────────────────────────────────────────────────────────────
-app.get("/health", (req, res) => res.json({ status: "ok" }));
+/* Forms */
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inp{padding:9px 12px;border-radius:7px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
+.inp.full{width:100%}
+.sel{padding:8px 11px;border-radius:7px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
+.btn{padding:8px 16px;border-radius:7px;border:none;font-weight:600;font-size:13px;color:#fff;background:#7c3aed}
+.btn:disabled{background:#4a2090}.btn-g{background:#059669}.btn-r{background:#7f1d1d;color:#fca5a5}
 
-// ── TCGgo: card search ────────────────────────────────────────────────────────
-app.get("/cards", async (req, res) => {
-  try {
-    const params = new URLSearchParams(req.query);
-    if (!params.has("per_page")) params.set("per_page", "20");
-    const response = await fetch(`https://${RAPIDAPI_HOST}/cards?${params}`, {
-      headers: {
-        "x-rapidapi-host": RAPIDAPI_HOST,
-        "x-rapidapi-key":  RAPIDAPI_KEY,
-      },
-    });
-    res.json(await response.json());
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+/* Bigger price/% inputs in offer rows */
+.pinp{padding:6px 9px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:14px;font-weight:600;-moz-appearance:textfield}
+.pinp::-webkit-outer-spin-button,.pinp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pinp:focus{border-color:#a78bfa;background:#1e1a50}
+.pinp.pp{color:#34d399}.pinp.pperc{color:#a78bfa;border-color:#5b2ecc;background:#160e38}.pinp.pcost{color:#f0c040}
 
-// ── TCGgo: episodes / sets ────────────────────────────────────────────────────
-app.get("/episodes", async (req, res) => {
-  try {
-    const params = new URLSearchParams(req.query).toString();
-    const response = await fetch(`https://${RAPIDAPI_HOST}/episodes?${params}`, {
-      headers: {
-        "x-rapidapi-host": RAPIDAPI_HOST,
-        "x-rapidapi-key":  RAPIDAPI_KEY,
-      },
-    });
-    res.json(await response.json());
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+/* Search */
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;margin-top:10px}
+.rcard{background:#1a1040;border:1px solid #3d2080;border-radius:8px;padding:7px;cursor:pointer;text-align:center;transition:border-color .15s}
+.rcard:hover{border-color:#a78bfa}
+.rcard img,.rcard .noimg{width:100%;border-radius:4px;margin-bottom:3px}
+.noimg{height:70px;background:#2d2060;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:9px}
+.rname{font-size:10px;font-weight:600;color:#e2e8f0;line-height:1.3}.rnum{font-size:9px;color:#7c6fcd;margin-top:1px}
+.rprice{font-size:10px;color:#34d399;font-weight:700;margin-top:2px}
 
-// ── TCGgo: single card price by TCGPlayer product ID ─────────────────────────
-// Called by autofillTCG() in the HTML when a TCGPlayer URL is pasted.
-// Hits the RapidAPI endpoint that returns pricing for a specific product ID.
-// Returns: { market_price: number | null }
-app.get("/cards/:id/price", async (req, res) => {
-  const { id } = req.params;
-  try {
-    // TCGgo exposes a pricing endpoint keyed on tcgplayer_id
-    const response = await fetch(
-      `https://${RAPIDAPI_HOST}/cards?tcgplayer_id=${encodeURIComponent(id)}&per_page=1`,
-      {
-        headers: {
-          "x-rapidapi-host": RAPIDAPI_HOST,
-          "x-rapidapi-key":  RAPIDAPI_KEY,
-        },
+/* Price table — flipped: Offer | Buy% | TCGPlayer | Condition */
+.ptbl{display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr;gap:2px;font-size:12px;margin-bottom:12px}
+.th{padding:5px 7px;background:#1a1040;color:#94a3b8;font-weight:600}
+.td{padding:5px 7px;background:#1a1640}
+
+/* Offer rows in sidebar */
+.orow{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1a1640}
+.othumb{width:34px;border-radius:3px;flex-shrink:0}
+.othumb-blank{width:34px;height:47px;background:#2d2060;border-radius:3px;flex-shrink:0}
+
+/* Inventory */
+.ilist{display:flex;flex-direction:column;gap:4px}
+.irow{display:flex;align-items:center;gap:10px;background:#13102a;border:1px solid #2d2060;border-radius:8px;padding:9px 13px;cursor:pointer;transition:border-color .15s}
+.irow:hover{border-color:#a78bfa}
+.ithumb{width:34px;height:47px;border-radius:3px;object-fit:cover;flex-shrink:0}
+.inoimg{width:34px;height:47px;background:#2d2060;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#6b7280}
+.iname{flex:2;min-width:120px}.iname-m{font-weight:600;font-size:13px}.iname-s{font-size:10px;color:#7c6fcd}
+.iconds{flex:2;display:flex;flex-wrap:wrap;gap:3px}
+.icost{flex:1;font-size:12px;color:#f0c040;text-align:right;white-space:nowrap}
+.ival{flex:1;font-size:12px;color:#34d399;text-align:right;white-space:nowrap}
+
+/* Checkboxes for bulk actions */
+.chk{width:16px;height:16px;accent-color:#7c3aed;cursor:pointer;flex-shrink:0}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+.bp{background:#2d1a00;color:#f0a040}.bo{background:#0d2010;color:#34d399}.bs{background:#0d1a2d;color:#60a5fa}
+.bm{background:#2d0d0d;color:#f87171}.bw{background:#2d0d2d;color:#d946ef}
+.bpart{background:#1a2d00;color:#a0d040}.bcomp{background:#00261a;color:#34d399}
+
+.sbtn{padding:5px 9px;border-radius:4px;font-size:11px;font-weight:700;border:none;cursor:pointer}
+.sp{background:#2d1a00;color:#f0a040}.so{background:#0d2010;color:#34d399}.ss{background:#0d1a2d;color:#60a5fa}
+.sm{background:#2d0d0d;color:#f87171}.sw{background:#2d0d2d;color:#d946ef}
+
+.scard{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+.scard:hover{border-color:#a78bfa}
+.pbar{background:#1a1040;border-radius:4px;height:5px;margin-top:7px;overflow:hidden}
+.pfill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#34d399)}
+
+.selcard{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:14px;margin-bottom:10px}
+.sfield{font-size:12px;color:#94a3b8;margin-bottom:3px}.sfield a{color:#60a5fa}
+
+.wgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.wstat{background:#1a1040;border:1px solid #2d2060;border-radius:10px;padding:14px;text-align:center}
+.wstat-l{font-size:11px;color:#94a3b8;margin-bottom:4px}.wstat-v{font-weight:700;font-size:21px}
+
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:12px;margin-bottom:20px}
+.fcard{background:#13102a;border:1px solid #2d2060;border-radius:10px;padding:16px}
+.fcard-t{font-size:12px;color:#94a3b8;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.finp{width:100%;padding:9px 12px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:15px;font-weight:700;text-align:right;margin-top:5px}
+.ftotal{background:linear-gradient(135deg,#1a1040,#0d0820);border:1px solid #7c3aed;border-radius:10px;padding:16px;text-align:center;margin-bottom:20px}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#13102a;border-radius:12px;border:1px solid #2d2060;padding:20px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
+.ml{font-size:11px;color:#94a3b8;margin-bottom:3px}
+
+.tier-row{display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.tinp{width:68px;padding:6px 7px;border-radius:5px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:12px;text-align:center}
+
+.sel-tooltip{position:fixed;z-index:200;background:#13102a;border:1px solid #7c3aed;border-radius:8px;padding:10px 14px;font-size:12px;min-width:180px;max-width:280px;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.7)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #7c3aed;border-radius:8px;padding:10px 22px;font-size:13px;color:#e2e8f0;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.6);display:none;white-space:nowrap}
+.empty{text-align:center;color:#6b7280;padding:50px;font-size:13px}
+.tbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.hint{font-size:11px;color:#6b7280;margin-bottom:8px}.hint b{color:#a78bfa}
+
+.show-row{background:#0d0820;border:1px solid #2d2060;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.show-stat{text-align:center;min-width:70px}.show-stat-l{font-size:10px;color:#94a3b8}.show-stat-v{font-weight:700;font-size:14px}
+.cat-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1640;font-size:12px}
+
+/* Bulk action bar */
+.bulk-bar{background:#1a1040;border:1px solid #7c3aed;border-radius:8px;padding:8px 12px;margin-bottom:10px;display:none;align-items:center;gap:8px;flex-wrap:wrap}
+.bulk-bar.on{display:flex}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div style="font-size:22px">🏴‍☠️</div>
+  <div><div class="htitle">One Piece TCG Reseller</div><div class="hsub">Buylist &amp; Inventory Manager</div></div>
+  <div class="hright">
+    <span id="sync-ui" style="font-size:11px;color:#94a3b8">☁️ Loading...</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div class="stat"><div class="stat-l">Cards</div><div class="stat-v" id="s-cards" style="color:#a78bfa">0</div></div>
+      <div class="stat"><div class="stat-l">Cost</div><div class="stat-v" id="s-cost" style="color:#f0c040">$0.00</div></div>
+      <div class="stat"><div class="stat-l">Value</div><div class="stat-v" id="s-val" style="color:#34d399">$0.00</div></div>
+      <div class="stat"><div class="stat-l">Net Worth</div><div class="stat-v" id="s-net" style="color:#60a5fa">$0.00</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="tabs">
+  <button class="tab on" onclick="show('buylist')">💰 Buylist</button>
+  <button class="tab" onclick="show('offers')">📋 Offers</button>
+  <button class="tab" onclick="show('inventory')">📦 Inventory</button>
+  <button class="tab" onclick="show('whatnot')">🏪 Sales</button>
+  <button class="tab" onclick="show('sellers')">👥 Sellers</button>
+  <button class="tab" onclick="show('finance')">💵 Finances</button>
+  <button class="tab" onclick="show('settings')">⚙️ Settings</button>
+</div>
+<div id="banner"><button onclick="show('settings')">⚙️ Add API key</button> to enable card search.</div>
+
+<!-- BUYLIST -->
+<div id="p-buylist" class="page on">
+  <div id="buylist-layout">
+    <!-- LEFT: search + card detail -->
+    <div id="buylist-left">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+          <div class="pt" style="margin:0">🔍 Card Search</div>
+          <div class="row" style="gap:6px">
+            <button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:12px;padding:6px 12px" onclick="openManualMod()">✏️ Manual Entry</button>
+            <span id="sess-badge" style="display:none;background:#1a1040;border:1px solid #7c3aed;border-radius:20px;padding:3px 10px;font-size:11px;color:#a78bfa"></span>
+          </div>
+        </div>
+        <div class="hint">Search → pick card → Add to Offer. <b>Build your full list before saving.</b></div>
+        <div class="row" style="margin-bottom:8px">
+          <input id="q" class="inp" style="flex:1" placeholder="e.g. Rayleigh or Luffy..." onkeydown="if(event.key==='Enter')search()"/>
+          <button class="btn" id="sbtn" onclick="search()">Search</button>
+        </div>
+        <div id="s-status"></div>
+        <div id="sort-bar" style="display:none;margin-top:8px" class="row">
+          <select class="sel" id="s-sort" onchange="applySort()" style="font-size:12px">
+            <option value="pd">Price High→Low</option>
+            <option value="pa">Price Low→High</option>
+            <option value="na">Name A→Z</option>
+            <option value="nd">Name Z→A</option>
+            <option value="sa">Set A→Z</option>
+            <option value="rar">Rarity</option>
+          </select>
+          <select class="sel" id="s-fset" onchange="applySort()" style="font-size:12px"><option value="">All Sets</option></select>
+          <select class="sel" id="s-fcol" onchange="applySort()" style="font-size:12px"><option value="">All Colors</option></select>
+          <span id="s-count" style="font-size:11px;color:#6b7280"></span>
+        </div>
+        <div id="rgrid" class="rgrid"></div>
+        <div id="rgrid" class="rgrid"></div>
+      </div>
+      <div id="sel-panel" class="panel" style="display:none"><div id="sel-content"></div></div>
+    </div>
+
+    <!-- RIGHT: offer sidebar -->
+    <div id="offer-sidebar">
+      <div id="offer-panel" class="panel" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-weight:700;color:#f0c040;font-size:14px">📋 Offer <span id="o-count" style="font-size:11px;color:#6b7280"></span></div>
+          <div class="row" style="gap:6px">
+            <span id="o-total" style="color:#34d399;font-weight:700;font-size:15px">$0.00</span>
+            <button class="btn btn-r" style="padding:3px 8px;font-size:11px" onclick="clearSess()">🗑</button>
+          </div>
+        </div>
+        <div class="row" style="margin-bottom:8px">
+          <select class="sel" id="o-seller" onchange="onSelChg()" style="flex:1;min-width:130px;font-size:12px">
+            <option value="">— Seller —</option>
+            <option value="__ip__">🏪 In Person</option>
+            <option value="__new__">➕ New Seller...</option>
+          </select>
+          <div id="new-sname-wrap" style="display:none"><input id="new-sname" class="inp" placeholder="Name..." style="width:110px;font-size:12px"/></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:1"><div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Ship $</div><input type="number" min="0" step="0.01" class="pinp pp" id="fee-ship" value="0" style="width:100%" oninput="calcOffer()"/></div>
+          <div style="flex:1"><div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Other $</div><input type="number" min="0" step="0.01" class="pinp pp" id="fee-other" value="0" style="width:100%" oninput="calcOffer()"/></div>
+        </div>
+        <div id="fee-note" style="font-size:10px;color:#6b7280;margin-bottom:8px"></div>
+        <div id="o-rows"></div>
+        <div class="row" style="margin-top:10px;gap:6px">
+          <button class="btn btn-g" style="flex:1;padding:10px;font-size:12px" onclick="saveOffer()">✅ Save Offer</button>
+          <button class="btn btn-r" style="padding:10px 12px;font-size:12px" onclick="clearSess()">Clear</button>
+        </div>
+      </div>
+      <div id="sidebar-empty" class="panel" style="text-align:center;color:#6b7280;font-size:12px;padding:24px">
+        <div style="font-size:28px;margin-bottom:8px">📋</div>
+        Add cards to start an offer
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OFFERS -->
+<div id="p-offers" class="page">
+  <div id="offers-list">
+    <div class="tbar">
+      <input class="inp" id="of-filter" placeholder="Filter by seller or date..." oninput="renderOffers()" style="flex:1"/>
+      <select class="sel" id="of-sort" onchange="renderOffers()">
+        <option value="dd">Newest First</option><option value="da">Oldest First</option>
+        <option value="td">Highest Total</option><option value="ta">Lowest Total</option>
+        <option value="sel">Seller A→Z</option>
+      </select>
+    </div>
+    <div id="offers-items"></div>
+  </div>
+</div>
+
+<!-- INVENTORY -->
+<div id="p-inventory" class="page">
+  <div class="tbar">
+    <input class="inp" id="inv-q" placeholder="Filter by name, set, seller..." oninput="renderInv()" style="flex:1;min-width:140px"/>
+    <select class="sel" id="inv-sf" onchange="renderInv()">
+      <option value="">All Statuses</option>
+      <option value="pending">Pending</option><option value="onhand">On Hand</option>
+      <option value="shipped">Shipped</option><option value="missing">Missing</option>
+      <option value="whatnot">📺 Whatnot</option>
+      <option value="vend">🏪 Vend</option>
+      <option value="direct">💬 Direct</option>
+    </select>
+    <select class="sel" id="inv-sort" onchange="renderInv()">
+      <option value="vd">Value High→Low</option><option value="va">Value Low→High</option>
+      <option value="cd">Cost High→Low</option><option value="ca">Cost Low→High</option>
+      <option value="na">Name A→Z</option><option value="nd">Name Z→A</option>
+      <option value="dd">Newest First</option><option value="da">Oldest First</option>
+    </select>
+  </div>
+  <div id="inv-stats" style="font-size:12px;color:#94a3b8;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
+  <!-- Bulk action bar -->
+  <div class="bulk-bar" id="inv-bulk-bar">
+    <span id="inv-bulk-count" style="font-size:12px;color:#a78bfa;font-weight:700"></span>
+    <select class="sel" id="inv-bulk-status" style="font-size:12px">
+      <option value="">Move to status...</option>
+      <option value="pending">Pending</option><option value="onhand">On Hand</option>
+      <option value="shipped">Shipped</option><option value="missing">Missing</option><option value="whatnot">Whatnot</option>
+    </select>
+    <button class="btn" style="font-size:12px;padding:5px 12px" onclick="bulkMoveInv()">Apply</button>
+    <button class="btn" style="font-size:12px;padding:5px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="bulkToWhatnot()">📺 → Whatnot</button>
+    <button class="btn" style="font-size:12px;padding:5px 10px;background:#1a1040;border:1px solid #2d2060;color:#6b7280" onclick="clearInvSel()">☐ Deselect</button>
+    <button class="btn btn-r" style="font-size:12px;padding:5px 10px" onclick="bulkDeleteInv()">🗑 Delete</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:4px 13px;font-size:10px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.4px" id="inv-col-header">
+    <div style="width:16px;flex-shrink:0"></div>
+    <div style="width:34px;flex-shrink:0"></div>
+    <div style="flex:2;min-width:120px">Card</div>
+    <div style="flex:2">Condition / Status</div>
+    <div style="flex:1;text-align:right;min-width:80px;color:#f0c040">Cost /ea · tot</div>
+    <div style="flex:1;text-align:right;min-width:80px;color:#34d399">Value /ea · tot</div>
+  </div>
+  <div id="inv-list"></div>
+</div>
+
+<!-- SALES / WHATNOT -->
+<div id="p-whatnot" class="page">
+  <!-- Dashboard summary -->
+  <div class="wgrid" id="wn-stats"></div>
+  <!-- Controls -->
+  <div class="tbar">
+    <input class="inp" id="wn-q" placeholder="Filter cards..." oninput="renderWhatnot()" style="flex:1"/>
+    <select class="sel" id="wn-sort" onchange="renderWhatnot()">
+      <option value="vd">Value High→Low</option><option value="va">Value Low→High</option>
+      <option value="na">Name A→Z</option><option value="cd">Cost High→Low</option>
+    </select>
+    <button class="btn" style="font-size:12px;padding:6px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="recSale()">+ Record Sale</button>
+  </div>
+  <!-- 3 lanes -->
+  <div id="wn-lanes" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px"></div>
+</div>
+
+<!-- SELLERS -->
+<div id="p-sellers" class="page">
+  <div class="tbar" style="margin-bottom:14px">
+    <button class="btn" onclick="openSelMod()">➕ Add Seller</button>
+    <input class="inp" id="sel-search" placeholder="Search sellers..." oninput="renderSellers()" style="flex:1"/>
+  </div>
+  <div id="sel-list"></div>
+</div>
+
+<!-- FINANCES -->
+<div id="p-finance" class="page">
+  <div class="ftotal">
+    <div style="font-size:12px;color:#a78bfa;margin-bottom:6px">💰 Total Business Net Worth</div>
+    <div id="f-net" style="font-size:36px;font-weight:700;color:#f0c040">$0.00</div>
+    <div id="f-break" style="font-size:11px;color:#94a3b8;margin-top:5px"></div>
+    <button class="btn" style="margin-top:10px;font-size:12px;padding:7px 16px" onclick="snapshot()">📸 Save Snapshot</button>
+  </div>
+  <div class="fgrid">
+    <div class="fcard"><div class="fcard-t">📦 Inventory Value</div><div id="f-inv" style="font-size:26px;font-weight:700;color:#f0c040">$0.00</div><div id="f-inv-sub" style="font-size:11px;color:#94a3b8"></div></div>
+    <div class="fcard"><div class="fcard-t">💳 PayPal</div><input type="number" class="finp" id="f-pp" value="0" step="0.01" min="0" oninput="saveFin();updFin()"/></div>
+    <div class="fcard"><div class="fcard-t">🏦 Bank</div><input type="number" class="finp" id="f-bank" value="0" step="0.01" min="0" oninput="saveFin();updFin()"/></div>
+    <div class="fcard"><div class="fcard-t">💵 Cash</div><input type="number" class="finp" id="f-cash" value="0" step="0.01" min="0" oninput="saveFin();updFin()"/></div>
+  </div>
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="pt" style="margin:0">📈 Net Worth History</div>
+      <div class="row" style="gap:6px">
+        <select class="sel" id="chart-range" onchange="drawChart()" style="font-size:12px">
+          <option value="all">All Time</option><option value="30">Last 30 Days</option><option value="90">Last 90 Days</option>
+        </select>
+        <button class="btn btn-r" style="font-size:12px;padding:5px 10px" onclick="if(confirm('Clear history?')){fin.history=[];saveFin();drawChart();}">Clear</button>
+      </div>
+    </div>
+    <canvas id="chart" style="width:100%;height:200px;display:none"></canvas>
+    <div id="chart-empty" style="text-align:center;color:#6b7280;padding:35px;font-size:13px">No snapshots yet.</div>
+  </div>
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="pt" style="margin:0">📺 Sales History</div>
+      <button class="btn" style="font-size:12px;padding:7px 14px;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="recSale()">+ Record Sale</button>
+    </div>
+    <div id="show-hist"></div>
+  </div>
+  <div class="panel"><div class="pt">📊 Inventory Breakdown</div><div id="f-breakdown"></div></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="p-settings" class="page">
+  <div style="max-width:560px;display:flex;flex-direction:column;gap:14px">
+    <div class="panel">
+      <div class="pt">🔑 RapidAPI Key (TCGgo)</div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:10px">Find at <a href="https://rapidapi.com/tcggopro/api/one-piece-tcg-prices/playground" target="_blank" style="color:#a78bfa">RapidAPI Playground ↗</a> — look for <b style="color:#e2e8f0">X-RapidAPI-Key</b></div>
+      <div class="row"><input type="password" class="inp" id="api-key-inp" placeholder="Paste key here..." style="flex:1"/><button class="btn" onclick="saveKey()">Save</button></div>
+      <div id="key-ok" style="margin-top:6px;font-size:12px;color:#34d399;display:none"></div>
+    </div>
+    <div class="panel">
+      <div class="pt">💾 Backup &amp; Restore</div>
+      <div class="row" style="margin-bottom:12px">
+        <button class="btn btn-g" onclick="exportBak()">📥 Export Backup</button>
+        <button class="btn" style="background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="exportSheet()">📊 Export Spreadsheet</button>
+        <button class="btn" onclick="document.getElementById('bak-file').click()">📤 Import Backup</button>
+        <input type="file" id="bak-file" accept=".json" style="display:none" onchange="importBak(this)"/>
+      </div>
+      <div style="background:#0d0820;border-radius:8px;padding:10px;font-size:12px;color:#94a3b8">⚠️ <b style="color:#f0c040">Tip:</b> Export after every buying session.</div>
+      <div id="bak-status" style="margin-top:8px;font-size:12px"></div>
+    </div>
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:0" onclick="togCatalogPanel()">
+        <div class="pt" style="margin:0">📁 My Card Catalog</div>
+        <span id="catalog-toggle-icon" style="font-size:11px;color:#6b7280">▼ show</span>
+      </div>
+      <div id="catalog-panel-inner" style="display:none;margin-top:12px">
+        <p style="font-size:13px;color:#94a3b8;margin-bottom:10px">Manually entered cards appear in search results. Click ✏️ to edit.</p>
+        <input class="inp full" id="catalog-search" placeholder="Search catalog..." oninput="renderCatalog()" style="margin-bottom:10px;font-size:12px"/>
+        <div id="catalog-list"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="pt">⚙️ Tiered Buy Percentages</div>
+      <p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Set buy % based on card market price. First matching tier wins.</p>
+      <div style="display:grid;grid-template-columns:68px 68px 52px 52px 52px 52px 52px auto;gap:4px;font-size:11px;color:#94a3b8;margin-bottom:5px">
+        <div>Min($)</div><div>Max($)</div><div>NM%</div><div>LP%</div><div>MP%</div><div>HP%</div><div>DMG%</div><div></div>
+      </div>
+      <div id="tier-list"></div>
+      <button class="btn" style="margin-top:8px;font-size:12px;padding:6px 13px;background:#1a1640;color:#a78bfa;border:1px solid #3d2080" onclick="addTier()">+ Add Tier</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALS ── -->
+
+<!-- Seller modal -->
+<div class="overlay" id="sel-modal" style="display:none" onclick="if(event.target===this)closeSelMod()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div style="font-weight:700;font-size:15px;color:#f0c040;margin-bottom:14px" id="sel-mod-title">Add Seller</div>
+    <div style="margin-bottom:10px"><div class="ml">Name *</div><input class="inp full" id="sm-name" placeholder="Seller name"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Facebook Messenger</div><input class="inp full" id="sm-fb" placeholder="https://m.me/..."/></div>
+    <div style="margin-bottom:10px"><div class="ml">Phone</div><input class="inp full" id="sm-ph" placeholder="+1 555 000-0000"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Address</div><input class="inp full" id="sm-addr" placeholder="Street, City, State"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Notes</div><textarea class="inp full" id="sm-notes" rows="3"></textarea></div>
+    <div class="row" style="margin-top:12px"><button class="btn" style="flex:1" onclick="saveSeller()">Save</button><button class="btn btn-r" onclick="closeSelMod()">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Inventory detail modal -->
+<div class="overlay" id="inv-modal" style="display:none" onclick="if(event.target===this)closeInvMod()">
+  <div class="modal" style="max-width:580px" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div id="inv-mod-title" style="font-weight:700;font-size:15px;color:#f0c040"></div>
+      <button onclick="closeInvMod()" style="background:none;border:none;color:#f87171;font-size:21px;line-height:1;cursor:pointer">×</button>
+    </div>
+    <div id="inv-mod-content"></div>
+  </div>
+</div>
+
+<!-- Manual Entry modal (popup) -->
+<div class="overlay" id="manual-modal" style="display:none">
+  <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-weight:700;font-size:15px;color:#a78bfa">✏️ Manual Card Entry</div>
+      <button onclick="closeManualMod()" style="background:none;border:none;color:#f87171;font-size:21px;cursor:pointer">×</button>
+    </div>
+    <!-- TCGPlayer paste-to-autofill -->
+    <div style="background:#0d0820;border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px">
+      <div style="color:#a78bfa;font-weight:700;margin-bottom:5px">🔗 Auto-fill from TCGPlayer URL</div>
+      <div style="color:#94a3b8;margin-bottom:7px">Paste a TCGPlayer One Piece card URL to auto-fill name &amp; set. You can also find it via the links below.</div>
+      <div class="row">
+        <input class="inp" id="me-tcg-url" placeholder="https://www.tcgplayer.com/product/..." style="flex:1;font-size:12px"/>
+        <button class="btn" style="font-size:12px;padding:7px 12px" onclick="autofillTCG()">Fill</button>
+      </div>
+      <div class="row" style="margin-top:8px;gap:6px">
+        <a href="https://www.tcgplayer.com/categories/trading-and-collectible-card-games/one-piece-card-game/cards" target="_blank" class="btn" style="font-size:11px;padding:5px 10px;background:#1a3a2a;color:#34d399;border:1px solid #1a4030">TCGPlayer One Piece ↗</a>
+        <a href="https://www.ebay.com/sch/i.html?_nkw=one+piece+card+game&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" class="btn" style="font-size:11px;padding:5px 10px;background:#3a2a00;color:#f0c040;border:1px solid #4a3800">eBay Sold Listings ↗</a>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px">
+      <div><div class="ml">Card Name *</div><input class="inp full" id="me-name" placeholder="e.g. Roronoa Zoro"/></div>
+      <div><div class="ml">Set Name</div><input class="inp full" id="me-set" placeholder="e.g. OP-01 Romance Dawn"/></div>
+      <div><div class="ml">Card #</div><input class="inp full" id="me-num" placeholder="e.g. OP01-001"/></div>
+      <div><div class="ml">Color</div><input class="inp full" id="me-color" placeholder="e.g. Green"/></div>
+      <div><div class="ml">Rarity</div><input class="inp full" id="me-rarity" placeholder="e.g. Super Rare"/></div>
+      <div><div class="ml">Condition</div>
+        <select class="inp full" id="me-cond">
+          <option value="NM">Near Mint</option><option value="LP">Lightly Played</option>
+          <option value="MP">Moderately Played</option><option value="HP">Heavily Played</option><option value="DMG">Damaged</option>
+        </select>
+      </div>
+      <div><div class="ml">Qty</div><input type="number" class="inp full" id="me-qty" value="1" min="1"/></div>
+      <div><div class="ml">Image URL</div><input class="inp full" id="me-img" placeholder="https://..."/></div>
+      <div style="grid-column:1/-1"><div class="ml">TCGPlayer Product URL (for button links)</div><input class="inp full" id="me-tcglink" placeholder="https://www.tcgplayer.com/product/..."/></div>
+    </div>
+      <div style="grid-column:1/-1"><div class="ml">Market Price $ (optional — for sorting in search results)</div><input type="number" step="0.01" min="0" class="inp full" id="me-mktprice" placeholder="e.g. 24.99"/></div>
+    <div id="me-edit-id" style="display:none"></div>
+    <div class="row">
+      <button class="btn" style="flex:1" onclick="manualToOffer()">+ Add to Offer</button>
+      <button class="btn btn-g" style="flex:1" onclick="manualToInv()">+ Add to Inventory</button>
+      <button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080" onclick="saveManualCatalogOnly()">💾 Save to Catalog</button>
+    </div>
+  </div>
+</div>
+
+<!-- Record Sale modal -->
+<div class="overlay" id="show-modal" style="display:none" onclick="if(event.target===this)closeShowMod()">
+  <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
+    <div style="font-weight:700;font-size:15px;color:#d946ef;margin-bottom:14px">🏪 Record Sale</div>
+    <div style="margin-bottom:10px"><div class="ml">Channel</div>
+      <select class="inp full" id="sh-channel" onchange="if(this.value==='whatnot'){var wc=0;app.inv.forEach(function(i){if(i.status==='whatnot')wc+=(i.cost||0)*i.qty;});if(wc>0&&g('sh-cogs'))g('sh-cogs').value=wc.toFixed(2);}else{if(g('sh-cogs'))g('sh-cogs').value='';}updShowCalc();">
+        <option value="whatnot">📺 Whatnot Stream</option>
+        <option value="vend">🏪 Vend / In-Person</option>
+        <option value="direct">💬 Direct Sale</option>
+      </select>
+    </div>
+    <div style="margin-bottom:10px"><div class="ml">Date</div><input class="inp full" id="sh-date" type="date"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Gross Revenue ($) — total before anything</div><input type="number" class="inp full" id="sh-rev" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Shipping Costs ($) — what you paid to ship</div><input type="number" class="inp full" id="sh-ship" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Cards Sold (qty)</div><input type="number" class="inp full" id="sh-qty" placeholder="0" min="0"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Cost of Goods Sold ($) — what you paid for cards sold</div><input type="number" class="inp full" id="sh-cogs" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
+    <div id="sh-calc" style="background:#0d0820;border-radius:7px;padding:10px;font-size:12px;margin-bottom:10px;display:none">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">Gross Revenue</span><span id="sh-c-rev" style="color:#34d399"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#94a3b8">- Shipping Costs</span><span id="sh-c-ship" style="color:#f87171"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#94a3b8">- COGS</span><span id="sh-c-cogs" style="color:#f87171"></span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid #2d2060;padding-top:5px"><span style="font-weight:700">Net Revenue</span><span id="sh-c-net" style="font-weight:700;font-size:14px;color:#f0c040"></span></div>
+    </div>
+    <div style="background:#0d0820;border-radius:7px;padding:10px;margin-bottom:10px;font-size:12px">
+      <div style="color:#a78bfa;font-weight:700;margin-bottom:7px">Split net revenue into:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+        <div><div class="ml">💳 PayPal</div><input type="number" class="pinp pp" id="sh-pp" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
+        <div><div class="ml">🏦 Bank</div><input type="number" class="pinp pp" id="sh-bank" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
+        <div><div class="ml">💵 Cash</div><input type="number" class="pinp pp" id="sh-cash" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
+      </div>
+      <div id="sh-split-warn" style="font-size:11px;color:#f87171;margin-top:5px;display:none">⚠️ Split total doesn't match net revenue</div>
+    </div>
+    <div style="margin-bottom:10px"><div class="ml">Notes</div><textarea class="inp full" id="sh-notes" rows="2"></textarea></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" style="flex:1;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="saveShow()">💾 Save Sale</button>
+      <button class="btn btn-r" onclick="closeShowMod()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="sel-tooltip" id="sel-tooltip" style="display:none"></div>
+
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+var P='https://op-tcg-proxy-production.up.railway.app';
+var EU=1.08;
+var CONDS=['NM','LP','MP','HP','DMG'];
+var CF={NM:'Near Mint',LP:'Lightly Played',MP:'Moderately Played',HP:'Heavily Played',DMG:'Damaged'};
+var CM={NM:1,LP:.8,MP:.64,HP:.4,DMG:.25};
+var SL={pending:'Pending',onhand:'On Hand',shipped:'Shipped',missing:'Missing',whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct'};
+var SC={pending:'sp',onhand:'so',shipped:'ss',missing:'sm',whatnot:'sw',vend:'sw',direct:'sw'};
+var SB={pending:'bp',onhand:'bo',shipped:'bs',missing:'bm',whatnot:'bw',vend:'bw',direct:'bw'};
+var SCYC=['pending','onhand','shipped','missing'];
+var RARITY={LEADER:0,'SECRET RARE':1,'SUPER RARE':2,R:3,Rare:3,Common:4,UC:5};
+
+// ─── State ────────────────────────────────────────────────────────────────────
+var app={key:'',tiers:[],inv:[],offers:[],sellers:[],sess:[],selCard:null,selCond:'NM',selQty:1,editSeller:null,editOffer:null,tab:'buylist'};
+var fin={paypal:0,bank:0,cash:0,history:[],shows:[]};
+var allRes=[];
+var syncT=null;
+var invSel={}; // selected inv entry ids for bulk actions
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function g(id){return document.getElementById(id);}
+function td(){var n=new Date();return String(n.getMonth()+1).padStart(2,'0')+'/'+String(n.getDate()).padStart(2,'0')+'/'+String(n.getFullYear()).slice(2);}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function ls(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function ll(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function toast(m){var t=g('toast');t.textContent=m;t.style.display='';setTimeout(function(){t.style.display='none';},2600);}
+function nm(v){return v!=null?'$'+parseFloat(v).toFixed(2):'—';}
+
+// ─── Sync ─────────────────────────────────────────────────────────────────────
+function syncUI(s){var e=g('sync-ui');if(!e)return;if(s==='sync'){e.textContent='🔄 Syncing...';e.style.color='#a78bfa';}else if(s==='ok'){e.textContent='☁️ Synced';e.style.color='#34d399';}else{e.textContent='⚠️ Sync error';e.style.color='#f87171';}}
+
+async function dbLoad(){
+  try{
+    var r=await fetch(P+'/db/load');if(!r.ok)throw 0;
+    var d=await r.json();
+    console.log('[dbLoad] raw keys:',Object.keys(d),'offers type:',typeof d.offers,'offers len:',Array.isArray(d.offers)?d.offers.length:'n/a');
+    // Inventory: take whichever is larger (Supabase or localStorage)
+    if(d.inventory&&Array.isArray(d.inventory)&&d.inventory.length>=app.inv.length){
+      app.inv=d.inventory;ls('inv',app.inv);
+    }
+    // Offers: only replace if Supabase has a valid non-empty array with >= local count
+    if(d.offers&&Array.isArray(d.offers)&&d.offers.length>0){
+      if(d.offers.length>=app.offers.length){
+        app.offers=d.offers;ls('offers',app.offers);
       }
-    );
-    const data = await response.json();
-    const cards = Array.isArray(data) ? data : (data.data || []);
-    const card  = cards[0];
-
-    if (!card) return res.json({ market_price: null });
-
-    // Normalise the price field — TCGgo uses tcg_player or tcgplayer
-    const prices = card.prices?.tcgplayer || card.prices?.tcg_player;
-    const market = prices?.market_price ?? null;
-
-    res.json({ market_price: market });
-  } catch (e) {
-    res.status(500).json({ error: e.message, market_price: null });
-  }
-});
-
-// ── Supabase helpers ──────────────────────────────────────────────────────────
-const supaHeaders = () => ({
-  "Content-Type":  "application/json",
-  "apikey":        SUPA_KEY,
-  "Authorization": `Bearer ${SUPA_KEY}`,
-  "Prefer":        "resolution=merge-duplicates",
-});
-
-// Load all keys at once — returns { inventory, offers, sellers, tiers, finances, custom_catalog, api_key }
-app.get("/db/load", async (req, res) => {
-  try {
-    const response = await fetch(
-      `${SUPA_URL}/rest/v1/app_data?select=key,value`,
-      { headers: supaHeaders() }
-    );
-    const rows = await response.json();
-    if (!Array.isArray(rows)) {
-      return res.status(500).json({ error: "Load failed", raw: rows });
+    } else if(d.offers&&Array.isArray(d.offers)&&d.offers.length===0&&app.offers.length===0){
+      // Both empty — fine
+      app.offers=[];ls('offers',[]);
     }
-    const data = {};
-    rows.forEach((r) => { data[r.key] = r.value; });
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    // If Supabase returned nothing for offers, keep whatever loadLocal already set
+    console.log('[dbLoad] final app.offers.length:',app.offers.length);
+    if(d.sellers&&Array.isArray(d.sellers)&&d.sellers.length>=app.sellers.length){
+      app.sellers=d.sellers;ls('sellers',app.sellers);
+    }
+    if(d.tiers&&d.tiers.length){app.tiers=d.tiers;ls('tiers',app.tiers);}
+    if(d.custom_catalog&&d.custom_catalog.length){ls('catalog',d.custom_catalog);}
+    if(d.finances){fin=d.finances;if(!fin.history)fin.history=[];if(!fin.shows)fin.shows=[];ls('fin',fin);}
+    if(d.api_key&&typeof d.api_key==='string'&&d.api_key.length>10){
+      app.key=d.api_key;ls('key',app.key);
+    }
+    syncUI('ok');return true;
+  }catch(e){
+    console.log('[dbLoad] error:',e.message||e,'. Using localStorage data. Offers:',app.offers.length,'Inv:',app.inv.length);
+    syncUI('err');
+    // Data is already loaded from localStorage — nothing to reset
+    return false;
   }
-});
+}
+async function dbSave(key,val){
+  try{
+    var r=await fetch(P+'/db/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:key,value:val})});
+    if(r.ok)syncUI('ok');else syncUI('err');
+  }catch(e){
+    syncUI('err'); // network error — data is safe in localStorage
+  }
+}
+function save(key,val){var lsKey={inventory:'inv',offers:'offers',sellers:'sellers',tiers:'tiers',finances:'fin',custom_catalog:'catalog'}[key]||key;ls(lsKey,val);syncUI('sync');clearTimeout(syncT);syncT=setTimeout(function(){dbSave(key,val);},1500);}
+function saveInv(){save('inventory',app.inv);}
+function saveSess(){ls('sess',app.sess);if(app.editOffer)ls('editOffer',app.editOffer);else ls('editOffer',null);}
+function saveOffers(){
+  ls('offers',app.offers); // always save locally first — never loses data
+  syncUI('sync');
+  clearTimeout(syncT);
+  // Debounce Supabase writes — they're best-effort, localStorage is the source of truth
+  syncT=setTimeout(function(){dbSave('offers',app.offers);},800);
+}
+function saveSellers(){save('sellers',app.sellers);}
+function saveTiers(){save('tiers',app.tiers);}
+function saveFin(){fin={paypal:parseFloat(g('f-pp').value)||0,bank:parseFloat(g('f-bank').value)||0,cash:parseFloat(g('f-cash').value)||0,history:fin.history||[],shows:fin.shows||[]};save('finances',fin);}
+function saveCatalog(c){save('custom_catalog',c);}
 
-// Save a single key/value pair (upsert)
-app.post("/db/save", async (req, res) => {
-  const { key, value } = req.body;
-  if (!key) return res.status(400).json({ error: "Missing key" });
-  try {
-    const response = await fetch(`${SUPA_URL}/rest/v1/app_data`, {
-      method:  "POST",
-      headers: supaHeaders(),
-      body:    JSON.stringify({ key, value, updated_at: new Date().toISOString() }),
+// ─── Load local ───────────────────────────────────────────────────────────────
+function loadLocal(){
+  app.key=ll('key','');
+  app.tiers=ll('tiers',[{id:'a',min:0,max:4.99,nm:40,lp:32,mp:25,hp:16,dmg:10},{id:'b',min:5,max:19.99,nm:50,lp:40,mp:32,hp:20,dmg:12},{id:'c',min:20,max:9999,nm:60,lp:48,mp:38,hp:24,dmg:15}]);
+  app.inv=ll('inv',[]);app.offers=ll('offers',[]);app.sellers=ll('sellers',[]);
+  app.sess=ll('sess',[]);app.editOffer=ll('editOffer',null)||null;
+  fin=ll('fin',{paypal:0,bank:0,cash:0,history:[],shows:[]});
+  if(!fin.history)fin.history=[];if(!fin.shows)fin.shows=[];
+  if(app.key){g('api-key-inp').value=app.key;g('key-ok').style.display='';g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);}
+  g('f-pp').value=fin.paypal||0;g('f-bank').value=fin.bank||0;g('f-cash').value=fin.cash||0;
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function show(tab){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
+  var pg=g('p-'+tab);if(pg)pg.classList.add('on');
+  var tabs=document.querySelectorAll('.tab');
+  var names=['buylist','offers','inventory','whatnot','sellers','finance','settings'];
+  var i=names.indexOf(tab);if(i>=0&&tabs[i])tabs[i].classList.add('on');
+  app.tab=tab;banner();
+  if(tab==='buylist'){renderOffer();}
+  if(tab==='offers'){renderOffers();}
+  if(tab==='inventory')renderInv();
+  if(tab==='whatnot')renderWhatnot();
+  if(tab==='sellers')renderSellers();
+  if(tab==='finance')updFin();
+  if(tab==='settings'){renderTiers();renderCatalog();}
+}
+function banner(){g('banner').style.display=(!app.key&&app.tab!=='settings')?'':'none';}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+function stats(){
+  g('s-cards').textContent=app.inv.length;
+  var c=0,v=0;app.inv.forEach(function(i){c+=(i.cost||0)*i.qty;v+=(i.mkt||0)*i.qty;});
+  g('s-cost').textContent=nm(c);g('s-val').textContent=nm(v);
+  g('s-net').textContent=nm(v+(fin.paypal||0)+(fin.bank||0)+(fin.cash||0));
+}
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+function sstat(h){var e=g('s-status');if(e)e.innerHTML=h;}
+
+// Search cache: key=query string, value=array of cards
+var searchCache={};
+
+async function search(){
+  var raw=g('q').value.trim();if(!raw)return;
+  if(!app.key){sstat('<span style="color:#f87171;font-size:12px">Add your API key in ⚙️ Settings.</span>');return;}
+  var name=raw.replace(/\b(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc)\b/gi,'').replace(/\s+/g,' ').trim()||raw;
+  var btn=g('sbtn');btn.disabled=true;btn.textContent='⏳';
+  g('rgrid').innerHTML='';allRes=[];g('sort-bar').style.display='none';
+  app.selCard=null;g('sel-panel').style.display='none';
+  // 1. Show matching catalog cards instantly in pinned section
+  var cat=ll('catalog',[]);
+  var q2=name.toLowerCase();
+  var custom=cat.filter(function(x){return(x.name||'').toLowerCase().includes(q2)||(x.cardNumber||'').toLowerCase().includes(q2)||(x.set||'').toLowerCase().includes(q2);});
+  if(custom.length){
+    sstat('<span style="color:#a78bfa;font-size:12px">📁 '+custom.length+' catalog  •  ⏳ Searching API...</span>');
+  } else {
+    sstat('<span style="color:#a78bfa;font-size:12px">⏳ Searching...</span>');
+  }
+  // 2. Check session cache
+  if(searchCache[name]){
+    var cached=searchCache[name];
+    var _mc=custom.concat(cached.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&(y.cardNumber||'')===(x.card_number||'');});}));allRes=_mc;buildFilters(_mc);sstat('<span style="color:#34d399;font-size:12px">⚡ '+_mc.length+' results (cached)</span>');applySort();
+    btn.disabled=false;btn.textContent='Search';return;
+  }
+  try{
+    // 3. Fetch page 1 first — show results immediately, then fetch remaining pages in parallel
+    var r1=await fetch(P+'/cards?search='+encodeURIComponent(name)+'&page=1&per_page=20');
+    if(!r1.ok)throw new Error('API '+r1.status);
+    var d1=await r1.json();
+    var cards1=Array.isArray(d1)?d1:(d1.data||[]);
+    cards1.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
+    var totalPages=(d1.paging&&d1.paging.total)||1;
+    // Show page 1 results right away
+    var _m1=custom.concat(cards1.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&(y.cardNumber||'')===(x.card_number||'');});}));allRes=_m1;buildFilters(_m1);applySort();
+    if(totalPages>1){
+      sstat('<span style="color:#a78bfa;font-size:12px">⏳ Loading '+totalPages+' pages...</span>');
+      // 4. Fetch all remaining pages in parallel
+      var pageNums=[];for(var p2=2;p2<=totalPages;p2++)pageNums.push(p2);
+      var remaining=await Promise.all(pageNums.map(function(pg){
+        return fetch(P+'/cards?search='+encodeURIComponent(name)+'&page='+pg+'&per_page=20')
+          .then(function(r){return r.ok?r.json():null;})
+          .catch(function(){return null;});
+      }));
+      var all=cards1.slice();
+      remaining.forEach(function(d){
+        if(!d)return;
+        var cards=(Array.isArray(d)?d:(d.data||[]));
+        cards.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
+        all=all.concat(cards);
+      });
+      searchCache[name]=all;
+      var _ma=custom.concat(all.filter(function(x){return!custom.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&(y.cardNumber||'')===(x.card_number||'');});}));allRes=_ma;buildFilters(_ma);applySort();
+      sstat('');
+    } else {
+      searchCache[name]=cards1;
+      sstat('');
+    }
+    if(!allRes.length){sstat('<span style="color:#f87171;font-size:12px">No results for "'+name+'".</span>');g('sort-bar').style.display='none';}
+  }catch(e){sstat('<span style="color:#f87171;font-size:12px">Search failed: '+e.message+'</span>');}
+  btn.disabled=false;btn.textContent='Search';
+}
+
+function buildFilters(cards){
+  var sets={},colors={};
+  cards.forEach(function(c){var s=c.episode&&c.episode.name?c.episode.name:(c.set_name||c.set||'');var col=c.color||'';if(s)sets[s]=1;if(col)colors[col]=1;});
+  var se=g('s-fset');se.innerHTML='<option value="">All Sets</option>';
+  Object.keys(sets).sort().forEach(function(s){se.innerHTML+='<option value="'+s+'">'+s+'</option>';});
+  var ce=g('s-fcol');ce.innerHTML='<option value="">All Colors</option>';
+  Object.keys(colors).sort().forEach(function(c){ce.innerHTML+='<option value="'+c+'">'+c+'</option>';});
+  // Default: price high→low
+  g('s-sort').value='pd';g('s-fset').value='';g('s-fcol').value='';
+  g('sort-bar').style.display='flex';
+}
+
+function applySort(){
+  var sort=g('s-sort').value||'pd';
+  var fset=g('s-fset').value,fcol=g('s-fcol').value;
+  var list=allRes.filter(function(c){
+    var s=c.episode&&c.episode.name?c.episode.name:(c.set_name||c.set||'');
+    return(!fset||s===fset)&&(!fcol||(c.color||'')===fcol);
+  });
+  list.sort(function(a,b){
+    var ap=cardPrice(a,'NM'),bp2=cardPrice(b,'NM');
+    if(sort==='pa'){if(ap==null)return 1;if(bp2==null)return -1;return ap-bp2;}
+    if(sort==='pd'){if(ap==null)return 1;if(bp2==null)return -1;return bp2-ap;}
+    if(sort==='na')return(a.name||'').localeCompare(b.name||'');
+    if(sort==='nd')return(b.name||'').localeCompare(a.name||'');
+    if(sort==='sa'){var as2=a.episode&&a.episode.name?a.episode.name:(a.set_name||'');var bs2=b.episode&&b.episode.name?b.episode.name:(b.set_name||'');return as2.localeCompare(bs2);}
+    if(sort==='rar'){var ar=RARITY[a.rarity]!=null?RARITY[a.rarity]:99;var br=RARITY[b.rarity]!=null?RARITY[b.rarity]:99;return ar-br;}
+    return bp2-ap; // fallback: high to low
+  });
+  g('s-count').textContent=list.length+' / '+allRes.length;
+  renderResults(list);
+}
+
+function cardPrice(card,cond){
+  // For catalog cards with a manual price, use that as NM base
+  if(card.isCustom&&card.mktprice){
+    return parseFloat((card.mktprice*CM[cond]).toFixed(2));
+  }
+  var e=card.prices&&card.prices.tcgplayer?card.prices.tcgplayer.market_price:null;
+  if(e==null)return null;
+  return parseFloat((e*EU*CM[cond]).toFixed(2));
+}
+
+
+function renderResults(cards){
+  var grid=g('rgrid');grid.innerHTML='';
+  cards.forEach(function(card){
+    var isC=card.isCustom;
+    var p=cardPrice(card,'NM');
+    var div=document.createElement('div');div.className='rcard';
+    if(isC)div.style.borderColor='#7c3aed';
+    var img=card.image?'<img src="'+card.image+'" onerror="this.style.display=\'none\'" style="width:100%;border-radius:4px;margin-bottom:3px"/>':'<div class="noimg">No image</div>';
+    var ep=card.episode&&card.episode.name?card.episode.name:(card.set_name||card.set||'');
+    div.innerHTML=img+(isC?'<div style="font-size:9px;color:#a78bfa;font-weight:700;margin-bottom:2px">📁 Catalog</div>':'')
+      +'<div class="rname">'+(card.name||card.name_numbered||'')+'</div>'
+      +'<div class="rnum">'+(card.card_number||card.cardNumber||'')+'</div>'
+      +'<div class="rnum">'+ep+'</div>'
+      +(p!=null?'<div class="rprice">'+nm(p)+' NM</div>':'');
+    div.onclick=function(){pickCard(card);};
+    grid.appendChild(div);
+  });
+}
+
+// ─── Selected card ────────────────────────────────────────────────────────────
+function pickCard(card){
+  if(card.isCustom){
+    card.card_number=card.card_number||card.cardNumber||'';
+    card.episode=card.episode||{name:card.set||''};
+    // Always pull latest tcgplayer_id from live catalog so edit reflects saves
+    var _cat=ll('catalog',[]);
+    var _fresh=_cat.find(function(x){return x.id===card.id||(x.name.toLowerCase()===(card.name||'').toLowerCase()&&x.cardNumber===(card.card_number||''));});
+    if(_fresh){card.tcgplayer_id=_fresh.tcgplayerUrl||card.tcgplayer_id||null;card.id=_fresh.id;}
+    else{card.tcgplayer_id=card.tcgplayer_id||card.tcgplayerId||card.tcgplayerUrl||null;}
+    card.prices=card.prices||null;
+  }
+  app.selCard=card;app.selCond='NM';app.selQty=1;
+  g('rgrid').innerHTML='';g('q').value=card.name||card.name_numbered||'';
+  renderSel();
+}
+
+function backToResults(){
+  app.selCard=null;
+  g('sel-panel').style.display='none';
+  if(allRes.length){applySort();}
+}
+
+function tieredPerc(mkt,cond){
+  var t=null;
+  for(var i=0;i<app.tiers.length;i++){if(mkt>=app.tiers[i].min&&mkt<=app.tiers[i].max){t=app.tiers[i];break;}}
+  if(!t)return 50;
+  return t[{NM:'nm',LP:'lp',MP:'mp',HP:'hp',DMG:'dmg'}[cond]]||50;
+}
+
+function renderSel(){
+  var c=app.selCard;if(!c)return;
+  g('sel-panel').style.display='';
+  var eu=c.prices&&c.prices.tcgplayer?c.prices.tcgplayer.market_price:null;
+  var nmUsd=eu!=null?eu*EU:null;
+  var nmPrice=nmUsd!=null?nmUsd:null;
+  var name=c.name||c.name_numbered||'';
+  var cardNum=c.card_number||'';
+  var ep=c.episode&&c.episode.name?c.episode.name:'';
+  var ebayQ=encodeURIComponent(name+(cardNum?' '+cardNum:''));
+  var opts='';CONDS.forEach(function(cond){opts+='<option value="'+cond+'"'+(cond===app.selCond?' selected':'')+'>'+CF[cond]+'</option>';});
+  var tcgHref=null;
+  if(c.tcgplayer_id&&String(c.tcgplayer_id).startsWith('http'))tcgHref=c.tcgplayer_id;
+  else if(c.tcgplayer_id)tcgHref='https://www.tcgplayer.com/product/'+c.tcgplayer_id;
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  h+='<button onclick="backToResults()" style="background:#1a1640;border:1px solid #3d2080;color:#a78bfa;border-radius:6px;padding:5px 10px;font-size:12px">← Results</button>';
+  h+='<button onclick="app.selCard=null;g(\'sel-panel\').style.display=\'none\'" style="background:none;border:none;color:#f87171;font-size:20px">×</button>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:14px;align-items:flex-start">';
+  h+=(c.image?'<img src="'+c.image+'" onerror="this.hidden=1" style="width:90px;border-radius:7px;flex-shrink:0"/>':'<div style="width:90px;height:126px;background:#2d2060;border-radius:7px;flex-shrink:0"></div>');
+  h+='<div style="flex:1;min-width:0">';
+  h+='<div style="font-weight:700;font-size:15px;color:#f0c040;margin-bottom:2px">'+name+'</div>';
+  h+='<div style="color:#a78bfa;font-size:11px">'+ep+(ep&&cardNum?' • ':'')+cardNum+'</div>';
+  h+='<div style="color:#6b7280;font-size:11px;margin-bottom:8px">'+(c.rarity||'')+(c.rarity&&c.color?' • ':'')+( c.color||'')+'</div>';
+  if(nmPrice!=null)h+='<div style="font-size:13px;margin-bottom:8px">NM Market: <b style="color:#34d399">'+nm(nmPrice)+'</b></div>';
+  // Condition + qty pickers → go directly to offer row
+  h+='<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap">';
+  h+='<select class="sel" style="font-size:12px" onchange="app.selCond=this.value;renderSel()">'+opts+'</select>';
+  h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:#94a3b8">Qty</span><input type="number" class="pinp" style="width:52px;font-size:13px" min="1" value="'+app.selQty+'" onchange="app.selQty=Math.max(1,parseInt(this.value)||1)"/></div>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  h+='<button class="btn" onclick="addToSess()">+ Add to Offer</button>';
+  h+='<button class="btn btn-g" onclick="addDirect()">+ Direct to Inv</button>';
+  if(tcgHref)h+='<a class="btn" style="background:#1a3a2a;color:#34d399;border:1px solid #1a4030;font-size:12px;padding:7px 10px" href="'+tcgHref+'" target="_blank">TCGPlayer ↗</a>';
+  h+='<a class="btn" style="background:#3a2a00;color:#f0c040;border:1px solid #4a3800;font-size:12px;padding:7px 10px" href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank">eBay Sold ↗</a>';
+  if(c.isCustom){var _cid=c.id||'';h+='<button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:12px;padding:7px 10px" onclick="editCatalogById(\''+_cid+'\',\''+encodeURIComponent(name)+'\')" >✏️ Edit</button>';}
+  h+='</div></div></div>';
+  g('sel-content').innerHTML=h;
+}
+
+// ─── Session ──────────────────────────────────────────────────────────────────
+function sessCard(c){
+  var mp=cardPrice(c,app.selCond);
+  var eu=c.prices&&c.prices.tcgplayer?c.prices.tcgplayer.market_price:null;
+  var nmUsd=eu!=null?eu*EU:null;
+  var perc=nmUsd!=null?tieredPerc(nmUsd,app.selCond):50;
+  var cost=mp!=null?parseFloat(((mp*perc)/100).toFixed(2)):null;
+  return{id:uid(),name:c.name||c.name_numbered||'',num:c.card_number||'',set:c.episode&&c.episode.name?c.episode.name:'',img:c.image||null,tcgId:c.tcgplayer_id||null,cond:app.selCond,qty:app.selQty,mkt:mp,cost:cost,perc:perc};
+}
+
+function addToSess(){
+  var c=app.selCard;if(!c)return;
+  var name=c.name||c.name_numbered||'';
+  var cond=app.selCond;
+  var dup=app.sess.find(function(e){return e.name===name&&e.cond===cond;});
+  if(dup){
+    if(!confirm('⚠️ '+name+' ('+cond+') is already in this offer. Add another anyway?'))return;
+  }
+  app.sess.unshift(sessCard(c));
+  saveSess();renderOffer();toast('Added '+name+' to offer');
+}
+
+function addDirect(){
+  var c=app.selCard;if(!c)return;
+  var mp=cardPrice(c,app.selCond);
+  app.inv.push({id:uid(),name:c.name||c.name_numbered||'',num:c.card_number||'',set:c.episode&&c.episode.name?c.episode.name:'',img:c.image||null,tcgId:c.tcgplayer_id||null,cond:app.selCond,qty:app.selQty,mkt:mp,cost:0,perc:0,seller:'Direct Add',sellerId:null,status:'onhand',offerId:null,date:td()});
+  saveInv();stats();toast('✅ Added to inventory!');
+}
+
+function onSelChg(){g('new-sname-wrap').style.display=g('o-seller').value==='__new__'?'':'none';}
+
+function calcOffer(){
+  var ct=0;app.sess.forEach(function(e){ct+=(e.cost||0)*e.qty;});
+  var sh=parseFloat(g('fee-ship').value)||0,ot=parseFloat(g('fee-other').value)||0,gt=ct+sh+ot;
+  g('o-total').textContent=nm(gt);
+  g('fee-note').textContent='Cards: '+nm(ct)+' | Ship: '+nm(sh)+' | Other: '+nm(ot);
+  var n=app.sess.length;
+  var b=g('sess-badge');if(b){b.style.display=n?'':'none';b.textContent=n+' card'+(n!==1?'s':'')+' in offer';}
+  var oc=g('o-count');if(oc)oc.textContent='('+n+')';
+}
+
+function renderOffer(){
+  var op=g('offer-panel'),se=g('sidebar-empty');
+  if(!app.sess.length){if(op)op.style.display='none';if(se)se.style.display='';calcOffer();return;}
+  if(op)op.style.display='';if(se)se.style.display='none';
+  var sel=g('o-seller');var cv=sel.value;
+  sel.innerHTML='<option value="">— Seller —</option><option value="__ip__">🏪 In Person</option><option value="__new__">➕ New Seller...</option>';
+  app.sellers.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
+  sel.value=cv||'';
+  calcOffer();
+  var h='';
+  app.sess.forEach(function(e,i){
+    var im=e.img?'<img class="othumb" src="'+e.img+'" onerror="this.style.display=\'none\'"/>':'<div class="othumb-blank"></div>';
+    h+='<div class="orow">'+im+'<div style="flex:1;min-width:0">';
+    h+='<div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.name+'</div>';
+    h+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#94a3b8">';
+    h+='<span>'+(CF[e.cond]||e.cond)+'</span>';
+    h+='<span>×</span>';
+    h+='<input type="number" min="1" value="'+e.qty+'" class="pinp" style="width:42px;font-size:12px;padding:3px 5px;color:#e2e8f0" onchange="updSessQty('+i+',this.value)"/>';
+    h+='</div>';
+    // Bigger price inputs, no cursor-loss: use onchange not oninput for recalculate
+    h+='<div style="display:flex;gap:4px;margin-top:5px;align-items:center;flex-wrap:wrap">';
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px">';
+    h+='<span style="font-size:9px;color:#94a3b8">Mkt</span>';
+    h+='<input type="number" step="0.01" min="0" value="'+(e.mkt!=null?e.mkt:'')+'" placeholder="—" class="pinp pp" style="width:62px" onchange="updSess('+i+',\'mkt\',this.value);recalc('+i+');renderOffer()"/>';
+    h+='</div>';
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px">';
+    h+='<span style="font-size:9px;color:#a78bfa">Buy%</span>';
+    h+='<input type="number" step="1" min="1" max="100" value="'+(e.perc!=null?e.perc:'')+'" placeholder="—" class="pinp pperc" style="width:52px" onchange="updSessPerc('+i+',this.value)"/>';
+    h+='</div>';
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px">';
+    h+='<span style="font-size:9px;color:#f0c040">Offer</span>';
+    h+='<input type="number" step="0.01" min="0" value="'+(e.cost!=null?e.cost:'')+'" placeholder="—" class="pinp pcost" style="width:62px" onchange="updSessCost('+i+',this.value)"/>'
+    h+='</div>';
+    h+='<span style="font-size:10px;color:#a78bfa;white-space:nowrap">='+nm(e.cost!=null?e.cost*e.qty:null)+'</span>';
+    h+='</div></div>';
+    h+='<button onclick="rmSess(\''+e.id+'\')" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;flex-shrink:0;align-self:flex-start;padding-top:2px">×</button>';
+    h+='</div>';
+  });
+  g('o-rows').innerHTML=h;
+}
+
+// Use onchange instead of oninput to prevent cursor loss mid-edit
+function updSess(i,f,v){if(app.sess[i])app.sess[i][f]=parseFloat(v)||null;}
+function updSessPerc(i,v){
+  var p=parseInt(v);if(!app.sess[i]||isNaN(p)||p<1)return;
+  app.sess[i].perc=p;
+  if(app.sess[i].mkt!=null)app.sess[i].cost=parseFloat(((app.sess[i].mkt*p)/100).toFixed(2));
+  saveSess();renderOffer();
+}
+function recalc(i){var e=app.sess[i];if(!e||e.mkt==null||!e.perc)return;e.cost=parseFloat(((e.mkt*e.perc)/100).toFixed(2));}
+function updSessCost(i,v){
+  if(!app.sess[i])return;
+  var cost=parseFloat(v)||null;
+  app.sess[i].cost=cost;
+  // Back-calc percentage if we have a market price
+  if(cost!=null&&app.sess[i].mkt!=null&&app.sess[i].mkt>0){
+    app.sess[i].perc=parseFloat(((cost/app.sess[i].mkt)*100).toFixed(1));
+  }
+  saveSess();renderOffer();
+}
+function rmSess(id){app.sess=app.sess.filter(function(e){return e.id!==id;});saveSess();renderOffer();}
+function updSessQty(i,v){
+  var q=parseInt(v);if(!app.sess[i]||isNaN(q)||q<1)return;
+  app.sess[i].qty=q;saveSess();renderOffer();
+}
+
+function clearSess(){
+  if(app.sess.length&&!confirm('Clear current offer?'))return;
+  app.sess=[];app.editOffer=null;
+  ls('sess',[]);ls('editOffer',null);
+  if(g('fee-ship'))g('fee-ship').value=0;if(g('fee-other'))g('fee-other').value=0;
+  if(g('o-seller'))g('o-seller').value='';if(g('new-sname-wrap'))g('new-sname-wrap').style.display='none';
+  renderOffer();
+}
+
+function saveOffer(){
+  if(!app.sess.length)return;
+  var sv=g('o-seller').value,sn='Unknown',sid=null;
+  if(!sv){toast('⚠️ Please select a seller first.');return;}
+  if(sv==='__ip__'){sn='In Person / Vending';}
+  else if(sv==='__new__'){
+    var nm2=g('new-sname').value.trim();if(!nm2){toast('⚠️ Enter a seller name.');return;}
+    var ns={id:uid(),name:nm2,fb:'',ph:'',addr:'',notes:''};app.sellers.push(ns);saveSellers();sid=ns.id;sn=nm2;
+  }else if(sv){for(var i=0;i<app.sellers.length;i++){if(String(app.sellers[i].id)===String(sv)){sn=app.sellers[i].name;sid=app.sellers[i].id;break;}}}
+  var sh=parseFloat(g('fee-ship').value)||0,ot=parseFloat(g('fee-other').value)||0;
+  var ct=0;app.sess.forEach(function(e){ct+=(e.cost||0)*e.qty;});
+  var day=td();
+  if(app.editOffer){
+    var ex=null;for(var j=0;j<app.offers.length;j++){if(String(app.offers[j].id)===String(app.editOffer)){ex=app.offers[j];break;}}
+    if(ex){
+      app.sess.forEach(function(e){ex.cards.push(Object.assign({},e,{status:'pending'}));});
+      ex.ct=0;ex.cards.forEach(function(c){ex.ct+=(c.cost||0)*c.qty;});
+      ex.ship=sh;ex.other=ot;ex.total=ex.ct+sh+ot;
+      saveOffers();
+      app.sess.forEach(function(e){app.inv.push(Object.assign({},e,{id:uid(),date:day,offerId:ex.id,seller:ex.seller,sellerId:ex.sellerId,status:'pending'}));});
+      saveInv();var eid=ex.id;clearSess();stats();toast('✅ Cards added!');show('offers');setTimeout(function(){openOffer(eid);},150);return;
+    }
+  }
+  var oid=uid();
+  var sheet={id:oid,seller:sn,sellerId:sid,date:day,ship:sh,other:ot,ct:ct,total:ct+sh+ot,cards:app.sess.map(function(e){return Object.assign({},e,{status:'pending'});})};
+  app.offers.unshift(sheet);saveOffers();
+  app.sess.forEach(function(e){
+    // Remove any stale duplicate with same offerId + name + cond before re-adding
+    app.inv=app.inv.filter(function(x){return!(String(x.offerId)===String(oid)&&x.name===e.name&&x.cond===e.cond);});
+    app.inv.push(Object.assign({},e,{id:uid(),date:day,offerId:oid,seller:sn,sellerId:sid,status:'pending'}));
+  });
+  saveInv();clearSess();ls('sess',[]);ls('editOffer',null);stats();toast('✅ Offer saved!');show('offers');
+}
+
+// ─── Manual Entry Modal ───────────────────────────────────────────────────────
+function openManualMod(catCard){
+  g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';
+  g('me-rarity').value='';g('me-cond').value='NM';g('me-qty').value=1;g('me-img').value='';
+  g('me-tcglink').value='';g('me-tcg-url').value='';g('me-edit-id').textContent='';
+  if(catCard){
+    g('me-name').value=catCard.name||'';g('me-set').value=catCard.set||'';g('me-num').value=catCard.cardNumber||'';
+    g('me-color').value=catCard.color||'';g('me-rarity').value=catCard.rarity||'';
+    g('me-img').value=catCard.image||'';g('me-tcglink').value=catCard.tcgplayerUrl||'';
+    if(g('me-mktprice'))g('me-mktprice').value=catCard.mktprice||'';
+    g('me-edit-id').textContent=catCard.id||'';
+  }
+  g('manual-modal').style.display='';
+}
+function closeManualMod(){g('manual-modal').style.display='none';}
+
+// Auto-fill from TCGPlayer URL: extract product ID & use as tcgId, parse name from URL slug
+function autofillTCG(){
+  var url=g('me-tcg-url').value.trim();if(!url)return;
+  g('me-tcglink').value=url;
+  var m=url.match(/\/product\/(\d+)\/?([^?#]*)/);
+  if(!m){toast('⚠️ Could not parse TCGPlayer URL.');return;}
+  var pid=m[1];
+  var slug=m[2]||'';
+  // Parse name and set from URL slug
+  if(slug){
+    var parts=slug.split('/');var last=parts[parts.length-1]||'';
+    var parsedName=last.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+    var setM=slug.match(/(op\d{2}|st\d{2}|eb\d{2})/i);
+    if(setM&&!g('me-set').value)g('me-set').value=setM[1].toUpperCase();
+    if(parsedName&&!g('me-name').value)g('me-name').value=parsedName;
+  }
+  // Image from TCGPlayer CDN
+  if(!g('me-img').value){
+    g('me-img').value='https://product-images.tcgplayer.com/fit-in/456x632/'+pid+'.jpg';
+  }
+  // Fetch price via proxy
+  toast('⏳ Fetching price...');
+  fetch(P+'/cards/'+pid+'/price').then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(d&&d.market_price!=null){
+      var mkt=parseFloat((d.market_price*EU).toFixed(2));
+      if(g('me-mktprice'))g('me-mktprice').value=mkt;
+      toast('✅ Filled! Market price: $'+mkt);
+    } else {
+      toast('✅ URL saved. Price not found — enter manually.');
+    }
+  }).catch(function(){
+    toast('✅ URL saved. Could not fetch price.');
+  });
+}
+
+function editCatalogCard(encoded){
+  try{var c=JSON.parse(decodeURIComponent(encoded));openManualMod(c);}catch(e){}
+}
+function editCatalogById(id,encodedName){
+  // Refresh from live catalog
+  var cat=ll('catalog',[]);
+  var found=id?cat.find(function(x){return x.id===id;}):null;
+  if(!found&&encodedName){
+    var nm2=decodeURIComponent(encodedName).toLowerCase();
+    found=cat.find(function(x){return x.name.toLowerCase()===nm2;});
+  }
+  // Also re-read app.selCard for any fields not in catalog
+  if(!found&&app.selCard){
+    found={id:app.selCard.id||uid(),name:app.selCard.name||app.selCard.name_numbered||'',cardNumber:app.selCard.card_number||'',set:app.selCard.set||'',color:app.selCard.color||'',rarity:app.selCard.rarity||'',image:app.selCard.image||null,tcgplayerUrl:app.selCard.tcgplayer_id||null,isCustom:true};
+  }
+  if(found)openManualMod(found);
+  else toast('⚠️ Card not found in catalog');
+}
+
+function getManual(){
+  var n=g('me-name').value.trim();if(!n){toast('⚠️ Card name required.');return null;}
+  return{
+    id:g('me-edit-id').textContent||uid(),
+    name:n,num:g('me-num').value.trim(),set:g('me-set').value.trim(),
+    color:g('me-color').value.trim(),rarity:g('me-rarity').value.trim(),
+    cond:g('me-cond').value,qty:Math.max(1,parseInt(g('me-qty').value)||1),
+    mkt:parseFloat(g('me-mktprice')?g('me-mktprice').value||0:0)||null,
+    img:g('me-img').value.trim()||null,
+    tcgId:g('me-tcglink').value.trim()||null,
+    manual:true,mktprice:parseFloat(g('me-mktprice')?g('me-mktprice').value||0:0)||null
+  };
+}
+
+function saveCat(e){
+  var cat=ll('catalog',[]);
+  var idx=-1;
+  for(var i=0;i<cat.length;i++){if(cat[i].id===e.id||(cat[i].name.toLowerCase()===e.name.toLowerCase()&&(cat[i].cardNumber||'')===(e.num||'')&&(cat[i].set||'').toLowerCase()===(e.set||'').toLowerCase())){idx=i;break;}}
+  var c={id:e.id||uid(),name:e.name,cardNumber:e.num||'',set:e.set||'',color:e.color||'',rarity:e.rarity||'',image:e.img||null,tcgplayerUrl:e.tcgId||null,isCustom:true,mktprice:e.mktprice||null};
+  if(idx>-1)cat[idx]=c;else cat.unshift(c);
+  ls('catalog',cat);saveCatalog(cat);
+  // Refresh allRes so search results reflect updated catalog card (e.g. new TCGPlayer URL)
+  // Patch live search results
+  for(var _ri=0;_ri<allRes.length;_ri++){
+    var _r=allRes[_ri];
+    if(_r.isCustom&&(_r.id===c.id||(_r.name||'').toLowerCase()===c.name.toLowerCase())){
+      _r.name=c.name;_r.card_number=c.cardNumber||_r.card_number||'';
+      _r.set=c.set||'';_r.color=c.color||'';_r.rarity=c.rarity||'';
+      _r.image=c.image||_r.image||null;
+      _r.tcgplayer_id=c.tcgplayerUrl||_r.tcgplayer_id||null;
+      _r.id=c.id;break;
+    }
+  }
+  // Update inventory entries — match by catalog id stored on entry OR by old name
+  // We store c.id on manual inventory entries so we can match precisely
+  var _updated=false;
+  app.inv.forEach(function(inv){
+    // Match by catalogId (most reliable) or by name match
+    if(inv.catalogId===c.id||(inv.manual&&inv.name.toLowerCase()===c.name.toLowerCase())){
+      inv.catalogId=c.id;
+      inv.name=c.name;
+      inv.num=c.cardNumber||inv.num||'';
+      inv.set=c.set||inv.set||'';
+      inv.color=c.color||inv.color||'';
+      inv.rarity=c.rarity||inv.rarity||'';
+      if(c.image)inv.img=c.image;
+      if(c.tcgplayerUrl)inv.tcgId=c.tcgplayerUrl;
+      _updated=true;
+    }
+  });
+  if(_updated)saveInv();
+}
+
+function clearManual(){g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';g('me-rarity').value='';g('me-img').value='';g('me-qty').value=1;g('me-cond').value='NM';g('me-tcglink').value='';g('me-tcg-url').value='';g('me-edit-id').textContent='';if(g('me-mktprice'))g('me-mktprice').value='';}
+
+function saveManualCatalogOnly(){
+  var e=getManual();if(!e)return;
+  saveCat(e);clearManual();closeManualMod();toast('💾 Saved to catalog!');
+  if(app.tab==='settings')renderCatalog();
+}
+
+function manualToOffer(){
+  var e=getManual();if(!e)return;
+  saveCat(e);
+  var entry=Object.assign({},e);
+  // Apply tiered buy% and calculate offer cost if market price is set
+  if(entry.mkt!=null){
+    entry.perc=tieredPerc(entry.mkt,entry.cond||'NM');
+    entry.cost=parseFloat(((entry.mkt*entry.perc)/100).toFixed(2));
+  }
+  app.sess.unshift(entry);
+  saveSess();renderOffer();clearManual();closeManualMod();
+  toast('✅ '+e.name+' added to offer!');
+}
+
+function manualToInv(){
+  var e=getManual();if(!e)return;
+  saveCat(e);
+  var inv={id:uid(),catalogId:e.id||null,name:e.name,num:e.num,set:e.set,color:e.color,rarity:e.rarity,img:e.img,tcgId:e.tcgId,cond:e.cond,qty:e.qty,mkt:e.mkt||null,cost:e.mkt&&e.perc?parseFloat(((e.mkt*(e.perc||0))/100).toFixed(2)):0,perc:e.perc||null,seller:'Direct Add',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true};
+  app.inv.push(inv);saveInv();stats();clearManual();closeManualMod();
+  toast('✅ '+e.name+' added to inventory!');
+}
+
+// ─── Offers ───────────────────────────────────────────────────────────────────
+function renderOffers(){
+  var flt=(g('of-filter').value||'').toLowerCase(),srt=g('of-sort').value;
+  var list=app.offers.filter(function(o){return(o.seller||'').toLowerCase().includes(flt)||o.date.includes(flt);});
+  list.sort(function(a,b){
+    if(srt==='dd')return(b.id>a.id?1:-1);if(srt==='da')return(a.id>b.id?1:-1);
+    if(srt==='td')return b.total-a.total;if(srt==='ta')return a.total-b.total;
+    if(srt==='sel')return(a.seller||'').localeCompare(b.seller||'');return 0;
+  });
+  var h='';
+  list.forEach(function(o){
+    var tot=o.cards.length,rec=o.cards.filter(function(c2){return c2.status==='onhand'||c2.status==='shipped';}).length;
+    var mis=o.cards.filter(function(c2){return c2.status==='missing';}).length;
+    var pct=tot?Math.round((rec/tot)*100):0;
+    var isOpen=expandedOffer===o.id;
+    var sb=rec===0?'<span class="badge bp">Pending</span>':rec<tot?'<span class="badge bpart">Partial</span>':'<span class="badge bcomp">Complete</span>';
+    var sellerSid=o.sellerId;
+    var sellerObj=null;for(var _si=0;_si<app.sellers.length;_si++){if(String(app.sellers[_si].id)===String(sellerSid)){sellerObj=app.sellers[_si];break;}}
+    var selNameHtml='<span style="color:#f0c040;font-weight:700;font-size:14px">🏴‍☠️ '+o.seller+'</span>';
+    h+='<div class="scard" style="'+(isOpen?'border-color:#7c3aed':'')+'">'; 
+    h+='<div data-oid="'+o.id+'" onclick="openOffer(this.dataset.oid)" style="cursor:pointer;padding-bottom:4px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">';
+    h+='<div>'+selNameHtml+'<div style="font-size:11px;color:#94a3b8">'+o.date+'</div></div>';
+    h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">';
+    h+='<button onclick="event.stopPropagation();delOffer(\''+o.id+'\')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>';
+    h+=sb;
+    var offerMktTot=0;o.cards.forEach(function(cx){offerMktTot+=(cx.mkt||0)*cx.qty;});
+    h+='<div style="font-size:11px;color:#34d399;font-weight:600">Value: $'+offerMktTot.toFixed(2)+'</div>';
+    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:#f0c040">Paid:</span>';
+    h+='<input type="number" step="0.01" min="0" value="'+o.total.toFixed(2)+'" class="pinp pcost" style="width:72px;font-size:12px" onclick="event.stopPropagation()" data-oid="'+o.id+'" onchange="updOfferTotal(this.dataset.oid,this.value)"/></div>';
+    h+='</div>'; // end right column
+    h+='</div>'; // end top row
+    h+='<div style="font-size:11px;color:#94a3b8;margin-top:4px">';
+    h+=tot+' cards';
+    h+=' • <span style="color:#34d399">Mkt: $'+offerMktTot.toFixed(2)+'</span>';
+    h+=' • <span style="color:#f0c040">Paid: $'+o.ct.toFixed(2)+'</span>';
+    if(o.ship>0)h+=' • Ship: $'+o.ship.toFixed(2);
+    if(mis)h+=' • <span style="color:#f87171">'+mis+' missing</span>';
+    h+='</div>';
+    var onhand_n=o.cards.filter(function(c){return c.status==='onhand';}).length;
+    var ship_n=o.cards.filter(function(c){return c.status==='shipped';}).length;
+    var miss_n=o.cards.filter(function(c){return c.status==='missing';}).length;
+    var pctOH=tot?Math.round((onhand_n/tot)*100):0;
+    var pctSH=tot?Math.round((ship_n/tot)*100):0;
+    var pctMS=tot?Math.round((miss_n/tot)*100):0;
+    h+='<div class="pbar" style="margin-top:6px;display:flex;overflow:hidden"><div style="width:'+pctOH+'%;background:#059669;height:5px"></div><div style="width:'+pctSH+'%;background:#3b82f6;height:5px"></div><div style="width:'+pctMS+'%;background:#ef4444;height:5px"></div></div>';
+    h+='<div style="font-size:10px;color:#6b7280;margin-top:3px">'+rec+'/'+tot+' received ('+pct+'%) '+(isOpen?'▲ collapse':'▼ expand')+'</div>';
+    h+='</div>'; // end clickable header
+    if(isOpen){
+      h+='<div id="odetail-'+o.id+'" style="margin-top:12px;border-top:1px solid #2d2060;padding-top:12px">';
+      h+=buildOfferDetailHTML(o);
+      h+='</div>';
+    }
+    h+='</div>'; // end scard
+  });
+  g('offers-items').innerHTML=h||'<div class="empty">No offer sheets yet.</div>';
+}
+
+// Accordion state
+var expandedOffer=null;
+function openOffer(id){
+  if(expandedOffer===id){expandedOffer=null;}else{expandedOffer=id;}
+  renderOffers();
+  if(expandedOffer){
+    setTimeout(function(){var el=document.getElementById('odetail-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
+  }
+}
+
+function buildOfferDetailHTML(o){
+  var tot=o.cards.length,rec=o.cards.filter(function(c){return c.status==='onhand'||c.status==='shipped';}).length;
+  var mis=o.cards.filter(function(c){return c.status==='missing';}).length;
+  var pct=tot?Math.round((rec/tot)*100):0;
+  var sel2=null;for(var i=0;i<app.sellers.length;i++){if(String(app.sellers[i].id)===String(o.sellerId)){sel2=app.sellers[i];break;}}
+  var sh='';
+  if(sel2){
+    sh='<div style="background:#0d0820;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px">';
+    sh+='<div style="font-weight:600;color:#a78bfa;margin-bottom:5px">Seller Contact</div>';
+    if(sel2.fb)sh+='<div class="sfield">💬 <a href="'+sel2.fb+'" target="_blank" style="color:#60a5fa">Facebook Messenger</a></div>';
+    if(sel2.ph)sh+='<div class="sfield">📞 '+sel2.ph+'</div>';
+    if(sel2.addr)sh+='<div class="sfield">📍 '+sel2.addr+'</div>';
+    if(sel2.notes)sh+='<div class="sfield">📝 '+sel2.notes+'</div>';
+    sh+='</div>';
+  }
+  // Bulk: checkboxes + status dropdown
+  var bh='<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-wrap:wrap">';
+  bh+='<span style="font-size:11px;color:#94a3b8;font-weight:600">Bulk:</span>';
+  bh+='<button onclick="offerCheckAll(\''+o.id+'\')" style="padding:4px 10px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">☑ All</button>';
+  bh+='<button onclick="offerUncheckAll(\''+o.id+'\')" style="padding:4px 10px;border-radius:4px;background:#1a1040;border:1px solid #2d2060;color:#6b7280;font-size:11px;cursor:pointer">☐ None</button>';
+  bh+='<select id="bulk-status-'+o.id+'" class="sel" style="font-size:12px;padding:5px 8px">';
+  bh+='<option value="">— Move to —</option>';
+  SCYC.forEach(function(s){bh+='<option value="'+s+'">'+SL[s]+'</option>';});
+  bh+='</select>';
+  bh+='<button onclick="offerBulkStatus(\''+o.id+'\',document.getElementById(\'bulk-status-'+o.id+'\').value)" style="padding:4px 12px;border-radius:4px;background:#7c3aed;border:none;color:#fff;font-size:11px;cursor:pointer">Apply</button>';
+  bh+='</div>';
+  var ch='';
+  o.cards.forEach(function(card,i){
+    var sbtns='';
+    SCYC.forEach(function(s){sbtns+='<button class="sbtn '+SC[s]+'" style="opacity:'+(card.status===s?1:0.35)+'" onclick="setStatus(\''+o.id+'\','+i+',\''+s+'\')">'+SL[s]+'</button>';});
+    var ep=card.set||'';
+    var ebayQ=encodeURIComponent(card.name+(card.num?' '+card.num:''));
+    ch+='<div class="orow" id="ocard-'+o.id+'-'+i+'">';
+    ch+='<input type="checkbox" class="chk offer-chk" data-oid="'+o.id+'" data-idx="'+i+'" style="margin-top:4px"/>';
+    ch+=card.img?'<img class="othumb" src="'+card.img+'" onerror="this.style.display=\'none\'"/>':'<div class="othumb-blank"></div>';
+    ch+='<div style="flex:1;min-width:0">';
+    ch+='<div style="font-weight:600;font-size:12px">'+card.name+'</div>';
+    ch+='<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#94a3b8">';
+    ch+='<span>'+(card.num||'')+' • '+(CF[card.cond]||card.cond)+' ×</span>';
+    ch+='<input type="number" min="1" value="'+card.qty+'" class="pinp" style="width:42px;font-size:12px;padding:2px 5px" onchange="editCard(\''+o.id+'\','+i+',\'qty\',this.value)"/>';
+    ch+='</div>';
+    ch+='<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;align-items:flex-end">';
+    ch+='<div><div style="font-size:9px;color:#94a3b8;margin-bottom:2px">Mkt $</div><input type="number" step="0.01" min="0" value="'+(card.mkt!=null?card.mkt:'')+'" placeholder="—" class="pinp pp" style="width:68px" onchange="editCard(\''+o.id+'\','+i+',\'mkt\',this.value)"/></div>';
+    ch+='<div><div style="font-size:9px;color:#a78bfa;margin-bottom:2px">Buy%</div><input type="number" min="1" max="100" value="'+(card.perc||'')+'" placeholder="—" class="pinp pperc" style="width:58px" onchange="editCard(\''+o.id+'\','+i+',\'perc\',this.value)"/></div>';
+    ch+='<div><div style="font-size:9px;color:#f0c040;margin-bottom:2px">Offer $</div><input type="number" step="0.01" min="0" value="'+(card.cost!=null?card.cost:'')+'" placeholder="—" class="pinp pcost" style="width:68px" onchange="editCard(\''+o.id+'\','+i+',\'cost\',this.value)"/></div>';
+    ch+='<span style="font-size:11px;color:#a78bfa;white-space:nowrap;padding-bottom:2px">='+nm(card.cost!=null?card.cost*card.qty:null)+'</span>';
+    if(card.tcgId){var tcgH2=String(card.tcgId).startsWith('http')?card.tcgId:'https://www.tcgplayer.com/product/'+card.tcgId;ch+='<a href="'+tcgH2+'" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px;align-self:flex-end">TCG ↗</a>';}
+    ch+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:10px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 5px;align-self:flex-end">eBay ↗</a>';
+    ch+='</div></div>';
+    ch+='<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0">';
+    ch+='<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:flex-end">'+sbtns+'</div>';
+    ch+='<button onclick="rmCard(\''+o.id+'\','+i+')" style="padding:2px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer;margin-top:2px">✕</button>';
+    ch+='</div></div>';
+  });
+  var h='';
+  h+='<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:6px">';
+  h+='<button class="btn btn-g" style="font-size:12px;padding:6px 10px" onclick="addToOffer(\''+ o.id +'\')" >+ Cards</button>';
+  h+='<button class="btn" style="font-size:12px;padding:6px 10px" onclick="pdfOffer(\''+o.id+'\')" >📄 PDF</button>';
+  h+='<button class="btn btn-r" style="font-size:12px;padding:6px 10px" onclick="delOffer(\''+o.id+'\')" >🗑 Delete</button>';
+  h+='</div>';
+  // Editable seller/ship/other
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Seller</div>';
+  h+='<select class="sel" style="width:100%;font-size:12px" onchange="updOfferSeller(\''+o.id+'\',this.value)">';
+  h+='<option value="__ip__"'+(o.seller==='In Person / Vending'?' selected':'')+'>🏪 In Person</option>';
+  app.sellers.forEach(function(s){h+='<option value="'+s.id+'"'+(String(o.sellerId)===String(s.id)?' selected':'')+'>'+s.name+'</option>';});
+  h+='</select></div>';
+  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Ship $</div>';
+  h+='<input type="number" step="0.01" min="0" value="'+o.ship.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'ship\',this.value)"/></div>';
+  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Other $</div>';
+  h+='<input type="number" step="0.01" min="0" value="'+o.other.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'other\',this.value)"/></div>';
+  h+='</div>';
+  h+=sh;
+  var detMktTot=0;o.cards.forEach(function(cx){detMktTot+=(cx.mkt||0)*cx.qty;});
+  h+='<div class="row" style="margin-bottom:8px;font-size:13px;flex-wrap:wrap;gap:10px">';
+  h+='<span>Value: <b style="color:#34d399">$'+detMktTot.toFixed(2)+'</b></span>';
+  h+='<span>Paid: <b style="color:#f0c040">$'+o.ct.toFixed(2)+'</b></span>';
+  h+='<span style="color:#94a3b8">Ship: <b>$'+o.ship.toFixed(2)+'</b></span>';
+  h+='<span style="color:#94a3b8">Other: <b>$'+o.other.toFixed(2)+'</b></span>';
+  h+='<span>Total Cost: <b style="color:#f0c040">$'+o.total.toFixed(2)+'</b></span>';
+  h+='</div>';
+    var oh_n=o.cards.filter(function(c2){return c2.status==='onhand';}).length;
+    var sh_n=o.cards.filter(function(c2){return c2.status==='shipped';}).length;
+    var ms_n=o.cards.filter(function(c2){return c2.status==='missing';}).length;
+    var pctOH2=tot?Math.round((oh_n/tot)*100):0;
+    var pctSH2=tot?Math.round((sh_n/tot)*100):0;
+    var pctMS2=tot?Math.round((ms_n/tot)*100):0;
+    h+='<div class="pbar" style="display:flex;overflow:hidden"><div style="width:'+pctOH2+'%;background:#059669;height:5px"></div><div style="width:'+pctSH2+'%;background:#3b82f6;height:5px"></div><div style="width:'+pctMS2+'%;background:#ef4444;height:5px"></div></div>';
+  h+='<div style="font-size:11px;color:#6b7280;margin-bottom:10px">'+rec+'/'+tot+' received • '+mis+' missing</div>';
+  h+=bh+ch;
+  return h;
+}
+
+// Bulk check/uncheck all in offer detail
+function offerCheckAll(oid){document.querySelectorAll('.offer-chk[data-oid="'+oid+'"]').forEach(function(c){c.checked=true;});}
+function offerUncheckAll(oid){document.querySelectorAll('.offer-chk[data-oid="'+oid+'"]').forEach(function(c){c.checked=false;});}
+function offerBulkStatus(oid,status){
+  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(oid)){o=app.offers[i];break;}}
+  if(!status){toast('⚠️ Choose a status first.');return;}
+  if(!o)return;
+  var checked=document.querySelectorAll('.offer-chk[data-oid="'+oid+'"]:checked');
+  if(!checked.length){toast('⚠️ Check at least one card first.');return;}
+  checked.forEach(function(chk){
+    var idx=parseInt(chk.dataset.idx);
+    if(o.cards[idx]){
+      o.cards[idx].status=status;
+      var c=o.cards[idx];
+      for(var k=0;k<app.inv.length;k++){if(String(app.inv[k].offerId)===String(oid)&&app.inv[k].name===c.name&&app.inv[k].cond===c.cond){app.inv[k].status=status;break;}}
+    }
+  });
+  saveOffers();saveInv();stats();renderOffers();toast('✅ '+checked.length+' cards → '+SL[status]);
+}
+
+function editCard(oid,i,f,v){
+  var o=null;for(var j=0;j<app.offers.length;j++){if(String(app.offers[j].id)===String(oid)){o=app.offers[j];break;}}
+  if(!o||!o.cards[i])return;
+  var c=o.cards[i];
+  if(f==='perc'){c.perc=parseFloat(v)||null;if(c.mkt!=null&&c.perc)c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));}
+  else if(f==='mkt'){c.mkt=parseFloat(v)||null;if(c.mkt!=null&&c.perc)c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));}
+  else if(f==='cost'){c.cost=parseFloat(v)||null;if(c.cost!=null&&c.mkt!=null&&c.mkt>0)c.perc=parseFloat(((c.cost/c.mkt)*100).toFixed(1));}
+  else if(f==='qty'){c.qty=parseInt(v)||1;}
+  else{c.cost=parseFloat(v)||null;}
+  o.ct=0;o.cards.forEach(function(x){o.ct+=(x.cost||0)*x.qty;});o.total=o.ct+o.ship+o.other;
+  saveOffers();
+  for(var k=0;k<app.inv.length;k++){if(String(app.inv[k].offerId)===String(oid)&&app.inv[k].name===c.name&&app.inv[k].cond===c.cond){app.inv[k].cost=c.cost;app.inv[k].mkt=c.mkt;app.inv[k].perc=c.perc;app.inv[k].qty=c.qty;break;}}
+  saveInv();
+}
+
+function rmCard(oid,i){
+  var o=null;for(var j=0;j<app.offers.length;j++){if(String(app.offers[j].id)===String(oid)){o=app.offers[j];break;}}
+  if(!o)return;
+  if(!confirm('Remove "'+o.cards[i].name+'" from this offer?'))return;
+  var rm=o.cards.splice(i,1)[0];
+  o.ct=0;o.cards.forEach(function(x){o.ct+=(x.cost||0)*x.qty;});o.total=o.ct+o.ship+o.other;
+  saveOffers();
+  app.inv=app.inv.filter(function(x){return!(String(x.offerId)===String(oid)&&x.name===rm.name&&x.cond===rm.cond);});
+  saveInv();stats();renderOffers();toast('🗑 '+rm.name+' removed.');
+}
+
+function setStatus(oid,i,status){
+  var o=null;for(var j=0;j<app.offers.length;j++){if(String(app.offers[j].id)===String(oid)){o=app.offers[j];break;}}
+  if(!o)return;
+  o.cards[i].status=status;saveOffers();
+  var c=o.cards[i];
+  for(var k=0;k<app.inv.length;k++){if(String(app.inv[k].offerId)===String(oid)&&app.inv[k].name===c.name&&app.inv[k].cond===c.cond){app.inv[k].status=status;break;}}
+  saveInv();stats();renderOffers();
+}
+
+function updOfferSeller(oid,val){
+  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(oid)){o=app.offers[i];break;}}
+  if(!o)return;
+  if(val==='__ip__'){o.seller='In Person / Vending';o.sellerId=null;}
+  else{for(var j=0;j<app.sellers.length;j++){if(String(app.sellers[j].id)===String(val)){o.seller=app.sellers[j].name;o.sellerId=app.sellers[j].id;break;}}}
+  // Update all inv entries from this offer
+  app.inv.forEach(function(i){if(String(i.offerId)===String(oid)){i.seller=o.seller;i.sellerId=o.sellerId;}});
+  saveOffers();saveInv();renderOffers();
+}
+function updOfferFee(oid,field,val){
+  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(oid)){o=app.offers[i];break;}}
+  if(!o)return;
+  o[field]=parseFloat(val)||0;
+  o.total=o.ct+o.ship+o.other;
+  saveOffers();renderOffers();
+}
+function updOfferTotal(oid,val){
+  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(oid)){o=app.offers[i];break;}}
+  if(!o)return;
+  o.total=parseFloat(val)||o.total;
+  saveOffers();renderOffers();
+}
+function delOffer(id){
+  if(!confirm('Delete this offer sheet and its inventory cards?'))return;
+  app.offers=app.offers.filter(function(o){return String(o.id)!==String(id);});
+  app.inv=app.inv.filter(function(i){return String(i.offerId)!==String(id);});
+  saveOffers();saveInv();stats();renderOffers();toast('🗑 Deleted.');
+}
+
+function addToOffer(id){
+  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(id)){o=app.offers[i];break;}}
+  if(!o)return;
+  if(app.sess.length&&!confirm('Clear current session and add to this offer?'))return;
+  app.editOffer=id;app.sess=[];show('buylist');
+  setTimeout(function(){
+    renderOffer();
+    var sel3=g('o-seller');if(!sel3)return;
+    sel3.innerHTML='<option value="">— Seller —</option><option value="__ip__">🏪 In Person</option><option value="__new__">➕ New Seller...</option>';
+    app.sellers.forEach(function(s){var op=document.createElement('option');op.value=s.id;op.textContent=s.name;sel3.appendChild(op);});
+    sel3.value=o.sellerId||'__ip__';
+    g('fee-ship').value=o.ship||0;g('fee-other').value=o.other||0;
+    var b=g('sess-badge');if(b){b.style.display='';b.textContent='Adding to: '+o.seller;}
+    toast('📋 Adding to '+o.seller+'. Search then Save.');
+  },150);
+}
+
+function pdfOffer(id){
+  var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(id)){o=app.offers[i];break;}}
+  if(!o)return;
+  var rows='';
+  o.cards.forEach(function(c,i){
+    var bg=i%2===0?'background:#f9f9f9':'';
+    var img=c.img?'<img src="'+c.img+'" style="width:36px;border-radius:3px;display:block;margin:auto" onerror="this.style.display=\'none\'"/>':'';
+    rows+='<tr style="border-bottom:1px solid #ddd;'+bg+'"><td style="padding:7px 5px;text-align:center">'+img+'</td><td style="padding:7px 5px;font-size:12px;font-weight:600">'+c.name+'</td><td style="padding:7px 5px;font-size:12px">'+(c.num||'')+'</td><td style="padding:7px 5px;font-size:12px;text-align:center">'+c.qty+'</td><td style="padding:7px 5px;font-size:12px;text-align:right">'+nm(c.mkt)+'</td><td style="padding:7px 5px;font-size:12px;text-align:right;font-weight:700">'+nm(c.cost)+'</td><td style="padding:7px 5px;font-size:12px;text-align:right;color:#059669;font-weight:700">'+nm(c.cost!=null?c.cost*c.qty:null)+'</td></tr>';
+  });
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offer Sheet</title><style>body{font-family:Arial,sans-serif;margin:0;padding:28px;color:#111;font-size:13px}.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #111}table{width:100%;border-collapse:collapse;margin-bottom:14px}thead tr{background:#111;color:#fff}thead td{padding:7px 5px;font-size:11px;text-transform:uppercase}tbody td{vertical-align:middle}.tots{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.tr{display:flex;gap:36px;font-size:13px}.gr{font-weight:900;font-size:15px;border-top:2px solid #111;padding-top:5px;margin-top:2px}@media print{body{padding:18px}}</style></head><body>';
+  html+='<div class="hdr"><div style="font-size:21px;font-weight:900">Offer Sheet — '+o.seller+'</div><div style="font-size:12px;color:#555">'+o.date+'</div></div>';
+  html+='<table><thead><tr><td style="width:46px">Photo</td><td>Card Name</td><td>Card #</td><td style="text-align:center">Qty</td><td style="text-align:right">Market</td><td style="text-align:right">Buy/ea</td><td style="text-align:right">Subtotal</td></tr></thead><tbody>'+rows+'</tbody></table>';
+  html+='<div class="tots"><div class="tr"><span style="color:#555">Cards:</span><span>$'+o.ct.toFixed(2)+'</span></div>';
+  if(o.ship>0)html+='<div class="tr"><span style="color:#555">Shipping:</span><span>$'+o.ship.toFixed(2)+'</span></div>';
+  if(o.other>0)html+='<div class="tr"><span style="color:#555">Other:</span><span>$'+o.other.toFixed(2)+'</span></div>';
+  html+='<div class="tr gr"><span>Total:</span><span style="color:#059669">$'+o.total.toFixed(2)+'</span></div></div></body></html>';
+  var w=window.open('','_blank');w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},500);
+}
+
+// ─── Inventory ────────────────────────────────────────────────────────────────
+function renderInv(){
+  invSel={};updBulkBar();
+  var flt=(g('inv-q').value||'').toLowerCase(),sf=g('inv-sf').value,srt=g('inv-sort').value||'vd';
+  var filtered=app.inv.filter(function(i){
+    return((i.name||'').toLowerCase().includes(flt)||(i.set||'').toLowerCase().includes(flt)||(i.seller||'').toLowerCase().includes(flt))&&(!sf||i.status===sf);
+  });
+  var grps={};
+  filtered.forEach(function(i){var k=i.name;if(!grps[k])grps[k]={name:i.name,num:i.num,set:i.set,img:i.img,entries:[]};grps[k].entries.push(i);});
+  var ga=Object.values(grps);
+  ga.forEach(function(g2){g2.tc=0;g2.tv=0;g2.ld='';g2.entries.forEach(function(e){g2.tc+=(e.cost||0)*e.qty;g2.tv+=(e.mkt||0)*e.qty;if(e.date>g2.ld)g2.ld=e.date;});});
+  // Compute per-card (not per-group) mkt for sorting
+  ga.forEach(function(g2){
+    // Use the highest individual card mkt among entries as the sort key
+    g2.maxMkt=0;g2.maxCost=0;
+    g2.entries.forEach(function(e){if((e.mkt||0)>g2.maxMkt)g2.maxMkt=e.mkt||0;if((e.cost||0)>g2.maxCost)g2.maxCost=e.cost||0;});
+  });
+  ga.sort(function(a,b){
+    if(srt==='na')return a.name.localeCompare(b.name);if(srt==='nd')return b.name.localeCompare(a.name);
+    if(srt==='cd')return b.maxCost-a.maxCost;if(srt==='ca')return a.maxCost-b.maxCost;
+    if(srt==='vd')return b.maxMkt-a.maxMkt;if(srt==='va')return a.maxMkt-b.maxMkt;
+    if(srt==='dd')return b.ld.localeCompare(a.ld);if(srt==='da')return a.ld.localeCompare(b.ld);
+    return 0;
+  });
+  var tc=0,tv=0;app.inv.forEach(function(i){tc+=(i.cost||0)*i.qty;tv+=(i.mkt||0)*i.qty;});
+  function byS(s){var n=0;app.inv.forEach(function(i){if(i.status===s)n++;});return n;}
+  g('inv-stats').innerHTML='<span>'+ga.length+' unique • '+filtered.length+' entries</span>'
+    +'<span style="color:#34d399">Cost: '+nm(tc)+'</span><span style="color:#f0c040">Value: '+nm(tv)+'</span>'
+    +'<span class="badge bp">Pending: '+byS('pending')+'</span><span class="badge bo">On Hand: '+byS('onhand')+'</span>'
+    +'<span class="badge bs">Shipped: '+byS('shipped')+'</span><span class="badge bm">Missing: '+byS('missing')+'</span>'
+    +'<span class="badge bw">Whatnot: '+byS('whatnot')+'</span>'
+    +'<button onclick="invSelAll()" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">☑ All</button>'
+    +'<button onclick="clearInvSel()" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #2d2060;color:#6b7280;font-size:11px;cursor:pointer">☐ None</button>';
+  if(!ga.length){g('inv-list').innerHTML='<div class="empty">No matches.</div>';return;}
+  var h='<div class="ilist">';
+  ga.forEach(function(grp){
+    var cg={};grp.entries.forEach(function(e){if(!cg[e.cond])cg[e.cond]=[];cg[e.cond].push(e);});
+    var chips='';
+    CONDS.forEach(function(c){
+      if(!cg[c])return;
+      var q=0;cg[c].forEach(function(e){q+=e.qty;});
+      var sts={};cg[c].forEach(function(e){sts[e.status]=1;});var sk=Object.keys(sts);
+      chips+='<span style="background:#0d0820;border:1px solid #2d2060;border-radius:4px;padding:2px 4px;font-size:9px;display:inline-flex;gap:2px;align-items:center">';
+      chips+='<span style="color:#a78bfa;font-weight:700">'+c+'</span><span style="color:#e2e8f0">×'+q+'</span>';
+      var _hasSales=sk.some(function(s){return s==='whatnot'||s==='vend'||s==='direct';});
+      var _badgeCls=sk.length>1?(_hasSales?'bw':'bpart'):(SB[sk[0]]||'bp');
+      var _badgeTxt=sk.length>1?'Mix':(SL[sk[0]]||'').slice(0,4);
+      chips+='<span class="badge '+_badgeCls+'" style="padding:1px 3px;font-size:8px;margin:0">'+_badgeTxt+'</span>';
+      chips+='</span>';
     });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      return res.status(500).json({ error: err });
-    }
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+    var hw=grp.entries.some(function(e){return e.status==='whatnot';});
+    var ek=encodeURIComponent(grp.name);
+    var ft=grp.entries[0]&&grp.entries[0].tcgId?grp.entries[0].tcgId:null;
+    var ep=grp.entries[0]&&grp.entries[0].set?grp.entries[0].set:'';
+    var ebayQ=encodeURIComponent(grp.name+(grp.num?' '+grp.num:''));
+    // Collect all entry IDs for this group for bulk select
+    var entryIds=grp.entries.map(function(e){return e.id;}).join(',');
+    var isGrpSel=grp.entries.every(function(e){return invSel[e.id];});
+    h+='<div class="irow">';
+    h+='<input type="checkbox" class="chk inv-grp-chk" '+(isGrpSel?'checked':'')+' data-ids="'+entryIds+'" onclick="event.stopPropagation();togInvGrp(this)" style="flex-shrink:0"/>';
+    h+=grp.img?'<img class="ithumb" src="'+grp.img+'" onerror="this.style.display=\'none\'" onclick="openInvMod(\''+ek+'\')"/>':'<div class="inoimg" onclick="openInvMod(\''+ek+'\')">?</div>';
+    h+='<div class="iname" onclick="openInvMod(\''+ek+'\')" style="cursor:pointer"><div class="iname-m">'+grp.name+'</div><div class="iname-s">'+(grp.num||'')+' • '+(grp.set||'')+'</div>';
+    h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">';
+    if(ft){var tcgH3=String(ft).startsWith('http')?ft:'https://www.tcgplayer.com/product/'+ft;h+='<a href="'+tcgH3+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 4px">TCGPlayer ↗</a>';}
+    h+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay Sold ↗</a>';
+    h+='</div></div>';
+    h+='<div class="iconds" onclick="openInvMod(\''+ek+'\')">'+chips+'</div>';
+    var _fe=grp.entries[0];
+    var _im=_fe?_fe.mkt:null,_ic=_fe?_fe.cost:null;
+    h+='<div style="flex:1;text-align:right;min-width:80px" onclick="openInvMod(\''+ek+'\')">';
+    h+='<div style="font-size:12px;color:#f0c040;font-weight:600">'+nm(_ic)+'/ea</div>';
+    h+='<div style="font-size:10px;color:#6b7280">'+nm(grp.tc)+' tot</div>';
+    h+='</div>';
+    h+='<div style="flex:1;text-align:right;min-width:80px" onclick="openInvMod(\''+ek+'\')">';
+    h+='<div style="font-size:12px;color:#34d399;font-weight:600">'+nm(_im)+'/ea</div>';
+    h+='<div style="font-size:10px;color:#6b7280">'+nm(grp.tv)+' tot</div>';
+    h+='</div>';
+    // Sales status shown in chips — no redundant end-of-row badge needed
+    h+='</div>';
+  });
+  g('inv-list').innerHTML=h+'</div>';
+}
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => console.log(`✅ Proxy running on port ${PORT}`));
+// Bulk inventory selection
+function togInvGrp(chk){
+  var ids=(chk.dataset.ids||'').split(',').filter(Boolean);
+  ids.forEach(function(id){if(chk.checked)invSel[id]=true;else delete invSel[id];});
+  updBulkBar();
+}
+function invSelAll(){
+  // Select all currently rendered (filtered) entries without re-rendering
+  app.inv.forEach(function(i){invSel[i.id]=true;});
+  document.querySelectorAll('.inv-grp-chk').forEach(function(chk){chk.checked=true;});
+  updBulkBar();
+}
+function clearInvSel(){invSel={};renderInv();}
+function updBulkBar(){
+  var n=Object.keys(invSel).length;
+  var bar=g('inv-bulk-bar');if(!bar)return;
+  if(n>0){bar.classList.add('on');g('inv-bulk-count').textContent=n+' selected';}
+  else{bar.classList.remove('on');}
+}
+function bulkMoveInv(){
+  var status=g('inv-bulk-status').value;if(!status){toast('⚠️ Choose a status first.');return;}
+  var ids=Object.keys(invSel);if(!ids.length){toast('⚠️ Nothing selected.');return;}
+  ids.forEach(function(id){for(var i=0;i<app.inv.length;i++){if(app.inv[i].id===id){app.inv[i].status=status;break;}}});
+  saveInv();stats();invSel={};renderInv();toast('✅ '+ids.length+' cards → '+SL[status]);
+}
+function bulkToWhatnot(){
+  var ids=Object.keys(invSel);if(!ids.length){toast('⚠️ Nothing selected.');return;}
+  ids.forEach(function(id){for(var i=0;i<app.inv.length;i++){if(app.inv[i].id===id){app.inv[i].status='whatnot';break;}}});
+  saveInv();stats();invSel={};renderInv();toast('📺 '+ids.length+' cards → Whatnot!');
+}
+function bulkDeleteInv(){
+  var ids=Object.keys(invSel);if(!ids.length){toast('⚠️ Nothing selected.');return;}
+  if(!confirm('Permanently delete '+ids.length+' selected card'+(ids.length!==1?'s':'')+' from inventory?'))return;
+  var idSet={};ids.forEach(function(id){idSet[id]=true;});
+  app.inv=app.inv.filter(function(i){return!idSet[i.id];});
+  saveInv();stats();invSel={};renderInv();toast('🗑 '+ids.length+' card'+(ids.length!==1?'s':'')+' deleted.');
+}
+
+function openInvMod(ek){
+  var name=decodeURIComponent(ek);
+  var entries=app.inv.filter(function(i){return i.name===name;});
+  if(!entries.length)return;
+  var f=entries[0];
+  var tq=0,tc=0;entries.forEach(function(e){tq+=e.qty;tc+=(e.cost||0)*e.qty;});
+  g('inv-mod-title').innerHTML=name+'<div style="font-size:11px;color:#a78bfa;font-weight:400">'+(f.num||'')+' • ×'+tq+' • Cost: '+nm(tc)+'</div>';
+  var rows='';
+  entries.forEach(function(e){
+    var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(e.offerId)){o=app.offers[i];break;}}
+    var iw=e.status==='whatnot';
+    rows+='<tr style="border-bottom:1px solid #1a1640">';
+    rows+='<td style="padding:7px 5px;font-size:11px;color:#a78bfa;font-weight:700">'+e.cond+'</td>';
+    rows+='<td style="padding:7px 5px;font-size:11px;text-align:center">'+e.qty+'</td>';
+    // Editable market price for manual cards
+    rows+='<td style="padding:7px 5px;font-size:11px">';
+    rows+='<div style="font-size:9px;color:#94a3b8;margin-bottom:1px">Cost: '+nm(e.cost)+'</div>';
+    rows+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:9px;color:#f0c040">Mkt:</span>';
+    rows+='<input type="number" step="0.01" min="0" value="'+(e.mkt!=null?e.mkt:'')+'" placeholder="—" class="pinp pp" style="width:72px;font-size:13px" onchange="updInvMkt(\''+e.id+'\',this.value,\''+ek+'\')"/></div>';
+    rows+='</td>';
+    rows+='<td style="padding:7px 5px"><span class="badge '+(SB[e.status]||'bp')+'">'+(SL[e.status]||e.status)+'</span></td>';
+    rows+='<td style="padding:7px 5px;font-size:11px">'+(o?'<button onclick="closeInvMod();show(\'offers\');openOffer(\''+o.id+'\')" style="padding:3px 7px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:10px;cursor:pointer">📋 '+o.seller+'</button>':'<span style="color:#6b7280;font-size:10px">—</span>')+'</td>';
+    var isSales=e.status==='whatnot'||e.status==='vend'||e.status==='direct';
+    rows+='<td style="padding:7px 5px">';
+    if(isSales){rows+='<span style="font-size:10px;font-weight:700;color:#d946ef">'+SL[e.status]+'</span>';}
+    else{
+      rows+='<div style="display:flex;align-items:center;gap:2px">';
+      rows+='<input type="number" min="1" max="'+e.qty+'" value="1" id="wn-qty-'+e.id+'" class="pinp" style="width:38px;font-size:11px;padding:2px 4px" onclick="event.stopPropagation()"/>';
+      rows+='<select id="wn-ch-'+e.id+'" class="sel" style="font-size:10px;padding:2px 4px" onclick="event.stopPropagation()">';
+      rows+='<option value="whatnot">📺</option><option value="vend">🏪</option><option value="direct">💬</option>';
+      rows+='</select>';
+      rows+='<button onclick="event.stopPropagation();togWhatnot(\''+e.id+'\',\''+ek+'\',document.getElementById(\'wn-qty-'+e.id+'\').value,document.getElementById(\'wn-ch-'+e.id+'\').value)" style="padding:2px 6px;border-radius:3px;border:none;font-size:10px;font-weight:700;cursor:pointer;background:#2d0d2d;color:#d946ef">→</button>';
+      rows+='</div>';
+    }
+    rows+='</td>';
+    rows+='<td style="padding:7px 5px"><button onclick="rmInv(\''+e.id+'\');openInvMod(\''+ek+'\')" style="padding:3px 7px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button></td>';
+    rows+='</tr>';
+  });
+  var h='<div style="display:flex;gap:11px;margin-bottom:12px">';
+  h+=f.img?'<img src="'+f.img+'" style="width:75px;border-radius:6px;flex-shrink:0" onerror="this.style.display=\'none\'"/>':'';
+  h+='<div style="font-size:12px">';
+  h+='<div style="color:#94a3b8;margin-bottom:2px">'+(f.set||'')+(f.color?' • '+f.color:'')+(f.rarity?' • '+f.rarity:'')+'</div>';
+  h+='<div style="color:#f0c040">Total Cost: '+nm(tc)+'</div><div style="color:#f0c040">Qty: ×'+tq+'</div>';
+  if(f.manual)h+='<div style="color:#a78bfa;font-size:11px;margin-top:3px">📁 Manual / Catalog card</div>';
+  h+='<button onclick="editCatalogEntry(\''+ek+'\')" style="margin-top:6px;padding:4px 9px;border-radius:4px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">✏️ Edit Card Info</button>';
+  h+='</div></div>';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid #2d2060">';
+  ['Cond','Qty','Cost / Mkt','Status','Offer Sheet','Whatnot',''].forEach(function(x){h+='<th style="padding:5px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">'+x+'</th>';});
+  h+='</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  g('inv-mod-content').innerHTML=h;
+  g('inv-modal').style.display='';
+}
+
+// Update market price directly from inventory modal (for manual cards or any card)
+function updInvMkt(id,val,ek){
+  var mkt=parseFloat(val)||null;
+  for(var i=0;i<app.inv.length;i++){if(app.inv[i].id===id){app.inv[i].mkt=mkt;break;}}
+  saveInv();stats();
+  // Recalc cost based on perc if available
+  for(var j=0;j<app.inv.length;j++){if(app.inv[j].id===id&&app.inv[j].perc&&mkt!=null){app.inv[j].cost=parseFloat(((mkt*app.inv[j].perc)/100).toFixed(2));break;}}
+  saveInv();
+}
+
+// Open manual modal pre-filled for editing a catalog card from inventory
+function editCatalogEntry(ek){
+  var name=decodeURIComponent(ek);
+  var e=app.inv.find(function(i){return i.name===name;});
+  if(!e)return;
+  closeInvMod();
+  var cat=ll('catalog',[]);
+  var catCard=cat.find(function(c){return c.name.toLowerCase()===name.toLowerCase();});
+  if(catCard){openManualMod(catCard);}
+  else{
+    // Build a fake catalog entry from inventory data
+    openManualMod({id:e.id,name:e.name,cardNumber:e.num||'',set:e.set||'',color:e.color||'',rarity:e.rarity||'',image:e.img||null,tcgplayerUrl:e.tcgId||''});
+  }
+}
+
+function closeInvMod(){g('inv-modal').style.display='none';}
+function togWhatnot(id,ek,partialQty,channel){
+  var qty=parseInt(partialQty)||1;
+  var ch=channel||'whatnot';
+  for(var i=0;i<app.inv.length;i++){
+    if(String(app.inv[i].id)===String(id)){
+      var entry=app.inv[i];
+      var isSales=entry.status==='whatnot'||entry.status==='vend'||entry.status==='direct';
+      if(isSales)return;
+      if(qty>=entry.qty){
+        entry.status=ch;
+      } else {
+        entry.qty=entry.qty-qty;
+        var newEntry=Object.assign({},entry,{id:uid(),qty:qty,status:ch});
+        app.inv.splice(i+1,0,newEntry);
+      }
+      break;
+    }
+  }
+  saveInv();stats();renderInv();if(ek)openInvMod(ek);toast(SL[ch]+' added!');
+}
+function rmInv(id){
+  app.inv=app.inv.filter(function(i){return String(i.id)!==String(id);});
+  saveInv();stats();renderInv();
+}
+
+// ─── Whatnot ──────────────────────────────────────────────────────────────────
+function renderWhatnot(){
+  var flt=(g('wn-q').value||'').toLowerCase(),srt=g('wn-sort').value||'vd';
+  var allSales=app.inv.filter(function(i){return i.status==='whatnot'||i.status==='vend'||i.status==='direct';});
+  // Dashboard stats
+  var tc=0,tv=0;allSales.forEach(function(i){tc+=(i.cost||0)*i.qty;tv+=(i.mkt||0)*i.qty;});
+  var pr=tv-tc;
+  g('wn-stats').innerHTML=
+    '<div class="wstat"><div class="wstat-l">Total in Queue</div><div class="wstat-v" style="color:#d946ef">'+allSales.length+'</div></div>'
+    +'<div class="wstat"><div class="wstat-l">Total Cost</div><div class="wstat-v" style="color:#34d399">'+nm(tc)+'</div></div>'
+    +'<div class="wstat"><div class="wstat-l">Market Value</div><div class="wstat-v" style="color:#f0c040">'+nm(tv)+'</div></div>'
+    +'<div class="wstat"><div class="wstat-l">Potential Profit</div><div class="wstat-v" style="color:'+(pr>=0?'#34d399':'#f87171')+'">'+nm(pr)+'</div></div>';
+  var lanes=[
+    {key:'whatnot',label:'📺 Whatnot Stream',color:'#d946ef',border:'#2d0d2d'},
+    {key:'vend',label:'🏪 Vend / In-Person',color:'#f0c040',border:'#2d1a00'},
+    {key:'direct',label:'💬 Direct Sale',color:'#60a5fa',border:'#0d1a2d'}
+  ];
+  var lanesH='';
+  lanes.forEach(function(lane){
+    var items=allSales.filter(function(i){return i.status===lane.key&&(i.name||'').toLowerCase().includes(flt);});
+    items.sort(function(a,b){
+      if(srt==='na')return(a.name||'').localeCompare(b.name||'');
+      if(srt==='cd')return(b.cost||0)*b.qty-(a.cost||0)*a.qty;
+      if(srt==='vd')return(b.mkt||0)*b.qty-(a.mkt||0)*a.qty;
+      if(srt==='va')return(a.mkt||0)*a.qty-(b.mkt||0)*b.qty;
+      return 0;
+    });
+    var ltc=0,ltv=0;items.forEach(function(i){ltc+=(i.cost||0)*i.qty;ltv+=(i.mkt||0)*i.qty;});
+    lanesH+='<div class="panel" style="border-color:'+lane.border+'">';
+    lanesH+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    lanesH+='<div style="font-weight:700;color:'+lane.color+';font-size:14px">'+lane.label+' <span style="font-size:11px;color:#6b7280">('+items.length+')</span></div>';
+    lanesH+='<button onclick="clearLane(\''+lane.key+'\')" style="padding:3px 9px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">🗑 Clear</button>';
+    lanesH+='</div>';
+    if(items.length){
+      lanesH+='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Cost: '+nm(ltc)+' • Value: '+nm(ltv)+'</div>';
+    }
+    if(!items.length){lanesH+='<div class="empty" style="padding:20px;font-size:12px">No cards here</div>';}
+    items.forEach(function(i){
+      var ep=i.set||'';var ebayQ=encodeURIComponent((i.name||'')+(i.num?' '+i.num:''));
+      lanesH+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1640">';
+      lanesH+=i.img?'<img src="'+i.img+'" style="width:30px;height:41px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:30px;height:41px;background:#2d2060;border-radius:3px;flex-shrink:0"></div>';
+      lanesH+='<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+i.name+'</div>';
+      lanesH+='<div style="font-size:10px;color:#94a3b8">'+(CF[i.cond]||i.cond)+' ×'+i.qty+' • '+(i.seller||'')+'</div>';
+      lanesH+='<div style="font-size:10px;color:#f0c040">Cost: <b>'+nm((i.cost||0)*i.qty)+'</b></div><div style="font-size:10px;color:#34d399">Value: <b>'+nm((i.mkt||0)*i.qty)+'</b></div></div>';
+      lanesH+='<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">';
+      lanesH+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay ↗</a>';
+      lanesH+='<button onclick="restoreWN(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:#0d2010;border:none;color:#34d399;font-size:10px;cursor:pointer">↩</button>';
+      lanesH+='<button onclick="rmInv(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button>';
+      lanesH+='</div></div>';
+    });
+    lanesH+='</div>';
+  });
+  g('wn-lanes').innerHTML=lanesH;
+}
+function clearLane(status){
+  if(!confirm('Remove all '+SL[status]+' cards from inventory?'))return;
+  app.inv=app.inv.filter(function(i){return i.status!==status;});
+  saveInv();stats();renderWhatnot();toast('✅ '+SL[status]+' queue cleared.');
+}
+function restoreWN(id){
+  for(var i=0;i<app.inv.length;i++){
+    if(String(app.inv[i].id)===String(id)){
+      var prevStatus=app.inv[i].status;
+      app.inv[i].status='onhand';
+      break;
+    }
+  }
+  saveInv();stats();renderWhatnot();toast('↩ Restored to On Hand.');
+}
+function clearShow(){if(!confirm('Remove all Whatnot cards from inventory?'))return;app.inv=app.inv.filter(function(i){return i.status!=='whatnot';});saveInv();stats();renderWhatnot();toast('✅ Show cleared.');}
+
+// ─── Sellers ──────────────────────────────────────────────────────────────────
+function renderSellers(){
+  var flt=(g('sel-search')?g('sel-search').value||'':'').toLowerCase();
+  var list=app.sellers.filter(function(s){
+    return!flt||(s.name||'').toLowerCase().includes(flt)||(s.ph||'').includes(flt)||(s.notes||'').toLowerCase().includes(flt);
+  });
+  if(!app.sellers.length){g('sel-list').innerHTML='<div class="empty">No sellers yet.</div>';return;}
+  if(!list.length){g('sel-list').innerHTML='<div class="empty">No sellers match "'+flt+'".</div>';return;}
+  var h='';
+  list.forEach(function(s){
+    var n=0;app.inv.forEach(function(i){if(String(i.sellerId)===String(s.id))n++;});
+    h+='<div class="selcard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">';
+    h+='<div style="font-weight:700;font-size:14px;color:#f0c040">👤 '+s.name+'</div>';
+    h+='<div class="row" style="gap:5px"><button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:11px;padding:4px 9px" onclick="openSelMod(\''+s.id+'\')">Edit</button>';
+    h+='<button class="btn btn-r" style="font-size:11px;padding:4px 9px" onclick="delSeller(\''+s.id+'\')">Delete</button></div></div>';
+    if(s.fb)h+='<div class="sfield">💬 <a href="'+s.fb+'" target="_blank">Facebook Messenger</a></div>';
+    if(s.ph)h+='<div class="sfield">📞 '+s.ph+'</div>';
+    if(s.addr)h+='<div class="sfield">📍 '+s.addr+'</div>';
+    if(s.notes)h+='<div class="sfield">📝 '+s.notes+'</div>';
+    h+='<div style="font-size:10px;color:#6b7280;margin-top:5px">'+n+' cards in inventory</div></div>';
+  });
+  g('sel-list').innerHTML=h;
+}
+function openSelMod(id){
+  app.editSeller=id||null;
+  g('sel-mod-title').textContent=id?'Edit Seller':'Add Seller';
+  if(id){var s=null;for(var i=0;i<app.sellers.length;i++){if(String(app.sellers[i].id)===String(id)){s=app.sellers[i];break;}}
+    if(s){g('sm-name').value=s.name||'';g('sm-fb').value=s.fb||'';g('sm-ph').value=s.ph||'';g('sm-addr').value=s.addr||'';g('sm-notes').value=s.notes||'';}}
+  else{['sm-name','sm-fb','sm-ph','sm-addr','sm-notes'].forEach(function(f){g(f).value='';});}
+  g('sel-modal').style.display='';
+}
+function closeSelMod(){g('sel-modal').style.display='none';}
+function saveSeller(){
+  var n=g('sm-name').value.trim();if(!n){toast('⚠️ Seller name required.');return;}
+  var d={name:n,fb:g('sm-fb').value.trim(),ph:g('sm-ph').value.trim(),addr:g('sm-addr').value.trim(),notes:g('sm-notes').value.trim()};
+  if(app.editSeller){for(var i=0;i<app.sellers.length;i++){if(String(app.sellers[i].id)===String(app.editSeller)){Object.assign(app.sellers[i],d);break;}}}
+  else{app.sellers.push(Object.assign({id:uid()},d));}
+  saveSellers();closeSelMod();renderSellers();toast('✅ Seller saved!');
+}
+function delSeller(id){if(!confirm('Delete this seller?'))return;app.sellers=app.sellers.filter(function(s){return String(s.id)!==String(id);});saveSellers();renderSellers();}
+
+// ─── Finances ─────────────────────────────────────────────────────────────────
+function updFin(){
+  var iv=0,ic=0;app.inv.forEach(function(i){iv+=(i.mkt||0)*i.qty;ic+=(i.cost||0)*i.qty;});
+  var pp=parseFloat(g('f-pp').value)||0,bk=parseFloat(g('f-bank').value)||0,ca=parseFloat(g('f-cash').value)||0;
+  var net=iv+pp+bk+ca;
+  g('f-net').textContent=nm(net);g('f-inv').textContent=nm(iv);
+  g('f-inv-sub').innerHTML='<span style="color:#f0c040">Cost: '+nm(ic)+'</span> • <span style="color:#34d399">Gain: '+nm(iv-ic)+'</span>';
+  g('f-break').textContent='Inv '+nm(iv)+' + PayPal '+nm(pp)+' + Bank '+nm(bk)+' + Cash '+nm(ca);
+  g('s-net').textContent=nm(net);
+  function bS(statuses){var r=[];app.inv.forEach(function(i){if(statuses.indexOf(i.status)>-1)r.push(i);});return r;}
+  var oh=bS(['onhand']),
+      pe=bS(['pending','missing','shipped']), // Pending = processing + missing + shipped
+      wn=bS(['whatnot']),
+      vn=bS(['vend']),
+      dr=bS(['direct']);
+  function sv(a){var s=0;a.forEach(function(i){s+=(i.mkt||0)*i.qty;});return s;}
+  function sc(a){var s=0;a.forEach(function(i){s+=(i.cost||0)*i.qty;});return s;}
+  g('f-breakdown').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:7px;margin-top:7px">'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#34d399;font-weight:700;font-size:12px">On Hand: '+oh.length+'</div><div>Value: '+nm(sv(oh))+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(sc(oh))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0a040;font-weight:700;font-size:12px">Pending/Ship/Missing: '+pe.length+'</div><div><span style="color:#34d399">Value: </span>'+nm(sv(pe))+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(sc(pe))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#d946ef;font-weight:700;font-size:12px">📺 Whatnot: '+wn.length+'</div><div><span style="color:#34d399">Value: </span>'+nm(sv(wn))+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(sc(wn))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0c040;font-weight:700;font-size:12px">🏪 Vend: '+vn.length+'</div><div><span style="color:#34d399">Value: </span>'+nm(sv(vn))+'</div><div>Cost: '+nm(sc(vn))+'</div></div>'
+    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#60a5fa;font-weight:700;font-size:12px">💬 Direct: '+dr.length+'</div><div><span style="color:#34d399">Value: </span>'+nm(sv(dr))+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(sc(dr))+'</div></div>'
+    +'</div>';
+  drawChart();renderShows();
+}
+
+function snapshot(){
+  var iv=0;app.inv.forEach(function(i){iv+=(i.mkt||0)*i.qty;});
+  var pp=parseFloat(g('f-pp').value)||0,bk=parseFloat(g('f-bank').value)||0,ca=parseFloat(g('f-cash').value)||0;
+  fin.history.push({date:td(),ts:Date.now(),net:iv+pp+bk+ca});
+  saveFin();drawChart();toast('📸 Snapshot saved!');
+}
+
+function drawChart(){
+  var cv=g('chart'),ce=g('chart-empty');if(!cv)return;
+  var hist=fin.history||[],rng=g('chart-range')&&g('chart-range').value||'all';
+  var data=hist.slice();
+  if(rng!=='all'){var cut=Date.now()-parseInt(rng)*86400000;data=data.filter(function(d){return d.ts>=cut;});}
+  if(!data.length){cv.style.display='none';ce.style.display='';return;}
+  cv.style.display='';ce.style.display='none';
+  var dpr=window.devicePixelRatio||1,W=cv.parentElement.clientWidth-30,H=200;
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
+  var ctx=cv.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  var pad={t:20,r:18,b:38,l:65},cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  var vals=data.map(function(d){return d.net;});
+  var mn=Math.min.apply(null,vals)*0.97,mx=Math.max.apply(null,vals)*1.03,rn=mx-mn||1;
+  function px(i){return pad.l+i*(cw/(data.length-1||1));}
+  function py(v){return pad.t+ch-((v-mn)/rn)*ch;}
+  ctx.strokeStyle='#2d2060';ctx.lineWidth=1;
+  for(var gi=0;gi<=4;gi++){var gy=pad.t+(ch/4)*gi;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke();ctx.fillStyle='#94a3b8';ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText('$'+(mx-((rn/4)*gi)).toFixed(0),pad.l-5,gy+4);}
+  var gr=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);gr.addColorStop(0,'rgba(124,58,237,.35)');gr.addColorStop(1,'rgba(124,58,237,.02)');
+  ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));data.forEach(function(d,i){if(i>0)ctx.lineTo(px(i),py(d.net));});
+  ctx.lineTo(px(data.length-1),pad.t+ch);ctx.lineTo(px(0),pad.t+ch);ctx.closePath();ctx.fillStyle=gr;ctx.fill();
+  ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));data.forEach(function(d,i){if(i>0)ctx.lineTo(px(i),py(d.net));});
+  ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  var nth=Math.ceil(data.length/7);
+  data.forEach(function(d,i){var x=px(i),y=py(d.net);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#f0c040';ctx.fill();if(i%nth===0||i===data.length-1){ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText(d.date,x,H-pad.b+13);}});
+  if(data.length>1){var ch2=data[data.length-1].net-data[0].net;ctx.fillStyle=ch2>=0?'#34d399':'#f87171';ctx.font='bold 12px system-ui';ctx.textAlign='left';ctx.fillText((ch2>=0?'▲ +':'▼ ')+'$'+ch2.toFixed(2),pad.l,pad.t-5);}
+}
+
+// ─── Show History ─────────────────────────────────────────────────────────────
+function recShow(){recSale('whatnot');}
+function recSale(channel){
+  var today=new Date();g('sh-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  ['sh-rev','sh-ship','sh-cogs','sh-qty','sh-pp','sh-bank','sh-cash','sh-notes'].forEach(function(id){var el=g(id);if(el)el.value='';});
+  if(channel&&g('sh-channel'))g('sh-channel').value=channel;
+  // Auto-populate COGS from whatnot list if channel is whatnot
+  if(channel==='whatnot'||(!channel&&g('sh-channel')&&g('sh-channel').value==='whatnot')){
+    var wnCogs=0;app.inv.forEach(function(i){if(i.status==='whatnot')wnCogs+=(i.cost||0)*i.qty;});
+    if(wnCogs>0&&g('sh-cogs'))g('sh-cogs').value=wnCogs.toFixed(2);
+  }
+  var sw=g('sh-split-warn');if(sw)sw.style.display='none';
+  g('sh-calc').style.display='none';g('show-modal').style.display='';
+  if(g('sh-cogs')&&g('sh-cogs').value)updShowCalc();
+}
+function updShowCalc(){
+  var rev=parseFloat(g('sh-rev').value)||0,ship=parseFloat(g('sh-ship').value)||0;
+  var cogs=parseFloat(g('sh-cogs')?g('sh-cogs').value||0:0)||0;
+  var net=rev-ship-cogs;
+  if(rev===0&&ship===0&&cogs===0){g('sh-calc').style.display='none';}
+  else{
+    g('sh-calc').style.display='';
+    g('sh-c-rev').textContent=nm(rev);
+    if(g('sh-c-ship'))g('sh-c-ship').textContent='-'+nm(ship);
+    if(g('sh-c-cogs'))g('sh-c-cogs').textContent='-'+nm(cogs);
+    g('sh-c-net').textContent=nm(net);
+    g('sh-c-net').style.color=net>=0?'#f0c040':'#f87171';
+  }
+  var pp=parseFloat(g('sh-pp')?g('sh-pp').value||0:0)||0;
+  var bk=parseFloat(g('sh-bank')?g('sh-bank').value||0:0)||0;
+  var ca=parseFloat(g('sh-cash')?g('sh-cash').value||0:0)||0;
+  var splitTot=pp+bk+ca;
+  var warn=g('sh-split-warn');
+  if(warn&&net>0&&splitTot>0){warn.style.display=Math.abs(splitTot-net)>0.02?'':'none';}
+  else if(warn){warn.style.display='none';}
+}
+function saveShow(){
+  var dateVal=g('sh-date').value;if(!dateVal){toast('⚠️ Date required.');return;}
+  var rev=parseFloat(g('sh-rev').value)||0;
+  var ship=parseFloat(g('sh-ship').value)||0;
+  var cogs=parseFloat(g('sh-cogs')?g('sh-cogs').value||0:0)||0;
+  var qty=parseInt(g('sh-qty').value)||0;
+  var net=rev-ship-cogs;
+  var pp=parseFloat(g('sh-pp')?g('sh-pp').value||0:0)||0;
+  var bk=parseFloat(g('sh-bank')?g('sh-bank').value||0:0)||0;
+  var ca=parseFloat(g('sh-cash')?g('sh-cash').value||0:0)||0;
+  var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
+  var ch=g('sh-channel')?g('sh-channel').value:'whatnot';
+  if(pp>0)fin.paypal=(fin.paypal||0)+pp;
+  if(bk>0)fin.bank=(fin.bank||0)+bk;
+  if(ca>0)fin.cash=(fin.cash||0)+ca;
+  if(g('f-pp'))g('f-pp').value=(fin.paypal||0).toFixed(2);
+  if(g('f-bank'))g('f-bank').value=(fin.bank||0).toFixed(2);
+  if(g('f-cash'))g('f-cash').value=(fin.cash||0).toFixed(2);
+  if(!fin.shows)fin.shows=[];
+  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,rev:rev,ship:ship,cogs:cogs,qty:qty,net:net,pp:pp,bank:bk,cash:ca,notes:g('sh-notes').value.trim()});
+  saveFin();closeShowMod();renderShows();toast('🏪 Sale recorded! Net: '+nm(net));
+}
+function closeShowMod(){g('show-modal').style.display='none';}
+function renderShows(){
+  var el=g('show-hist');if(!el)return;
+  var shows=fin.shows||[];
+  if(!shows.length){el.innerHTML='<div class="empty" style="padding:24px">No sales recorded yet.</div>';return;}
+  var totRev=0,totNet=0,totQty=0;shows.forEach(function(s){totRev+=s.rev||0;totNet+=s.net||0;totQty+=s.qty||0;});
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">';
+  h+='<div class="wstat"><div class="wstat-l">Sales</div><div class="wstat-v" style="color:#d946ef;font-size:18px">'+shows.length+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Total Revenue</div><div class="wstat-v" style="color:#34d399;font-size:18px">'+nm(totRev)+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Total Net</div><div class="wstat-v" style="color:'+(totNet>=0?'#f0c040':'#f87171')+';font-size:18px">'+nm(totNet)+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Cards Sold</div><div class="wstat-v" style="color:#a78bfa;font-size:18px">'+totQty+'</div></div>';
+  h+='</div>';
+  shows.forEach(function(s){
+    var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):0;
+    h+='<div class="show-row">';
+    var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct'};
+    h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:#d946ef;font-size:11px">'+(chLabels[s.channel]||'📺')+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:#a78bfa;font-size:12px">'+s.date+'</div></div>';
+    if(s.pp||s.bank||s.cash){
+      var splitStr=[];
+      if(s.pp)splitStr.push('💳'+nm(s.pp));
+      if(s.bank)splitStr.push('🏦'+nm(s.bank));
+      if(s.cash)splitStr.push('💵'+nm(s.cash));
+      h+='<div style="font-size:10px;color:#94a3b8;flex-basis:100%">Split: '+splitStr.join(' + ')+'</div>';
+    }
+    h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:#34d399">'+nm(s.rev)+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Net Profit</div><div class="show-stat-v" style="color:'+(s.net>=0?'#f0c040':'#f87171')+'">'+nm(s.net)+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Margin</div><div class="show-stat-v" style="color:#60a5fa;font-size:14px">'+margin+'%</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Sold</div><div class="show-stat-v" style="font-size:14px">'+s.qty+'</div></div>';
+    if(s.notes)h+='<div style="font-size:11px;color:#94a3b8;flex:1;min-width:100px">📝 '+s.notes+'</div>';
+    h+='<button onclick="delShow(\''+s.id+'\')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">🗑</button>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+function delShow(id){if(!confirm('Delete this show?'))return;fin.shows=fin.shows.filter(function(s){return s.id!==id;});saveFin();renderShows();toast('🗑 Show deleted.');}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+function saveKey(){
+  var k=g('api-key-inp').value.trim();if(!k){toast('⚠️ Paste your API key first.');return;}
+  app.key=k;ls('key',k);
+  g('key-ok').style.display='';g('key-ok').textContent='✅ Key saved: ...'+k.slice(-6);banner();toast('✅ API key saved!');
+  // Also persist to Supabase so other devices pick it up
+  dbSave('api_key',k);
+}
+
+function exportBak(){
+  var data={inventory:app.inv,offers:app.offers,sellers:app.sellers,tiers:app.tiers,finances:fin,custom_catalog:ll('catalog',[]),exported:new Date().toISOString()};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  var d=new Date();a.download='op-tcg-backup-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';
+  a.click();URL.revokeObjectURL(url);
+  g('bak-status').textContent='✅ Exported '+app.inv.length+' items, '+app.offers.length+' offers.';
+  g('bak-status').style.color='#34d399';toast('📥 Backup exported!');
+}
+
+function exportSheet(){
+  // Build CSV with headers
+  var cols=['Image','Card Name','Card #','Set','Condition','Qty','TCGPlayer Value','Cost','Percentage','Total Cost','Total Value','Status','Seller'];
+  var rows=[cols.map(function(c){return '"'+c+'"';}).join(',')];
+  app.inv.forEach(function(i){
+    var tcgUrl=i.tcgId?(String(i.tcgId).startsWith('http')?i.tcgId:'https://www.tcgplayer.com/product/'+i.tcgId):'';
+    var nameCell=tcgUrl?'"=HYPERLINK(\"'+tcgUrl+'\",\"'+(i.name||'').replace(/"/g,"'")+'\")"':'"'+(i.name||'')+'"';
+    var row=[
+      '"'+(i.img||'')+'"',
+      nameCell,
+      '"'+(i.num||'')+'"',
+      '"'+(i.set||'')+'"',
+      '"'+(i.cond||'')+'"',
+      i.qty||1,
+      (i.mkt!=null?i.mkt.toFixed(2):''),
+      (i.cost!=null?i.cost.toFixed(2):''),
+      (i.perc!=null?i.perc+'%':''),
+      ((i.cost||0)*(i.qty||1)).toFixed(2),
+      ((i.mkt||0)*(i.qty||1)).toFixed(2),
+      '"'+(i.status||'')+'"',
+      '"'+(i.seller||'')+'"'
+    ];
+    rows.push(row.join(','));
+  });
+  // Offers sheet
+  rows.push('');rows.push('"OFFER SHEETS"');
+  rows.push('"Offer ID","Seller","Date","Cards","Card Total","Ship","Other","Grand Total"');
+  app.offers.forEach(function(o){
+    rows.push(['"'+o.id+'"','"'+(o.seller||'')+'"','"'+o.date+'"',o.cards.length,o.ct.toFixed(2),o.ship.toFixed(2),o.other.toFixed(2),o.total.toFixed(2)].join(','));
+    o.cards.forEach(function(card){
+      var tcgUrl2=card.tcgId?(String(card.tcgId).startsWith('http')?card.tcgId:'https://www.tcgplayer.com/product/'+card.tcgId):'';
+      var cname=tcgUrl2?'"=HYPERLINK(\"'+tcgUrl2+'\",\"'+(card.name||'').replace(/"/g,"'")+'\")"':'"'+(card.name||'')+'"';
+      rows.push(['',cname,'"'+(card.num||'')+'"','"'+(card.cond||'')+'"',card.qty,(card.mkt!=null?card.mkt.toFixed(2):''),(card.cost!=null?card.cost.toFixed(2):''),(card.perc!=null?card.perc+'%':''),((card.cost||0)*card.qty).toFixed(2),'','','"'+(card.status||'')+'"',''].join(','));
+    });
+  });
+  var blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  var d=new Date();a.download='op-tcg-export-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  toast('📊 Spreadsheet exported!');
+}
+
+function importBak(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);var restored=[];
+      if(data.inventory&&Array.isArray(data.inventory)){app.inv=data.inventory;ls('inv',app.inv);restored.push(data.inventory.length+' inventory');}
+      if(data.offers&&Array.isArray(data.offers)){app.offers=data.offers;ls('offers',app.offers);restored.push(data.offers.length+' offers');}
+      if(data.sellers&&Array.isArray(data.sellers)){app.sellers=data.sellers;ls('sellers',app.sellers);}
+      if(data.tiers&&Array.isArray(data.tiers)){app.tiers=data.tiers;ls('tiers',app.tiers);}
+      if(data.finances){fin=data.finances;if(!fin.history)fin.history=[];if(!fin.shows)fin.shows=[];ls('fin',fin);g('f-pp').value=fin.paypal||0;g('f-bank').value=fin.bank||0;g('f-cash').value=fin.cash||0;}
+      if(data.custom_catalog&&Array.isArray(data.custom_catalog)){ls('catalog',data.custom_catalog);}
+      saveInv();saveOffers();saveSellers();saveTiers();saveFin();stats();
+      g('bak-status').textContent='✅ Restored: '+restored.join(', ');g('bak-status').style.color='#34d399';
+      toast('📤 Backup imported!');renderTiers();renderCatalog();
+    }catch(err){g('bak-status').textContent='❌ Invalid backup file.';g('bak-status').style.color='#f87171';toast('❌ Import failed.');}
+  };
+  reader.readAsText(file);input.value='';
+}
+
+function renderTiers(){
+  var el=g('tier-list');if(!el)return;
+  if(!app.tiers.length){el.innerHTML='<div style="font-size:12px;color:#6b7280">No tiers. Click + Add Tier.</div>';return;}
+  var h='';
+  app.tiers.forEach(function(t,i){
+    h+='<div class="tier-row">';
+    h+='<input class="tinp" type="number" step="0.01" min="0" value="'+t.min+'" title="Min $" onchange="updTier('+i+',\'min\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="0.01" min="0" value="'+t.max+'" title="Max $" onchange="updTier('+i+',\'max\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.nm+'" title="NM%" onchange="updTier('+i+',\'nm\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.lp+'" title="LP%" onchange="updTier('+i+',\'lp\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.mp+'" title="MP%" onchange="updTier('+i+',\'mp\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.hp+'" title="HP%" onchange="updTier('+i+',\'hp\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+(t.dmg||10)+'" title="DMG%" onchange="updTier('+i+',\'dmg\',this.value)"/>';
+    h+='<button onclick="delTier(\''+t.id+'\')" style="padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+function updTier(i,field,val){if(!app.tiers[i])return;app.tiers[i][field]=parseFloat(val)||0;saveTiers();}
+function addTier(){var last=app.tiers[app.tiers.length-1];var newMin=last?last.max+0.01:0;app.tiers.push({id:uid(),min:newMin,max:newMin+9.99,nm:50,lp:40,mp:32,hp:20,dmg:12});saveTiers();renderTiers();}
+function delTier(id){app.tiers=app.tiers.filter(function(t){return t.id!==id;});saveTiers();renderTiers();toast('Tier removed.');}
+
+function togCatalogPanel(){
+  var inner=g('catalog-panel-inner'),icon=g('catalog-toggle-icon');
+  if(!inner)return;
+  var open=inner.style.display==='none';
+  inner.style.display=open?'':'none';
+  if(icon)icon.textContent=open?'▲ hide':'▼ show';
+  if(open)renderCatalog();
+}
+function renderCatalog(){
+  var el=g('catalog-list');if(!el)return;
+  var cat=ll('catalog',[]);
+  var flt=(g('catalog-search')?g('catalog-search').value||'':'').toLowerCase();
+  var filtered=flt?cat.filter(function(c){return(c.name||'').toLowerCase().includes(flt)||(c.cardNumber||'').toLowerCase().includes(flt)||(c.set||'').toLowerCase().includes(flt);}):cat;
+  if(!cat.length){el.innerHTML='<div style="font-size:12px;color:#6b7280">No custom cards yet. Use ✏️ Manual Entry on the Buylist tab.</div>';return;}
+  var h='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">'+filtered.length+(flt?' of ':' ')+cat.length+' card'+(cat.length!==1?'s':'')+' in catalog</div>';
+  if(!filtered.length){el.innerHTML=h+'<div style="font-size:12px;color:#6b7280">No matches.</div>';return;}
+  filtered.forEach(function(c){
+    _catCache[c.id]=c;
+    h+='<div class="cat-row">';
+    h+=c.image?'<img src="'+c.image+'" style="width:28px;height:38px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'"/>':'<div style="width:28px;height:38px;background:#2d2060;border-radius:3px;flex-shrink:0"></div>';
+    h+='<div style="flex:1"><div style="font-weight:600;color:#e2e8f0">'+c.name+'</div><div style="color:#7c6fcd">'+c.cardNumber+' • '+c.set+(c.color?' • '+c.color:'')+'</div></div>';
+    if(c.tcgplayerUrl){var tcgH4=String(c.tcgplayerUrl).startsWith('http')?c.tcgplayerUrl:'https://www.tcgplayer.com/product/'+c.tcgplayerUrl;h+='<a href="'+tcgH4+'" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px">TCG ↗</a>';}
+    h+='<button onclick="openManualModById(\''+c.id+'\')" style="padding:3px 8px;border-radius:4px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">✏️</button>';
+    h+='<button onclick="delCatCard(\''+c.id+'\')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+var _catCache={};
+function openManualModById(id){
+  var c=_catCache[id];
+  if(!c){var cat=ll('catalog',[]);c=cat.find(function(x){return x.id===id;})||null;}
+  if(c)openManualMod(c);
+}
+function delCatCard(id){var cat=ll('catalog',[]);cat=cat.filter(function(c){return c.id!==id;});ls('catalog',cat);saveCatalog(cat);renderCatalog();toast('🗑 Removed from catalog.');}
+
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+(async function init(){
+  loadLocal();stats();banner();
+  await dbLoad().catch(function(){return false;});
+  // Whether Supabase succeeded or not, always update UI from current app state
+  stats();
+  if(app.key){
+    g('api-key-inp').value=app.key;
+    g('key-ok').style.display='';
+    g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
+    banner();
+  }
+  g('f-pp').value=fin.paypal||0;
+  g('f-bank').value=fin.bank||0;
+  g('f-cash').value=fin.cash||0;
+})();
+</script>
+</body>
+</html>
