@@ -262,10 +262,10 @@ button{cursor:pointer}a{text-decoration:none}
     </select>
     <select class="sel" id="inv-sort" onchange="renderInv()">
       <option value="dd">Newest First</option><option value="da">Oldest First</option>
-      <option value="dd">Newest First</option><option value="da">Oldest First</option>
       <option value="vd">Value High→Low</option><option value="va">Value Low→High</option>
       <option value="cd">Cost High→Low</option><option value="ca">Cost Low→High</option>
       <option value="na">Name A→Z</option><option value="nd">Name Z→A</option>
+    </select>
     <button class="btn" style="background:#2d1a00;color:#f0a040;border:1px solid #4a3000;font-size:12px;padding:7px 10px;white-space:nowrap" onclick="showBrokenInv()">🔧 Fix Broken</button>
   </div>
   <div id="inv-stats" style="font-size:12px;color:#94a3b8;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
@@ -1380,7 +1380,7 @@ function editCatalogById(id){
   if(c)openManualMod(c);else toast('⚠️ Card not found in catalog');
 }
 function editCatalogEntry(ek){
-  var name=decodeURIComponent(ek);
+  var name=decodeURIComponent(ek).split('||')[0];
   var e=app.inv.find(function(i){return i.name===name;});
   if(!e)return;
   closeInvMod();
@@ -1737,7 +1737,7 @@ function renderInv(){
       chips+='<span style="color:#a78bfa;font-weight:700">'+c+'</span><span style="color:#e2e8f0">×'+q+'</span>';
       chips+='<span class="badge '+badgeCls+'" style="padding:1px 3px;font-size:8px;margin:0">'+badgeTxt+'</span></span>';
     });
-    var ek=encodeURIComponent(grp.name);
+    var ek=encodeURIComponent(grp.name+'||'+(grp.num||'')+'||'+(grp.set||''));
     var ft=grp.entries[0]&&grp.entries[0].tcgId?grp.entries[0].tcgId:null;
     var ebayQ=encodeURIComponent(grp.name+(grp.num?' '+grp.num:''));
     var entryIds=grp.entries.map(function(e){return e.id;}).join(',');
@@ -1799,8 +1799,14 @@ function bulkDeleteInv(){
 }
 
 function openInvMod(ek){
-  var name=decodeURIComponent(ek);
-  var entries=app.inv.filter(function(i){return i.name===name;});
+  var decoded=decodeURIComponent(ek);
+  var parts=decoded.split('||');
+  var name=parts[0],num=parts[1]||'',set=parts[2]||'';
+  var entries=app.inv.filter(function(i){
+    return i.name===name&&(i.num||'')==num&&(i.set||'')==set;
+  });
+  // fallback: name only (for old data)
+  if(!entries.length)entries=app.inv.filter(function(i){return i.name===name;});
   if(!entries.length)return;
   var f=entries[0];
   var tq=0,tc=0;entries.forEach(function(e){tq+=e.qty;tc+=(e.cost||0)*e.qty;});
