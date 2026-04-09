@@ -176,7 +176,7 @@ a{text-decoration:none}
     </div>
     <div class="hint">Search a card → add it → search another. Build the full offer before saving. <span>Add as many cards as needed.</span></div>
     <div class="search-row">
-      <input id="search-input" class="search-input" placeholder="e.g. Rayleigh or Monkey D. Luffy..."/>
+      <input id="search-input" class="search-input" placeholder="e.g. Rayleigh or Monkey D. Luffy..." onkeydown="if(event.key==='Enter')doSearch()"/>
       <button class="search-btn" id="search-btn" onclick="doSearch()">Search</button>
     </div>
     <div id="search-status"></div>
@@ -467,7 +467,7 @@ var SL = {pending:'Pending',onhand:'On Hand',shipped:'Shipped',missing:'Missing'
 var SC = {pending:'status-pending',onhand:'status-onhand',shipped:'status-shipped',missing:'status-missing',whatnot:'status-whatnot'};
 var SB = {pending:'badge-pending',onhand:'badge-onhand',shipped:'badge-shipped',missing:'badge-missing',whatnot:'badge-whatnot'};
 var SCYCLE = ['pending','onhand','shipped','missing','whatnot'];
-
+var allSearchResults = [];
 var st = {apiKey:'',tiers:[],inventory:[],offers:[],sellers:[],session:[],
   selectedCard:null,selectedCond:'NM',selectedQty:1,
   editingSellerId:null,editingOfferId:null,currentTab:'buylist'};
@@ -569,11 +569,7 @@ function switchTab(tab){
 function updateBanner(){g('no-key-banner').style.display=(!st.apiKey&&st.currentTab!=='settings')?'':'none';}
 
 // ── SEARCH ────────────────────────────────────────────────────────────────────
-function setStatus(h){g('search-status').innerHTML=h;}
-
-document.addEventListener('DOMContentLoaded',function(){
-  g('search-input').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
-});
+function setStatus(h){var el=g('search-status');if(el)el.innerHTML=h;}
 
 async function doSearch(){
   var raw=g('search-input').value.trim();
