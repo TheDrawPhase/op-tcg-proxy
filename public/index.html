@@ -1891,9 +1891,19 @@ function bulkDeleteInv(){
 }
 
 function openInvMod(ek){
-  // ek is encoded as: encName~encNum~encSet~encVariant
-  var parts=ek.split('~');
-  var name=decodeURIComponent(parts[0]||''),num=decodeURIComponent(parts[1]||''),set=decodeURIComponent(parts[2]||''),variant=decodeURIComponent(parts[3]||'');
+  // Support both old format (encodeURIComponent(name+'||'+num+'||'+set))
+  // and new format (encName~encNum~encSet~encVariant)
+  var name,num,set,variant;
+  if(ek.indexOf('~')!==-1){
+    var parts=ek.split('~');
+    name=decodeURIComponent(parts[0]||'');num=decodeURIComponent(parts[1]||'');
+    set=decodeURIComponent(parts[2]||'');variant=decodeURIComponent(parts[3]||'');
+  } else {
+    // Old format — decode whole thing then split on ||
+    var decoded=decodeURIComponent(ek);
+    var parts=decoded.split('||');
+    name=parts[0]||'';num=parts[1]||'';set=parts[2]||'';variant=parts[3]||'';
+  }
   var entries=app.inv.filter(function(i){
     return i.name===name&&(i.num||'')==num&&(i.set||'')==set&&(i.variant||'')==variant;
   });
