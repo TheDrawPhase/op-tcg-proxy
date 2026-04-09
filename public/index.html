@@ -887,8 +887,32 @@ function addToSess(){
 function addDirect(){
   var c=app.selCard;if(!c)return;
   var mp=cardPrice(c,app.selCond);
-  app.inv.push({id:uid(),name:c.name||c.name_numbered||'',num:c.card_number||'',set:c.episode&&c.episode.name?c.episode.name:'',img:c.image||null,tcgId:c.tcgplayer_id||null,cond:app.selCond,qty:app.selQty,mkt:mp,cost:0,perc:0,seller:'Direct Add',sellerId:null,status:'onhand',offerId:null,date:td()});
-  saveInv();stats();toast('✅ Added to inventory!');
+  // Calculate tiered buy % and cost same as offer flow
+  var eu=c.prices&&c.prices.tcgplayer?c.prices.tcgplayer.market_price:null;
+  var nmUsd=eu!=null?eu*EU:(c.mktprice||null);
+  var perc=nmUsd!=null?tieredPerc(nmUsd,app.selCond):null;
+  var cost=mp!=null&&perc!=null?parseFloat(((mp*perc)/100).toFixed(2)):0;
+  var entry={
+    id:uid(),
+    name:c.name||c.name_numbered||'',
+    num:c.card_number||'',
+    set:c.episode&&c.episode.name?c.episode.name:'',
+    img:c.image||null,
+    tcgId:c.tcgplayer_id||null,
+    cond:app.selCond,
+    qty:app.selQty,
+    mkt:mp,
+    cost:cost,
+    perc:perc,
+    seller:'Direct Add',
+    sellerId:null,
+    status:'onhand',
+    offerId:null,
+    date:td()
+  };
+  app.inv.push(entry);
+  saveInv();stats();
+  toast('✅ '+entry.name+' → Inventory ('+(CF[app.selCond]||app.selCond)+' ×'+app.selQty+')');
 }
 
 function onSelChg(){g('new-sname-wrap').style.display=g('o-seller').value==='__new__'?'':'none';}
