@@ -402,7 +402,7 @@ button{cursor:pointer}a{text-decoration:none}
 
 <!-- Seller modal -->
 <div class="overlay" id="sel-modal" style="display:none" onclick="if(event.target===this)closeSelMod()">
-  <div class="modal">
+  <div class="modal" onclick="event.stopPropagation()">
     <div style="font-weight:700;font-size:15px;color:#f0c040;margin-bottom:14px" id="sel-mod-title">Add Seller</div>
     <div style="margin-bottom:10px"><div class="ml">Name *</div><input class="inp full" id="sm-name" placeholder="Seller name"/></div>
     <div style="margin-bottom:10px"><div class="ml">Facebook Messenger</div><input class="inp full" id="sm-fb" placeholder="https://m.me/..."/></div>
@@ -415,7 +415,7 @@ button{cursor:pointer}a{text-decoration:none}
 
 <!-- Inventory detail modal -->
 <div class="overlay" id="inv-modal" style="display:none" onclick="if(event.target===this)closeInvMod()">
-  <div class="modal" style="max-width:580px">
+  <div class="modal" style="max-width:580px" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
       <div id="inv-mod-title" style="font-weight:700;font-size:15px;color:#f0c040"></div>
       <button onclick="closeInvMod()" style="background:none;border:none;color:#f87171;font-size:21px;line-height:1;cursor:pointer">×</button>
@@ -426,7 +426,7 @@ button{cursor:pointer}a{text-decoration:none}
 
 <!-- Manual Entry modal (popup) -->
 <div class="overlay" id="manual-modal" style="display:none" onclick="if(event.target===this)closeManualMod()">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-weight:700;font-size:15px;color:#a78bfa">✏️ Manual Card Entry</div>
       <button onclick="closeManualMod()" style="background:none;border:none;color:#f87171;font-size:21px;cursor:pointer">×</button>
@@ -472,7 +472,7 @@ button{cursor:pointer}a{text-decoration:none}
 
 <!-- Record Sale modal -->
 <div class="overlay" id="show-modal" style="display:none" onclick="if(event.target===this)closeShowMod()">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
     <div style="font-weight:700;font-size:15px;color:#d946ef;margin-bottom:14px">🏪 Record Sale</div>
     <div style="margin-bottom:10px"><div class="ml">Channel</div>
       <select class="inp full" id="sh-channel" onchange="if(this.value==='whatnot'){var wc=0;app.inv.forEach(function(i){if(i.status==='whatnot')wc+=(i.cost||0)*i.qty;});if(wc>0&&g('sh-cogs'))g('sh-cogs').value=wc.toFixed(2);}else{if(g('sh-cogs'))g('sh-cogs').value='';}updShowCalc();">
@@ -1189,11 +1189,16 @@ function buildOfferDetailHTML(o){
     if(sel2.notes)sh+='<div class="sfield">📝 '+sel2.notes+'</div>';
     sh+='</div>';
   }
-  // Bulk checkboxes only — status buttons removed
-  var bh='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
-  bh+='<span style="font-size:11px;color:#94a3b8">Bulk:</span>';
+  // Bulk: checkboxes + status dropdown
+  var bh='<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-wrap:wrap">';
+  bh+='<span style="font-size:11px;color:#94a3b8;font-weight:600">Bulk:</span>';
   bh+='<button onclick="offerCheckAll(\''+o.id+'\')" style="padding:4px 10px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">☑ All</button>';
   bh+='<button onclick="offerUncheckAll(\''+o.id+'\')" style="padding:4px 10px;border-radius:4px;background:#1a1040;border:1px solid #2d2060;color:#6b7280;font-size:11px;cursor:pointer">☐ None</button>';
+  bh+='<select id="bulk-status-'+o.id+'" class="sel" style="font-size:12px;padding:5px 8px">';
+  bh+='<option value="">— Move to —</option>';
+  SCYC.forEach(function(s){bh+='<option value="'+s+'">'+SL[s]+'</option>';});
+  bh+='</select>';
+  bh+='<button onclick="offerBulkStatus(\''+o.id+'\',document.getElementById(\'bulk-status-'+o.id+'\').value)" style="padding:4px 12px;border-radius:4px;background:#7c3aed;border:none;color:#fff;font-size:11px;cursor:pointer">Apply</button>';
   bh+='</div>';
   var ch='';
   o.cards.forEach(function(card,i){
@@ -1267,6 +1272,7 @@ function offerCheckAll(oid){document.querySelectorAll('.offer-chk[data-oid="'+oi
 function offerUncheckAll(oid){document.querySelectorAll('.offer-chk[data-oid="'+oid+'"]').forEach(function(c){c.checked=false;});}
 function offerBulkStatus(oid,status){
   var o=null;for(var i=0;i<app.offers.length;i++){if(String(app.offers[i].id)===String(oid)){o=app.offers[i];break;}}
+  if(!status){toast('⚠️ Choose a status first.');return;}
   if(!o)return;
   var checked=document.querySelectorAll('.offer-chk[data-oid="'+oid+'"]:checked');
   if(!checked.length){toast('⚠️ Check at least one card first.');return;}
