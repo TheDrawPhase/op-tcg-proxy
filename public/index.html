@@ -548,25 +548,57 @@ async function dbLoad(){
   try{
     var r=await fetch(P+'/db/load');if(!r.ok)throw 0;
     var d=await r.json();
-    if(d.inventory&&d.inventory.length){app.inv=d.inventory;ls('inv',app.inv);}
-    // Always load offers from supabase (even empty array is valid)
-    if(d.offers&&Array.isArray(d.offers)){app.offers=d.offers;ls('offers',app.offers);}
-    if(d.sellers&&d.sellers.length){app.sellers=d.sellers;ls('sellers',app.sellers);}
+    console.log('[dbLoad] raw keys:',Object.keys(d),'offers type:',typeof d.offers,'offers len:',Array.isArray(d.offers)?d.offers.length:'n/a');
+    // Inventory: take whichever is larger (Supabase or localStorage)
+    if(d.inventory&&Array.isArray(d.inventory)&&d.inventory.length>=app.inv.length){
+      app.inv=d.inventory;ls('inv',app.inv);
+    }
+    // Offers: only replace if Supabase has a valid non-empty array with >= local count
+    if(d.offers&&Array.isArray(d.offers)&&d.offers.length>0){
+      if(d.offers.length>=app.offers.length){
+        app.offers=d.offers;ls('offers',app.offers);
+      }
+    } else if(d.offers&&Array.isArray(d.offers)&&d.offers.length===0&&app.offers.length===0){
+      // Both empty — fine
+      app.offers=[];ls('offers',[]);
+    }
+    // If Supabase returned nothing for offers, keep whatever loadLocal already set
+    console.log('[dbLoad] final app.offers.length:',app.offers.length);
+    if(d.sellers&&Array.isArray(d.sellers)&&d.sellers.length>=app.sellers.length){
+      app.sellers=d.sellers;ls('sellers',app.sellers);
+    }
     if(d.tiers&&d.tiers.length){app.tiers=d.tiers;ls('tiers',app.tiers);}
     if(d.custom_catalog&&d.custom_catalog.length){ls('catalog',d.custom_catalog);}
-    // Always restore finances if present (even if paypal/bank/cash are 0)
     if(d.finances){fin=d.finances;if(!fin.history)fin.history=[];if(!fin.shows)fin.shows=[];ls('fin',fin);}
-    // Load API key if stored in supabase
     if(d.api_key&&typeof d.api_key==='string'&&d.api_key.length>10){
       app.key=d.api_key;ls('key',app.key);
     }
     syncUI('ok');return true;
-  }catch(e){syncUI('err');return false;}
+  }catch(e){
+    console.log('[dbLoad] error:',e.message||e,'. Using localStorage data. Offers:',app.offers.length,'Inv:',app.inv.length);
+    syncUI('err');
+    // Data is already loaded from localStorage — nothing to reset
+    return false;
+  }
 }
-async function dbSave(key,val){try{await fetch(P+'/db/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:key,value:val})});syncUI('ok');}catch(e){syncUI('err');}}
+async function dbSave(key,val){
+  try{
+    var r=await fetch(P+'/db/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:key,value:val})});
+    if(r.ok)syncUI('ok');else syncUI('err');
+  }catch(e){
+    syncUI('err'); // network error — data is safe in localStorage
+  }
+}
 function save(key,val){var lsKey={inventory:'inv',offers:'offers',sellers:'sellers',tiers:'tiers',finances:'fin',custom_catalog:'catalog'}[key]||key;ls(lsKey,val);syncUI('sync');clearTimeout(syncT);syncT=setTimeout(function(){dbSave(key,val);},1500);}
 function saveInv(){save('inventory',app.inv);}
-function saveOffers(){save('offers',app.offers);}
+function saveSess(){ls('sess',app.sess);if(app.editOffer)ls('editOffer',app.editOffer);else ls('editOffer',null);}
+function saveOffers(){
+  ls('offers',app.offers); // always save locally first — never loses data
+  syncUI('sync');
+  clearTimeout(syncT);
+  // Debounce Supabase writes — they're best-effort, localStorage is the source of truth
+  syncT=setTimeout(function(){dbSave('offers',app.offers);},800);
+}
 function saveSellers(){save('sellers',app.sellers);}
 function saveTiers(){save('tiers',app.tiers);}
 function saveFin(){fin={paypal:parseFloat(g('f-pp').value)||0,bank:parseFloat(g('f-bank').value)||0,cash:parseFloat(g('f-cash').value)||0,history:fin.history||[],shows:fin.shows||[]};save('finances',fin);}
@@ -577,6 +609,7 @@ function loadLocal(){
   app.key=ll('key','');
   app.tiers=ll('tiers',[{id:'a',min:0,max:4.99,nm:40,lp:32,mp:25,hp:16,dmg:10},{id:'b',min:5,max:19.99,nm:50,lp:40,mp:32,hp:20,dmg:12},{id:'c',min:20,max:9999,nm:60,lp:48,mp:38,hp:24,dmg:15}]);
   app.inv=ll('inv',[]);app.offers=ll('offers',[]);app.sellers=ll('sellers',[]);
+  app.sess=ll('sess',[]);app.editOffer=ll('editOffer',null)||null;
   fin=ll('fin',{paypal:0,bank:0,cash:0,history:[],shows:[]});
   if(!fin.history)fin.history=[];if(!fin.shows)fin.shows=[];
   if(app.key){g('api-key-inp').value=app.key;g('key-ok').style.display='';g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);}
@@ -592,6 +625,7 @@ function show(tab){
   var names=['buylist','offers','inventory','whatnot','sellers','finance','settings'];
   var i=names.indexOf(tab);if(i>=0&&tabs[i])tabs[i].classList.add('on');
   app.tab=tab;banner();
+  if(tab==='buylist'){renderOffer();}
   if(tab==='offers'){renderOffers();}
   if(tab==='inventory')renderInv();
   if(tab==='whatnot')renderWhatnot();
@@ -827,7 +861,7 @@ function addToSess(){
     if(!confirm('⚠️ '+name+' ('+cond+') is already in this offer. Add another anyway?'))return;
   }
   app.sess.unshift(sessCard(c));
-  renderOffer();toast('Added '+name+' to offer');
+  saveSess();renderOffer();toast('Added '+name+' to offer');
 }
 
 function addDirect(){
@@ -896,7 +930,7 @@ function updSessPerc(i,v){
   var p=parseInt(v);if(!app.sess[i]||isNaN(p)||p<1)return;
   app.sess[i].perc=p;
   if(app.sess[i].mkt!=null)app.sess[i].cost=parseFloat(((app.sess[i].mkt*p)/100).toFixed(2));
-  renderOffer();
+  saveSess();renderOffer();
 }
 function recalc(i){var e=app.sess[i];if(!e||e.mkt==null||!e.perc)return;e.cost=parseFloat(((e.mkt*e.perc)/100).toFixed(2));}
 function updSessCost(i,v){
@@ -907,17 +941,18 @@ function updSessCost(i,v){
   if(cost!=null&&app.sess[i].mkt!=null&&app.sess[i].mkt>0){
     app.sess[i].perc=parseFloat(((cost/app.sess[i].mkt)*100).toFixed(1));
   }
-  renderOffer();
+  saveSess();renderOffer();
 }
-function rmSess(id){app.sess=app.sess.filter(function(e){return e.id!==id;});renderOffer();}
+function rmSess(id){app.sess=app.sess.filter(function(e){return e.id!==id;});saveSess();renderOffer();}
 function updSessQty(i,v){
   var q=parseInt(v);if(!app.sess[i]||isNaN(q)||q<1)return;
-  app.sess[i].qty=q;renderOffer();
+  app.sess[i].qty=q;saveSess();renderOffer();
 }
 
 function clearSess(){
   if(app.sess.length&&!confirm('Clear current offer?'))return;
   app.sess=[];app.editOffer=null;
+  ls('sess',[]);ls('editOffer',null);
   if(g('fee-ship'))g('fee-ship').value=0;if(g('fee-other'))g('fee-other').value=0;
   if(g('o-seller'))g('o-seller').value='';if(g('new-sname-wrap'))g('new-sname-wrap').style.display='none';
   renderOffer();
@@ -954,7 +989,7 @@ function saveOffer(){
     app.inv=app.inv.filter(function(x){return!(String(x.offerId)===String(oid)&&x.name===e.name&&x.cond===e.cond);});
     app.inv.push(Object.assign({},e,{id:uid(),date:day,offerId:oid,seller:sn,sellerId:sid,status:'pending'}));
   });
-  saveInv();clearSess();stats();toast('✅ Offer saved!');show('offers');
+  saveInv();clearSess();ls('sess',[]);ls('editOffer',null);stats();toast('✅ Offer saved!');show('offers');
 }
 
 // ─── Manual Entry Modal ───────────────────────────────────────────────────────
@@ -1034,7 +1069,7 @@ function getManual(){
     name:n,num:g('me-num').value.trim(),set:g('me-set').value.trim(),
     color:g('me-color').value.trim(),rarity:g('me-rarity').value.trim(),
     cond:g('me-cond').value,qty:Math.max(1,parseInt(g('me-qty').value)||1),
-    mkt:null,cost:0,perc:null,
+    mkt:parseFloat(g('me-mktprice')?g('me-mktprice').value||0:0)||null,
     img:g('me-img').value.trim()||null,
     tcgId:g('me-tcglink').value.trim()||null,
     manual:true,mktprice:parseFloat(g('me-mktprice')?g('me-mktprice').value||0:0)||null
@@ -1091,17 +1126,21 @@ function saveManualCatalogOnly(){
 function manualToOffer(){
   var e=getManual();if(!e)return;
   saveCat(e);
-  // Build a proper inventory-compatible entry
   var entry=Object.assign({},e);
+  // Apply tiered buy% and calculate offer cost if market price is set
+  if(entry.mkt!=null){
+    entry.perc=tieredPerc(entry.mkt,entry.cond||'NM');
+    entry.cost=parseFloat(((entry.mkt*entry.perc)/100).toFixed(2));
+  }
   app.sess.unshift(entry);
-  renderOffer();clearManual();closeManualMod();
+  saveSess();renderOffer();clearManual();closeManualMod();
   toast('✅ '+e.name+' added to offer!');
 }
 
 function manualToInv(){
   var e=getManual();if(!e)return;
   saveCat(e);
-  var inv={id:uid(),catalogId:e.id||null,name:e.name,num:e.num,set:e.set,color:e.color,rarity:e.rarity,img:e.img,tcgId:e.tcgId,cond:e.cond,qty:e.qty,mkt:null,cost:0,perc:null,seller:'Direct Add',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true};
+  var inv={id:uid(),catalogId:e.id||null,name:e.name,num:e.num,set:e.set,color:e.color,rarity:e.rarity,img:e.img,tcgId:e.tcgId,cond:e.cond,qty:e.qty,mkt:e.mkt||null,cost:e.mkt&&e.perc?parseFloat(((e.mkt*(e.perc||0))/100).toFixed(2)):0,perc:e.perc||null,seller:'Direct Add',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true};
   app.inv.push(inv);saveInv();stats();clearManual();closeManualMod();
   toast('✅ '+e.name+' added to inventory!');
 }
@@ -2025,20 +2064,18 @@ function delCatCard(id){var cat=ll('catalog',[]);cat=cat.filter(function(c){retu
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 (async function init(){
   loadLocal();stats();banner();
-  await dbLoad().then(function(ok){
-    if(ok){
-      stats();
-      if(app.key){
-        g('api-key-inp').value=app.key;
-        g('key-ok').style.display='';
-        g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
-        banner();
-      }
-      g('f-pp').value=fin.paypal||0;
-      g('f-bank').value=fin.bank||0;
-      g('f-cash').value=fin.cash||0;
-    }
-  }).catch(function(){});
+  await dbLoad().catch(function(){return false;});
+  // Whether Supabase succeeded or not, always update UI from current app state
+  stats();
+  if(app.key){
+    g('api-key-inp').value=app.key;
+    g('key-ok').style.display='';
+    g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
+    banner();
+  }
+  g('f-pp').value=fin.paypal||0;
+  g('f-bank').value=fin.bank||0;
+  g('f-cash').value=fin.cash||0;
 })();
 </script>
 </body>
