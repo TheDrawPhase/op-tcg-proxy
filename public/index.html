@@ -284,8 +284,8 @@ button{cursor:pointer}a{text-decoration:none}
     <div style="width:34px;flex-shrink:0"></div>
     <div style="flex:2;min-width:120px">Card</div>
     <div style="flex:2">Condition / Status</div>
-    <div style="flex:1;text-align:right;min-width:80px;color:#34d399">Cost /ea · tot</div>
-    <div style="flex:1;text-align:right;min-width:80px;color:#f0c040">Value /ea · tot</div>
+    <div style="flex:1;text-align:right;min-width:80px;color:#f0c040">Cost /ea · tot</div>
+    <div style="flex:1;text-align:right;min-width:80px;color:#34d399">Value /ea · tot</div>
   </div>
   <div id="inv-list"></div>
 </div>
@@ -547,7 +547,7 @@ async function dbLoad(){
     var d=await r.json();
     if(d.inventory&&d.inventory.length){app.inv=d.inventory;ls('inv',app.inv);}
     // Always load offers from supabase (even empty array is valid)
-    if(d.offers){app.offers=d.offers;ls('offers',app.offers);}
+    if(d.offers&&Array.isArray(d.offers)){app.offers=d.offers;ls('offers',app.offers);}
     if(d.sellers&&d.sellers.length){app.sellers=d.sellers;ls('sellers',app.sellers);}
     if(d.tiers&&d.tiers.length){app.tiers=d.tiers;ls('tiers',app.tiers);}
     if(d.custom_catalog&&d.custom_catalog.length){ls('catalog',d.custom_catalog);}
@@ -991,7 +991,7 @@ function getManual(){
 function saveCat(e){
   var cat=ll('catalog',[]);
   var idx=-1;
-  for(var i=0;i<cat.length;i++){if(cat[i].id===e.id||(cat[i].name.toLowerCase()===e.name.toLowerCase()&&cat[i].cardNumber===(e.num||''))){idx=i;break;}}
+  for(var i=0;i<cat.length;i++){if(cat[i].id===e.id||(cat[i].name.toLowerCase()===e.name.toLowerCase()&&(cat[i].cardNumber||'')===(e.num||'')&&(cat[i].set||'').toLowerCase()===(e.set||'').toLowerCase())){idx=i;break;}}
   var c={id:e.id||uid(),name:e.name,cardNumber:e.num||'',set:e.set||'',color:e.color||'',rarity:e.rarity||'',image:e.img||null,tcgplayerUrl:e.tcgId||null,isCustom:true};
   if(idx>-1)cat[idx]=c;else cat.unshift(c);
   ls('catalog',cat);saveCatalog(cat);
