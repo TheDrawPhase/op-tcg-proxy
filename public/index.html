@@ -133,6 +133,15 @@ a{text-decoration:none}
 .tbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
 .hint{font-size:11px;color:#6b7280;margin-bottom:8px}
 .hint b{color:#a78bfa}
+
+/* Show history */
+.show-row{background:#0d0820;border:1px solid #2d2060;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.show-stat{text-align:center;min-width:70px}
+.show-stat-l{font-size:10px;color:#94a3b8}
+.show-stat-v{font-weight:700;font-size:14px}
+
+/* Catalog */
+.cat-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1640;font-size:12px}
 </style>
 </head>
 <body>
@@ -362,8 +371,8 @@ a{text-decoration:none}
     <div class="panel">
       <div class="pt">⚙️ Tiered Buy Percentages</div>
       <p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Set buy % based on card market price. First matching tier wins.</p>
-      <div style="display:grid;grid-template-columns:72px 72px 58px 58px auto;gap:4px;font-size:11px;color:#94a3b8;margin-bottom:5px">
-        <div>Min($)</div><div>Max($)</div><div>NM%</div><div>LP%</div><div></div>
+      <div style="display:grid;grid-template-columns:72px 72px 58px 58px 58px 58px 58px auto;gap:4px;font-size:11px;color:#94a3b8;margin-bottom:5px">
+        <div>Min($)</div><div>Max($)</div><div>NM%</div><div>LP%</div><div>MP%</div><div>HP%</div><div>DMG%</div><div></div>
       </div>
       <div id="tier-list"></div>
       <button class="btn" style="margin-top:8px;font-size:12px;padding:6px 13px;background:#1a1640;color:#a78bfa;border:1px solid #3d2080" onclick="addTier()">+ Add Tier</button>
@@ -397,10 +406,35 @@ a{text-decoration:none}
   </div>
 </div>
 
+<!-- Record Show Modal -->
+<div class="overlay" id="show-modal" style="display:none" onclick="if(event.target===this)closeShowMod()">
+  <div class="modal" style="max-width:420px">
+    <div style="font-weight:700;font-size:15px;color:#d946ef;margin-bottom:14px">📺 Record Whatnot Show</div>
+    <div style="margin-bottom:10px"><div class="ml">Date</div><input class="inp full" id="sh-date" type="date"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Gross Revenue ($)</div><input type="number" class="inp full" id="sh-rev" placeholder="0.00" step="0.01" min="0"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Cards Sold (qty)</div><input type="number" class="inp full" id="sh-qty" placeholder="0" min="0"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Platform Fees ($)</div><input type="number" class="inp full" id="sh-fees" placeholder="0.00" step="0.01" min="0"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Shipping Costs ($)</div><input type="number" class="inp full" id="sh-ship" placeholder="0.00" step="0.01" min="0"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Cost of Goods Sold ($)</div><input type="number" class="inp full" id="sh-cogs" placeholder="0.00" step="0.01" min="0"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Notes</div><textarea class="inp full" id="sh-notes" rows="2" placeholder="e.g. Good show, sold 2 alts..."></textarea></div>
+    <div id="sh-calc" style="background:#0d0820;border-radius:7px;padding:10px;font-size:12px;margin-bottom:12px;display:none">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">Revenue</span><span id="sh-c-rev" style="color:#34d399"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">- Fees</span><span id="sh-c-fees" style="color:#f87171"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">- Shipping</span><span id="sh-c-ship" style="color:#f87171"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#94a3b8">- COGS</span><span id="sh-c-cogs" style="color:#f87171"></span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid #2d2060;padding-top:5px"><span style="font-weight:700">Net Profit</span><span id="sh-c-net" style="font-weight:700;font-size:14px"></span></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" style="flex:1;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="saveShow()">💾 Save Show</button>
+      <button class="btn btn-r" onclick="closeShowMod()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 var P='https://op-tcg-proxy-production.up.railway.app';
 var EU=1.08;
 var CONDS=['NM','LP','MP','HP','DMG'];
@@ -553,7 +587,6 @@ async function search(){
       all=all.concat(cards);
       if(d.paging){total=d.paging.total||1;if(!cards.length)break;page++;}else break;
     }while(page<=total);
-    // Merge custom catalog
     var cat=ll('catalog',[]);
     var q2=name.toLowerCase();
     var custom=cat.filter(function(c){return(c.name||'').toLowerCase().includes(q2)||(c.cardNumber||'').toLowerCase().includes(q2)||(c.set||'').toLowerCase().includes(q2);});
@@ -733,7 +766,6 @@ function renderOffer(){
   var p=g('offer-panel');
   if(!app.sess.length){p.style.display='none';calcOffer();return;}
   p.style.display='';
-  // Rebuild seller dropdown
   var sel=g('o-seller');var cv=sel.value;
   sel.innerHTML='<option value="">— Select Seller —</option><option value="__ip__">🏪 In Person / Vending</option><option value="__new__">➕ New Seller...</option>';
   app.sellers.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});
@@ -801,7 +833,7 @@ function saveOffer(){
       ex.ct=0;ex.cards.forEach(function(c){ex.ct+=(c.cost||0)*c.qty;});
       ex.ship=sh;ex.other=ot;ex.total=ex.ct+sh+ot;
       saveOffers();
-      app.sess.forEach(function(e){app.inv.push(Object.assign({},e,{id:uid(),date:day,offerId:ex.id,seller:ex.seller,sellerId:ex.sellerId,status:'pending'});});
+      app.sess.forEach(function(e){app.inv.push(Object.assign({},e,{id:uid(),date:day,offerId:ex.id,seller:ex.seller,sellerId:ex.sellerId,status:'pending'}));});
       saveInv();var eid=ex.id;clearSess();stats();toast('✅ Cards added to offer!');show('offers');setTimeout(function(){openOffer(eid);},150);return;
     }
   }
@@ -942,7 +974,6 @@ function editCard(oid,i,f,v){
   else{c.cost=parseFloat(v)||null;}
   o.ct=0;o.cards.forEach(function(x){o.ct+=(x.cost||0)*x.qty;});o.total=o.ct+o.ship+o.other;
   saveOffers();
-  // sync to inv
   for(var k=0;k<app.inv.length;k++){if(String(app.inv[k].offerId)===String(oid)&&app.inv[k].name===c.name&&app.inv[k].cond===c.cond){app.inv[k].cost=c.cost;app.inv[k].perc=c.perc;break;}}
   saveInv();renderOfferDetail(o);
 }
@@ -1018,7 +1049,6 @@ function renderInv(){
   var filtered=app.inv.filter(function(i){
     return((i.name||'').toLowerCase().includes(flt)||(i.set||'').toLowerCase().includes(flt)||(i.seller||'').toLowerCase().includes(flt))&&(!sf||i.status===sf);
   });
-  // Group by name
   var grps={};
   filtered.forEach(function(i){var k=i.name;if(!grps[k])grps[k]={name:i.name,num:i.num,set:i.set,img:i.img,entries:[]};grps[k].entries.push(i);});
   var ga=Object.values(grps);
@@ -1219,7 +1249,8 @@ function updFin(){
     +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0a040;font-weight:700;font-size:12px">Pending: '+pe.length+'</div><div>Value: '+nm(sv(pe))+'</div><div>Cost: '+nm(sc(pe))+'</div></div>'
     +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#d946ef;font-weight:700;font-size:12px">Whatnot: '+wn.length+'</div><div>Value: '+nm(sv(wn))+'</div><div>Cost: '+nm(sc(wn))+'</div></div>'
     +'</div>';
-  drawChart();renderShows();
+  drawChart();
+  renderShows();
 }
 
 function snapshot(){
@@ -1277,4 +1308,245 @@ function drawChart(){
   }
 }
 
+// ─── Show History (PREVIOUSLY MISSING) ────────────────────────────────────────
 function recShow(){
+  // Pre-fill date to today
+  var today=new Date();
+  var yyyy=today.getFullYear();
+  var mm=String(today.getMonth()+1).padStart(2,'0');
+  var dd=String(today.getDate()).padStart(2,'0');
+  g('sh-date').value=yyyy+'-'+mm+'-'+dd;
+  g('sh-rev').value='';g('sh-qty').value='';g('sh-fees').value='';
+  g('sh-ship').value='';g('sh-cogs').value='';g('sh-notes').value='';
+  g('sh-calc').style.display='none';
+  // Attach live preview
+  ['sh-rev','sh-fees','sh-ship','sh-cogs'].forEach(function(id){
+    var el=g(id);
+    el.oninput=function(){updShowCalc();};
+  });
+  g('show-modal').style.display='';
+}
+
+function updShowCalc(){
+  var rev=parseFloat(g('sh-rev').value)||0;
+  var fees=parseFloat(g('sh-fees').value)||0;
+  var ship=parseFloat(g('sh-ship').value)||0;
+  var cogs=parseFloat(g('sh-cogs').value)||0;
+  if(rev===0&&fees===0&&ship===0&&cogs===0){g('sh-calc').style.display='none';return;}
+  var net=rev-fees-ship-cogs;
+  g('sh-calc').style.display='';
+  g('sh-c-rev').textContent=nm(rev);
+  g('sh-c-fees').textContent='-'+nm(fees);
+  g('sh-c-ship').textContent='-'+nm(ship);
+  g('sh-c-cogs').textContent='-'+nm(cogs);
+  g('sh-c-net').textContent=nm(net);
+  g('sh-c-net').style.color=net>=0?'#34d399':'#f87171';
+}
+
+function saveShow(){
+  var dateVal=g('sh-date').value;
+  if(!dateVal){toast('⚠️ Date required.');return;}
+  var rev=parseFloat(g('sh-rev').value)||0;
+  var qty=parseInt(g('sh-qty').value)||0;
+  var fees=parseFloat(g('sh-fees').value)||0;
+  var ship=parseFloat(g('sh-ship').value)||0;
+  var cogs=parseFloat(g('sh-cogs').value)||0;
+  var net=rev-fees-ship-cogs;
+  // Format date as MM/DD/YY for consistency
+  var dp=dateVal.split('-');
+  var fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
+  var show={
+    id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),
+    rev:rev,qty:qty,fees:fees,ship:ship,cogs:cogs,net:net,
+    notes:g('sh-notes').value.trim()
+  };
+  if(!fin.shows)fin.shows=[];
+  fin.shows.unshift(show);
+  saveFin();
+  closeShowMod();
+  renderShows();
+  toast('📺 Show recorded! Net: '+nm(net));
+}
+
+function closeShowMod(){
+  g('show-modal').style.display='none';
+}
+
+function renderShows(){
+  var el=g('show-hist');if(!el)return;
+  var shows=fin.shows||[];
+  if(!shows.length){el.innerHTML='<div class="empty" style="padding:24px">No shows recorded yet.</div>';return;}
+  // Summary totals
+  var totRev=0,totNet=0,totQty=0;
+  shows.forEach(function(s){totRev+=s.rev||0;totNet+=s.net||0;totQty+=s.qty||0;});
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">';
+  h+='<div class="wstat"><div class="wstat-l">Shows</div><div class="wstat-v" style="color:#d946ef;font-size:18px">'+shows.length+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Total Revenue</div><div class="wstat-v" style="color:#34d399;font-size:18px">'+nm(totRev)+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Total Net Profit</div><div class="wstat-v" style="color:'+(totNet>=0?'#f0c040':'#f87171')+';font-size:18px">'+nm(totNet)+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Cards Sold</div><div class="wstat-v" style="color:#a78bfa;font-size:18px">'+totQty+'</div></div>';
+  h+='</div>';
+  shows.forEach(function(s){
+    var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):0;
+    h+='<div class="show-row">';
+    h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:#a78bfa;font-size:12px">'+s.date+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:#34d399">'+nm(s.rev)+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Net Profit</div><div class="show-stat-v" style="color:'+(s.net>=0?'#f0c040':'#f87171')+'">'+nm(s.net)+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Margin</div><div class="show-stat-v" style="color:#60a5fa;font-size:14px">'+margin+'%</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Sold</div><div class="show-stat-v" style="color:#e2e8f0;font-size:14px">'+s.qty+'</div></div>';
+    if(s.notes)h+='<div style="font-size:11px;color:#94a3b8;flex:1;min-width:120px">📝 '+s.notes+'</div>';
+    h+='<button onclick="delShow(\''+s.id+'\')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer;flex-shrink:0">🗑</button>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
+function delShow(id){
+  if(!confirm('Delete this show record?'))return;
+  fin.shows=fin.shows.filter(function(s){return s.id!==id;});
+  saveFin();renderShows();toast('🗑 Show deleted.');
+}
+
+// ─── Settings: API Key (PREVIOUSLY MISSING) ───────────────────────────────────
+function saveKey(){
+  var k=g('api-key-inp').value.trim();
+  if(!k){toast('⚠️ Paste your API key first.');return;}
+  app.key=k;
+  ls('key',k);
+  g('key-ok').style.display='';
+  g('key-ok').textContent='✅ Key saved: ...'+k.slice(-6);
+  banner();
+  toast('✅ API key saved!');
+}
+
+// ─── Settings: Backup & Restore (PREVIOUSLY MISSING) ─────────────────────────
+function exportBak(){
+  var data={
+    inventory:app.inv,
+    offers:app.offers,
+    sellers:app.sellers,
+    tiers:app.tiers,
+    finances:fin,
+    custom_catalog:ll('catalog',[]),
+    exported:new Date().toISOString()
+  };
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  var d=new Date();
+  a.download='op-tcg-backup-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  g('bak-status').textContent='✅ Exported '+app.inv.length+' inventory items, '+app.offers.length+' offer sheets.';
+  g('bak-status').style.color='#34d399';
+  toast('📥 Backup exported!');
+}
+
+function importBak(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      var restored=[];
+      if(data.inventory&&Array.isArray(data.inventory)){app.inv=data.inventory;ls('inv',app.inv);restored.push(data.inventory.length+' inventory items');}
+      if(data.offers&&Array.isArray(data.offers)){app.offers=data.offers;ls('offers',app.offers);restored.push(data.offers.length+' offers');}
+      if(data.sellers&&Array.isArray(data.sellers)){app.sellers=data.sellers;ls('sellers',app.sellers);restored.push(data.sellers.length+' sellers');}
+      if(data.tiers&&Array.isArray(data.tiers)){app.tiers=data.tiers;ls('tiers',app.tiers);}
+      if(data.finances){fin=data.finances;if(!fin.history)fin.history=[];if(!fin.shows)fin.shows=[];ls('fin',fin);g('f-pp').value=fin.paypal||0;g('f-bank').value=fin.bank||0;g('f-cash').value=fin.cash||0;}
+      if(data.custom_catalog&&Array.isArray(data.custom_catalog)){ls('catalog',data.custom_catalog);}
+      // Push to cloud
+      saveInv();saveOffers();saveSellers();saveTiers();saveFin();
+      stats();
+      var msg='✅ Restored: '+restored.join(', ')+'.';
+      g('bak-status').textContent=msg;
+      g('bak-status').style.color='#34d399';
+      toast('📤 Backup imported!');
+      renderTiers();renderCatalog();
+    }catch(err){
+      g('bak-status').textContent='❌ Invalid backup file.';
+      g('bak-status').style.color='#f87171';
+      toast('❌ Import failed.');
+    }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+// ─── Settings: Tiers (PREVIOUSLY MISSING) ─────────────────────────────────────
+function renderTiers(){
+  var el=g('tier-list');if(!el)return;
+  if(!app.tiers.length){el.innerHTML='<div style="font-size:12px;color:#6b7280">No tiers. Click + Add Tier.</div>';return;}
+  var h='';
+  app.tiers.forEach(function(t,i){
+    h+='<div class="tier-row" data-id="'+t.id+'">';
+    h+='<input class="tinp" type="number" step="0.01" min="0" value="'+t.min+'" title="Min $" placeholder="Min" oninput="updTier('+i+',\'min\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="0.01" min="0" value="'+t.max+'" title="Max $" placeholder="Max" oninput="updTier('+i+',\'max\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.nm+'" title="NM %" placeholder="NM%" oninput="updTier('+i+',\'nm\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.lp+'" title="LP %" placeholder="LP%" oninput="updTier('+i+',\'lp\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.mp+'" title="MP %" placeholder="MP%" oninput="updTier('+i+',\'mp\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.hp+'" title="HP %" placeholder="HP%" oninput="updTier('+i+',\'hp\',this.value)"/>';
+    h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+(t.dmg||10)+'" title="DMG %" placeholder="DMG%" oninput="updTier('+i+',\'dmg\',this.value)"/>';
+    h+='<button onclick="delTier(\''+t.id+'\')" style="padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
+function updTier(i,field,val){
+  if(!app.tiers[i])return;
+  app.tiers[i][field]=parseFloat(val)||0;
+  saveTiers();
+}
+
+function addTier(){
+  var last=app.tiers[app.tiers.length-1];
+  var newMin=last?last.max+0.01:0;
+  app.tiers.push({id:uid(),min:newMin,max:newMin+9.99,nm:50,lp:40,mp:32,hp:20,dmg:12});
+  saveTiers();renderTiers();
+}
+
+function delTier(id){
+  app.tiers=app.tiers.filter(function(t){return t.id!==id;});
+  saveTiers();renderTiers();toast('Tier removed.');
+}
+
+// ─── Settings: Catalog (PREVIOUSLY MISSING) ───────────────────────────────────
+function renderCatalog(){
+  var el=g('catalog-list');if(!el)return;
+  var cat=ll('catalog',[]);
+  if(!cat.length){el.innerHTML='<div style="font-size:12px;color:#6b7280">No custom cards yet. Use Manual Entry on the Buylist tab.</div>';return;}
+  var h='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">'+cat.length+' card'+(cat.length!==1?'s':'')+' in catalog</div>';
+  cat.forEach(function(c){
+    h+='<div class="cat-row">';
+    h+=c.image?'<img src="'+c.image+'" style="width:28px;height:38px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.style.display=\'none\'"/>':'<div style="width:28px;height:38px;background:#2d2060;border-radius:3px;flex-shrink:0"></div>';
+    h+='<div style="flex:1"><div style="font-weight:600;color:#e2e8f0">'+c.name+'</div><div style="color:#7c6fcd">'+c.cardNumber+' • '+c.set+'</div></div>';
+    h+='<button onclick="delCatCard(\''+c.id+'\')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer;flex-shrink:0">✕</button>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
+function delCatCard(id){
+  var cat=ll('catalog',[]);
+  cat=cat.filter(function(c){return c.id!==id;});
+  ls('catalog',cat);saveCatalog(cat);renderCatalog();toast('🗑 Card removed from catalog.');
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+(async function init(){
+  loadLocal();
+  stats();
+  banner();
+  // Try cloud load, fall back to local silently
+  await dbLoad().then(function(ok){
+    if(ok){
+      stats();
+      if(app.key){g('api-key-inp').value=app.key;g('key-ok').style.display='';g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);}
+      g('f-pp').value=fin.paypal||0;g('f-bank').value=fin.bank||0;g('f-cash').value=fin.cash||0;
+    }
+  }).catch(function(){});
+})();
+</script>
+</body>
+</html>
