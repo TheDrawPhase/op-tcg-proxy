@@ -1119,12 +1119,14 @@ function clearManual(){g('me-name').value='';g('me-set').value='';g('me-num').va
 
 function saveManualCatalogOnly(){
   var e=getManual();if(!e)return;
+  if(!g('me-edit-id').textContent)g('me-edit-id').textContent=e.id;
   saveCat(e);clearManual();closeManualMod();toast('💾 Saved to catalog!');
   if(app.tab==='settings')renderCatalog();
 }
 
 function manualToOffer(){
   var e=getManual();if(!e)return;
+  if(!g('me-edit-id').textContent)g('me-edit-id').textContent=e.id;
   saveCat(e);
   var entry=Object.assign({},e);
   // Apply tiered buy% and calculate offer cost if market price is set
@@ -1139,6 +1141,8 @@ function manualToOffer(){
 
 function manualToInv(){
   var e=getManual();if(!e)return;
+  // Ensure stable id — write back so catalog and inv entry share the same id
+  if(!g('me-edit-id').textContent)g('me-edit-id').textContent=e.id;
   saveCat(e);
   var inv={id:uid(),catalogId:e.id||null,name:e.name,num:e.num,set:e.set,color:e.color,rarity:e.rarity,img:e.img,tcgId:e.tcgId,cond:e.cond,qty:e.qty,mkt:e.mkt||null,cost:e.mkt&&e.perc?parseFloat(((e.mkt*(e.perc||0))/100).toFixed(2)):0,perc:e.perc||null,seller:'Direct Add',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true};
   app.inv.push(inv);saveInv();stats();clearManual();closeManualMod();
@@ -1287,9 +1291,14 @@ function buildOfferDetailHTML(o){
   h+='</div>';
   h+=sh;
   var detMktTot=0;o.cards.forEach(function(cx){detMktTot+=(cx.mkt||0)*cx.qty;});
+  // Weighted average buy %: sum(cost*qty) / sum(mkt*qty) * 100
+  var _wtMkt=0,_wtCost=0;
+  o.cards.forEach(function(cx){_wtMkt+=(cx.mkt||0)*cx.qty;_wtCost+=(cx.cost||0)*cx.qty;});
+  var avgPerc=_wtMkt>0?parseFloat(((_wtCost/_wtMkt)*100).toFixed(1)):null;
   h+='<div class="row" style="margin-bottom:8px;font-size:13px;flex-wrap:wrap;gap:10px">';
   h+='<span>Value: <b style="color:#34d399">$'+detMktTot.toFixed(2)+'</b></span>';
   h+='<span>Paid: <b style="color:#f0c040">$'+o.ct.toFixed(2)+'</b></span>';
+  if(avgPerc!=null)h+='<span>Avg Buy: <b style="color:#a78bfa">'+avgPerc+'%</b></span>';
   h+='<span style="color:#94a3b8">Ship: <b>$'+o.ship.toFixed(2)+'</b></span>';
   h+='<span style="color:#94a3b8">Other: <b>$'+o.other.toFixed(2)+'</b></span>';
   h+='<span>Total Cost: <b style="color:#f0c040">$'+o.total.toFixed(2)+'</b></span>';
