@@ -52,37 +52,54 @@ app.get("/optcg/search", async (req, res) => {
   const query = (req.query.q || "").toLowerCase().trim();
   if (!query) return res.json({ results: [] });
   try {
-    const [setsRes, stRes, promoRes] = await Promise.all([
-      fetch(`${OPTCG_BASE}/sets/filtered/?card_name=${encodeURIComponent(query)}`),
-      fetch(`${OPTCG_BASE}/decks/filtered/?card_name=${encodeURIComponent(query)}`),
-      fetch(`${OPTCG_BASE}/promos/filtered/?card_name=${encodeURIComponent(query)}`)
-    ]);
-    const [setsData, stData, promoData] = await Promise.all([
-      setsRes.json().catch(() => []),
-      stRes.json().catch(() => []),
-      promoRes.json().catch(() => [])
-    ]);
-    const normalize = (card, source) => ({
-      id: card.card_id || card.id,
-      name: card.card_name || card.name,
-      card_number: card.card_id || card.card_number || "",
-      set_name: card.set_name || card.deck_name || source,
-      image: card.card_image || card.image || null,
-      rarity: card.rarity || "",
-      color: card.color || "",
-      tcgplayer_market_price: parseFloat(card.market_price) || null,
-      tcgplayer_low_price: parseFloat(card.low_price) || null,
-      tcgplayer_mid_price: parseFloat(card.mid_price) || null,
-      tcgplayer_id: card.tcgplayer_id || null,
-      source: "optcg"
-    });
-    const results = [
-      ...(Array.isArray(setsData) ? setsData : []).map(c => normalize(c, "Set Card")),
-      ...(Array.isArray(stData) ? stData : []).map(c => normalize(c, "Starter Deck")),
-      ...(Array.isArray(promoData) ? promoData : []).map(c => normalize(c, "Promo"))
+    const results = [];
+
+    // Fetch each endpoint separately with individual error handling
+    const endpoints = [
+      { url: `${OPTCG_BASE}/sets/filtered/?card_name=${encodeURIComponent(query)}`, source: "Set Card" },
+      { url: `${OPTCG_BASE}/decks/filtered/?card_name=${encodeURIComponent(query)}`, source: "Starter Deck" },
+      { url: `${OPTCG_BASE}/promos/filtered/?card_name=${encodeURIComponent(query)}`, source: "Promo" }
     ];
+
+    for (const endpoint of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const r = await fetch(endpoint.url, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!r.ok) continue;
+        const text = await r.text();
+        if (!text || text.trim() === '') continue;
+        let data;
+        try { data = JSON.parse(text); } catch { continue; }
+        if (!Array.isArray(data)) continue;
+        data.forEach(card => {
+          results.push({
+            id: card.card_id || card.id || '',
+            name: card.card_name || card.name || '',
+            card_number: card.card_id || card.card_number || '',
+            set_name: card.set_name || card.deck_name || endpoint.source,
+            image: card.card_image || card.image || null,
+            rarity: card.rarity || '',
+            color: card.color || '',
+            tcgplayer_market_price: parseFloat(card.market_price) || null,
+            tcgplayer_low_price: parseFloat(card.low_price) || null,
+            tcgplayer_mid_price: parseFloat(card.mid_price) || null,
+            tcgplayer_id: card.tcgplayer_id || null,
+            source: "optcg"
+          });
+        });
+      } catch (endpointErr) {
+        console.warn('OPTCG endpoint failed:', endpoint.source, endpointErr.message);
+        continue;
+      }
+    }
+
     res.json({ results });
-  } catch (e) { res.status(500).json({ error: e.message, results: [] }); }
+  } catch (e) {
+    console.error('OPTCG search error:', e.message);
+    res.json({ results: [], error: e.message });
+  }
 });
 
 app.get("/optcg/card/:cardId", async (req, res) => {
