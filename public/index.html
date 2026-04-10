@@ -529,7 +529,7 @@ var RARITY={LEADER:0,'SECRET RARE':1,'SUPER RARE':2,R:3,Rare:3,Common:4,UC:5};
 // ─── State ────────────────────────────────────────────────────────────────────
 var app={
   key:'', tiers:[], inv:[], offers:[], sellers:[], catalog:[], sess:[],
-  selCard:null, selCond:'NM', selQty:1, selMkt:null, selCost:null, selPerc:null, _lastCond:null,
+  selCard:null, selCond:'NM', selQty:1,
   editSeller:null, editOffer:null, tab:'buylist'
 };
 var fin={paypal:0,bank:0,cash:0,history:[],shows:[]};
@@ -974,10 +974,9 @@ function renderSel(){
   var _selMkt=cardPrice(c,app.selCond);
   var _selPerc=nmPrice!=null?tieredPerc(nmPrice,app.selCond):null;
   var _selCost=_selMkt!=null&&_selPerc!=null?parseFloat((_selMkt*_selPerc/100).toFixed(2)):null;
-  // Always show fresh calculated values — read from DOM at click time
   if(nmPrice!=null)h+='<div style="font-size:13px;margin-bottom:8px">NM Market: <b style="color:#34d399">'+nm(nmPrice)+'</b></div>';
   h+='<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap">';
-  h+='<select class="sel" style="font-size:12px" onchange="app.selCond=this.value;app._lastCond=null;renderSel()">'+opts+'</select>';
+  h+='<select class="sel" style="font-size:12px" onchange="app.selCond=this.value;renderSel()">'+opts+'</select>';
   h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:#94a3b8">Qty</span><input id="sel-qty" type="number" class="pinp" style="width:52px;font-size:13px" min="1" value="'+app.selQty+'" oninput="app.selQty=Math.max(1,parseInt(this.value)||1)" onchange="app.selQty=Math.max(1,parseInt(this.value)||1)"/></div>';
   h+='</div>';
   // Editable Mkt / Cost row
@@ -1000,18 +999,8 @@ function renderSel(){
 }
 
 // ─── Offer session (sidebar) ──────────────────────────────────────────────────
-function readSelInputs(){
-  var qEl=g('sel-qty');
-  if(qEl)app.selQty=Math.max(1,parseInt(qEl.value)||1);
-  var mEl=g('sel-mkt'),cEl=g('sel-cost'),pEl=g('sel-perc');
-  // Use trimmed value — only null if field is genuinely empty
-  if(mEl)app.selMkt=mEl.value.trim()!==''?parseFloat(mEl.value):null;
-  if(cEl)app.selCost=cEl.value.trim()!==''?parseFloat(cEl.value):null;
-  if(pEl)app.selPerc=pEl.value.trim()!==''?parseFloat(pEl.value):null;
-}
 function addToSess(){
   var c=app.selCard;if(!c)return;
-  readSelInputs();
   var name=c.name||c.name_numbered||'';
   var dup=app.sess.find(function(e){return e.name===name&&e.cond===app.selCond;});
   if(dup&&!confirm('⚠️ '+name+' ('+CF[app.selCond]+') is already in this offer. Add another?'))return;
@@ -1102,7 +1091,6 @@ function fixInvEntry(id){
 
 function addDirect(){
   var c=app.selCard;if(!c)return;
-  readSelInputs();
   // Build entry with base calculated values first
   var entry=makeInvEntry(c,{seller:'Direct Add',sellerId:null,status:'onhand'});
   // Read directly from DOM — most reliable, bypasses any stale app.sel* state
@@ -1155,7 +1143,8 @@ function renderOffer(){
     h+='</div>';
     h+='<div style="display:flex;gap:4px;margin-top:5px;align-items:center;flex-wrap:wrap">';
     h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:#94a3b8">Mkt</span>';
-    h+='<input type="number" step="0.01" min="0" value="'+(e.mkt!=null?e.mkt:'')+'" placeholder="—" class="pinp pp" style="width:62px" onchange="updSess('+i+',\'mkt\',this.value);recalc('+i+');renderOffer()"/></div>';
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:#94a3b8">Mkt</span>';
+    h+='<input type="number" step="0.01" min="0" value="'+(e.mkt!=null?e.mkt:'')+'" placeholder="—" class="pinp pp" style="width:62px" onchange="updSessMkt('+i+',this.value)"/></div>';
     h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:#a78bfa">Buy%</span>';
     h+='<input type="number" step="1" min="1" max="100" value="'+(e.perc!=null?e.perc:'')+'" placeholder="—" class="pinp pperc" style="width:52px" onchange="updSessPerc('+i+',this.value)"/></div>';
     h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:#f0c040">Offer</span>';
@@ -1169,13 +1158,18 @@ function renderOffer(){
 }
 
 function updSess(i,f,v){if(app.sess[i])app.sess[i][f]=parseFloat(v)||null;}
+function updSessMkt(i,v){
+  var e=app.sess[i];if(!e)return;
+  e.mkt=parseFloat(v)||null;
+  if(e.mkt!=null&&e.perc!=null)e.cost=parseFloat(((e.mkt*e.perc)/100).toFixed(2));
+  saveSess();renderOffer();
+}
 function updSessPerc(i,v){
   var p=parseInt(v);if(!app.sess[i]||isNaN(p)||p<1)return;
   app.sess[i].perc=p;
   if(app.sess[i].mkt!=null)app.sess[i].cost=parseFloat(((app.sess[i].mkt*p)/100).toFixed(2));
   saveSess();renderOffer();
 }
-function recalc(i){var e=app.sess[i];if(!e||e.mkt==null||!e.perc)return;e.cost=parseFloat(((e.mkt*e.perc)/100).toFixed(2));}
 function updSessCost(i,v){
   if(!app.sess[i])return;
   var cost=parseFloat(v)||null;
@@ -1626,38 +1620,6 @@ function editCard(oid,i,f,v){
   saveInv();
 }
 
-function restoreCardToInv(oid,idx){
-  var o=findOffer(oid);if(!o||!o.cards[idx])return;
-  var card=o.cards[idx];
-  // Check it's not already in inventory
-  var exists=app.inv.some(function(iv){return String(iv.offerId)===String(oid)&&iv.name===card.name&&iv.cond===card.cond;});
-  if(exists){toast('⚠️ Already in inventory.');return;}
-  var entry={
-    id:uid(),
-    catalogId:card.catalogId||null,
-    name:card.name,
-    num:card.num||'',
-    set:card.set||'',
-    color:card.color||'',
-    rarity:card.rarity||'',
-    img:card.img||null,
-    tcgId:card.tcgId||null,
-    cond:card.cond,
-    qty:card.qty||1,
-    mkt:card.mkt||null,
-    cost:card.cost||0,
-    perc:card.perc||null,
-    seller:o.seller||'',
-    sellerId:o.sellerId||null,
-    status:card.status||'pending',
-    offerId:oid,
-    date:td(),
-    manual:false
-  };
-  app.inv.push(entry);
-  saveInv();stats();renderOffers();
-  toast('✅ '+card.name+' restored to inventory!');
-}
 
 function restoreCardToInv(oid,idx){
   var o=findOffer(oid);if(!o||!o.cards[idx])return;
@@ -1765,11 +1727,9 @@ function pdfOffer(id){
 function renderInv(){
   invSel={};updBulkBar();
   var flt=(g('inv-q').value||'').toLowerCase(),sf=g('inv-sf').value,srt=g('inv-sort').value||'dd';
-  console.log('[renderInv] total:',app.inv.length,'filter:',flt,'sf:',sf,'inv sample:',app.inv.slice(0,3).map(function(i){return{name:i.name,qty:i.qty,status:i.status};}));
   var filtered=app.inv.filter(function(i){
     return((i.name||'').toLowerCase().includes(flt)||(i.set||'').toLowerCase().includes(flt)||(i.seller||'').toLowerCase().includes(flt))&&(!sf||i.status===sf);
   });
-  console.log('[renderInv] filtered:',filtered.length);
   // Group by name
   var grpMap={};
   filtered.forEach(function(i){
@@ -1851,7 +1811,6 @@ function renderInv(){
     }catch(err){console.error('[renderInv] error on',grp.name,err);}
   });
   g('inv-list').innerHTML=h+'</div>';
-  console.log('[renderInv] rendered',ga.length,'groups, html length:',h.length);
 }
 
 function togInvGrp(chk){
@@ -1891,7 +1850,6 @@ function bulkDeleteInv(){
 }
 
 function openInvMod(ek){
-  console.log('[openInvMod] ek=',ek);
   // Support both old format (encodeURIComponent(name+'||'+num+'||'+set))
   // and new format (encName~encNum~encSet~encVariant)
   var name,num,set,variant;
@@ -1905,8 +1863,6 @@ function openInvMod(ek){
     var parts=decoded.split('||');
     name=parts[0]||'';num=parts[1]||'';set=parts[2]||'';variant=parts[3]||'';
   }
-  console.log('[openInvMod] name=',name,'num=',num,'set=',set);
-  console.log('[openInvMod] inv names=',app.inv.map(function(i){return i.name;}));
   var entries=app.inv.filter(function(i){
     return i.name===name&&(i.num||'')==num&&(i.set||'')==set&&(i.variant||'')==variant;
   });
