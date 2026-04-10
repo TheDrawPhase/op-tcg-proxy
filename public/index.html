@@ -584,6 +584,7 @@ function makeInvEntry(card,overrides){
   var mkt=cardPrice(card,cond);
   var perc=nm2!=null?tieredPerc(nm2,cond):null;
   var cost=mkt!=null&&perc!=null?parseFloat(((mkt*perc)/100).toFixed(2)):null;
+  console.log('[makeInvEntry] card.img:',card.img,'card.image:',card.image);
   return Object.assign({
     id:uid(),
     catalogId:card.id||null,
@@ -931,12 +932,12 @@ function pickCard(card){
     if(fresh){
       card={isCustom:true,id:fresh.id,name:fresh.name,card_number:fresh.cardNumber||'',
         episode:{name:fresh.set||''},color:fresh.color||'',rarity:fresh.rarity||'',
-        image:fresh.image||null,tcgplayer_id:fresh.tcgplayerUrl||null,
+        image:fresh.image||card.image||null,tcgplayer_id:fresh.tcgplayerUrl||card.tcgplayer_id||null,
         prices:fresh.mktprice?{tcgplayer:{market_price:fresh.mktprice/EU}}:null,
         mktprice:fresh.mktprice||null};
     }
   }
-  app.selCard=card;app.selCond='NM';app.selQty=1;app.selMkt=null;app.selCost=null;app.selPerc=null;app._lastCond=null;
+  app.selCard=card;app.selCond='NM';app.selQty=1;
   g('q').value=card.name||card.name_numbered||'';
   renderSel();
   setTimeout(function(){var p=g('buylist-left');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},30);
