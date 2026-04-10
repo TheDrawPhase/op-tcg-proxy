@@ -1891,6 +1891,7 @@ function bulkDeleteInv(){
 }
 
 function openInvMod(ek){
+  console.log('[openInvMod] ek=',ek);
   // Support both old format (encodeURIComponent(name+'||'+num+'||'+set))
   // and new format (encName~encNum~encSet~encVariant)
   var name,num,set,variant;
@@ -1904,6 +1905,8 @@ function openInvMod(ek){
     var parts=decoded.split('||');
     name=parts[0]||'';num=parts[1]||'';set=parts[2]||'';variant=parts[3]||'';
   }
+  console.log('[openInvMod] name=',name,'num=',num,'set=',set);
+  console.log('[openInvMod] inv names=',app.inv.map(function(i){return i.name;}));
   var entries=app.inv.filter(function(i){
     return i.name===name&&(i.num||'')==num&&(i.set||'')==set&&(i.variant||'')==variant;
   });
