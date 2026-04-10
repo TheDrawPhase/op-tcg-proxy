@@ -1421,7 +1421,7 @@ function editCatalogById(id){
   if(c)openManualMod(c);else toast('⚠️ Card not found in catalog');
 }
 function editCatalogEntry(ek){
-  var name=decodeURIComponent(ek.split('~')[0]);
+  var name=decodeURIComponent((ek.split('~')[0]||'').replace(/%27/g,"'"));
   var e=app.inv.find(function(i){return i.name===name;});
   if(!e)return;
   closeInvMod();
@@ -1829,7 +1829,7 @@ function renderInv(){
       chips+='<span class="badge '+badgeCls+'" style="padding:1px 3px;font-size:8px;margin:0">'+badgeTxt+'</span></span>';
     });
     var variant=grp.entries[0]?grp.entries[0].variant||'':'';
-    var ek=encodeURIComponent(grp.name)+'~'+encodeURIComponent(grp.num||'')+'~'+encodeURIComponent(grp.set||'')+'~'+encodeURIComponent(variant);
+    var ek=[grp.name,grp.num||'',grp.set||'',variant].map(function(s){return encodeURIComponent(s).replace(/'/g,'%27');}).join('~');
     var ft=grp.entries[0]&&grp.entries[0].tcgId?grp.entries[0].tcgId:null;
     var ebayQ=encodeURIComponent(grp.name+(grp.num?' '+grp.num:''));
     var entryIds=grp.entries.map(function(e){return e.id;}).join(',');
