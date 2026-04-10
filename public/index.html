@@ -583,7 +583,7 @@ function makeInvEntry(card,overrides){
   var qty=parseInt((overrides&&overrides.qty)||app.selQty||1)||1;
   var mkt=cardPrice(card,cond);
   var perc=nm2!=null?tieredPerc(nm2,cond):null;
-  var cost=mkt!=null&&perc!=null?parseFloat(((mkt*perc)/100).toFixed(2)):0;
+  var cost=mkt!=null&&perc!=null?parseFloat(((mkt*perc)/100).toFixed(2)):null;
   return Object.assign({
     id:uid(),
     catalogId:card.id||null,
@@ -1016,14 +1016,15 @@ function addToSess(){
   var dup=app.sess.find(function(e){return e.name===name&&e.cond===app.selCond;});
   if(dup&&!confirm('⚠️ '+name+' ('+CF[app.selCond]+') is already in this offer. Add another?'))return;
   var sc=makeSessCard(c);
-  // Apply user-typed overrides only if they typed a value
-  if(app.selMkt!=null){
-    sc.mkt=app.selMkt;
-    if(app.selCost==null&&sc.perc!=null)
-      sc.cost=parseFloat((sc.mkt*sc.perc/100).toFixed(2));
-  }
-  if(app.selCost!=null){sc.cost=app.selCost;}
-  if(app.selPerc!=null){sc.perc=app.selPerc;}
+  // Read directly from DOM inputs
+  var mktEl2=g('sel-mkt'),costEl2=g('sel-cost'),percEl2=g('sel-perc');
+  var domMkt2=mktEl2&&mktEl2.value.trim()!==''?parseFloat(mktEl2.value):null;
+  var domCost2=costEl2&&costEl2.value.trim()!==''?parseFloat(costEl2.value):null;
+  var domPerc2=percEl2&&percEl2.value.trim()!==''?parseFloat(percEl2.value):null;
+  if(domMkt2!=null)sc.mkt=domMkt2;
+  if(domPerc2!=null)sc.perc=domPerc2;
+  if(domCost2!=null)sc.cost=domCost2;
+  else if(sc.mkt!=null&&sc.perc!=null)sc.cost=parseFloat((sc.mkt*sc.perc/100).toFixed(2));
   app.sess.unshift(sc);
   saveSess();renderOffer();
   toast('Added '+name+' to offer');
@@ -1104,16 +1105,15 @@ function addDirect(){
   readSelInputs();
   // Build entry with base calculated values first
   var entry=makeInvEntry(c,{seller:'Direct Add',sellerId:null,status:'onhand'});
-  // Then apply user-typed overrides — only if they actually typed a value
-  if(app.selMkt!=null){
-    entry.mkt=app.selMkt;
-    // Recalc cost from new mkt + existing perc if cost wasn't also overridden
-    if(app.selCost==null&&entry.perc!=null)
-      entry.cost=parseFloat((entry.mkt*entry.perc/100).toFixed(2));
-  }
-  if(app.selCost!=null){entry.cost=app.selCost;}
-  if(app.selPerc!=null){entry.perc=app.selPerc;}
-  console.log('[addDirect] mkt:',entry.mkt,'cost:',entry.cost,'perc:',entry.perc);
+  // Read directly from DOM — most reliable, bypasses any stale app.sel* state
+  var mktEl=g('sel-mkt'),costEl=g('sel-cost'),percEl=g('sel-perc');
+  var domMkt=mktEl&&mktEl.value.trim()!==''?parseFloat(mktEl.value):null;
+  var domCost=costEl&&costEl.value.trim()!==''?parseFloat(costEl.value):null;
+  var domPerc=percEl&&percEl.value.trim()!==''?parseFloat(percEl.value):null;
+  if(domMkt!=null)entry.mkt=domMkt;
+  if(domPerc!=null)entry.perc=domPerc;
+  if(domCost!=null)entry.cost=domCost;
+  else if(entry.mkt!=null&&entry.perc!=null)entry.cost=parseFloat((entry.mkt*entry.perc/100).toFixed(2));
   app.inv.push(entry);
   saveInv();stats();
   // Reset inventory filters so the new card is visible immediately
