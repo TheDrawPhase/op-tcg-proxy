@@ -723,7 +723,8 @@ function saveOffers(){
   ls('offers',app.offers); // always local first
   syncUI('sync');
   clearTimeout(syncT);
-  syncT=setTimeout(function(){dbSave('offers',app.offers);},1200);
+  dbSave('offers',app.offers); // immediate push
+  syncT=setTimeout(function(){dbSave('offers',app.offers);},4000); // retry after 4s
 }
 function saveSellers(){save('sellers',app.sellers);}
 function saveTiers(){save('tiers',app.tiers);}
@@ -2323,7 +2324,7 @@ function delCatCard(id){
 (async function init(){
   loadLocal();stats();banner();
   await dbLoad().catch(function(){return false;});
-  fixInv(); // repair any corrupted entries from previous versions
+  fixInv();
   stats();
   if(app.key){
     g('api-key-inp').value=app.key;
@@ -2333,9 +2334,7 @@ function delCatCard(id){
   }
   g('f-pp').value=fin.paypal||0;
   g('f-bank').value=fin.bank||0;
-  fixInv();
   g('f-cash').value=fin.cash||0;
-  fixInv();
 })();
 
 </script>
