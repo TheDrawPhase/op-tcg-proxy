@@ -1177,11 +1177,18 @@ function saveOffer(){
   app.offers.unshift(sheet);
   saveOffers();
   // Create inventory entries for each card in the offer
+  // Also patch any existing entries missing num/img that match by catalogId or name+set
   cards.forEach(function(e){
-    console.log('[saveOffer]',e.name,'img:',e.img);
-    var _inv=makeInvEntry(e,{id:uid(),offerId:oid,seller:sn,sellerId:sid,status:'pending',date:day});
-    console.log('[makeInvEntry result]',e.name,'img:',_inv.img);
-    app.inv.push(_inv);
+    var newEntry=makeInvEntry(e,{id:uid(),offerId:oid,seller:sn,sellerId:sid,status:'pending',date:day});
+    // Patch existing stale entries missing num or img for the same card
+    app.inv.forEach(function(inv){
+      var sameCard=(e.catalogId&&inv.catalogId===e.catalogId)||(inv.name===newEntry.name&&(inv.set||'')===(newEntry.set||''));
+      if(sameCard){
+        if(!inv.num&&newEntry.num)inv.num=newEntry.num;
+        if(!inv.img&&newEntry.img)inv.img=newEntry.img;
+      }
+    });
+    app.inv.push(newEntry);
   });
   saveInv();
   clearSess();stats();
@@ -1704,7 +1711,6 @@ function renderInv(){
   var filtered=app.inv.filter(function(i){
     return((i.name||'').toLowerCase().includes(flt)||(i.set||'').toLowerCase().includes(flt)||(i.seller||'').toLowerCase().includes(flt))&&(!sf||i.status===sf);
   });
-  console.log('[renderInv] filtered:',filtered.length);
   // Group by name
   var grpMap={};
   filtered.forEach(function(i){
@@ -1715,7 +1721,8 @@ function renderInv(){
     var varKey=i.variant||'';
     var key=(i.name||'(unnamed)')+'||'+numKey+'||'+setKey+'||'+varKey;
     if(!numKey&&!setKey&&!varKey)key=key+'||'+i.id; // isolate cards with no identifying data
-    if(!grpMap[key])grpMap[key]={name:i.name||'(unnamed)',num:numKey,set:setKey,img:i.img||null,entries:[]};
+    if(!grpMap[key])grpMap[key]={name:i.name||'(unnamed)',num:numKey,set:setKey,variant:varKey,img:null,entries:[]};
+    if(i.img&&!grpMap[key].img)grpMap[key].img=i.img;
     grpMap[key].entries.push(i);
   });
   var ga=Object.values(grpMap);
@@ -1786,7 +1793,6 @@ function renderInv(){
     }catch(err){console.error('[renderInv] error on',grp.name,err);}
   });
   g('inv-list').innerHTML=h+'</div>';
-  console.log('[renderInv] rendered',ga.length,'groups, html length:',h.length);
 }
 
 function togInvGrp(chk){
@@ -1826,7 +1832,6 @@ function bulkDeleteInv(){
 }
 
 function openInvMod(ek){
-  console.log('[openInvMod] ek=',ek);
   // Support both old format (encodeURIComponent(name+'||'+num+'||'+set))
   // and new format (encName~encNum~encSet~encVariant)
   var name,num,set,variant;
@@ -1840,7 +1845,6 @@ function openInvMod(ek){
     var parts=decoded.split('||');
     name=parts[0]||'';num=parts[1]||'';set=parts[2]||'';variant=parts[3]||'';
   }
-  console.log('[openInvMod] name=',name,'num=',num,'set=',set);
   console.log('[openInvMod] inv names=',app.inv.map(function(i){return i.name;}));
   var entries=app.inv.filter(function(i){
     return i.name===name&&(i.num||'')==num&&(i.set||'')==set&&(i.variant||'')==variant;
