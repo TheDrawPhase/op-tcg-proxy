@@ -10,9 +10,9 @@
 
 /* ── Design tokens ── */
 :root{
-  --bg:#f5f4f0;
-  --bg2:#eeecea;
-  --bg3:#e6e4e0;
+  --bg:#d8d6d0;
+  --bg2:#dfddd8;
+  --bg3:#d6d4cf;
   --surface:#ffffff;
   --border:#d4d2ce;
   --border2:#c8c6c2;
@@ -547,10 +547,11 @@ button{cursor:pointer}a{text-decoration:none}
   <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
     <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:16px">🏪 Record Sale</div>
     <div style="margin-bottom:10px"><div class="ml">Channel</div>
-      <select class="inp full" id="sh-channel" onchange="if(this.value==='whatnot'){var wc=0;app.inv.forEach(function(i){if(i.status==='whatnot')wc+=(i.cost||0)*i.qty;});if(wc>0&&g('sh-cogs'))g('sh-cogs').value=wc.toFixed(2);}else{if(g('sh-cogs'))g('sh-cogs').value='';}updShowCalc();">
+      <select class="inp full" id="sh-channel" onchange="updShowChannel(this.value);if(this.value==='whatnot'){var wc=0;app.inv.forEach(function(i){if(i.status==='whatnot')wc+=(i.cost||0)*i.qty;});if(wc>0&&g('sh-cogs'))g('sh-cogs').value=wc.toFixed(2);}else{if(g('sh-cogs'))g('sh-cogs').value='';}updShowCalc();">
         <option value="whatnot">📺 Whatnot Stream</option>
         <option value="vend">🏪 Vend / In-Person</option>
         <option value="direct">💬 Direct Sale</option>
+        <option value="refund">↩️ Seller Refund / Adjustment</option>
       </select>
     </div>
     <div style="margin-bottom:10px"><div class="ml">Date</div><input class="inp full" id="sh-date" type="date"/></div>
@@ -1801,7 +1802,9 @@ function renderInv(){
   var ga=Object.values(grpMap);
   ga.forEach(function(g2){
     g2.tc=0;g2.tv=0;g2.ld='';g2.maxMkt=0;g2.maxCost=0;
+    g2.tq=0;
     g2.entries.forEach(function(e){
+      g2.tq+=e.qty;
       g2.tc+=(e.cost||0)*e.qty;g2.tv+=(e.mkt||0)*e.qty;
       if(e.date>g2.ld)g2.ld=e.date;
       if((e.mkt||0)>g2.maxMkt)g2.maxMkt=e.mkt||0;
@@ -1852,7 +1855,7 @@ function renderInv(){
     h+='<div class="irow">';
     h+='<input type="checkbox" class="chk inv-grp-chk" '+(isGrpSel?'checked':'')+' data-ids="'+entryIds+'" onclick="event.stopPropagation();togInvGrp(this)"/>';
     h+=grp.img?'<img class="ithumb" src="'+grp.img+'" onerror="this.hidden=1" onclick="openInvMod(\''+ek+'\')"/>':'<div class="inoimg" onclick="openInvMod(\''+ek+'\')">?</div>';
-    h+='<div class="iname" onclick="openInvMod(\''+ek+'\')" style="cursor:pointer"><div class="iname-m">'+grp.name+'</div>';
+    h+='<div class="iname" onclick="openInvMod(\''+ek+'\')" style="cursor:pointer"><div class="iname-m" style="display:flex;align-items:center;gap:7px">'+grp.name+'<span style="font-size:12px;font-weight:700;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1px 8px">×'+grp.tq+'</span></div>';
     h+='<div class="iname-s">'+(grp.num||'')+' • '+(grp.set||'')+(variant?' • <span style="color:var(--purple);font-weight:700">'+variant+'</span>':'')+'</div>';
     h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">';
     if(ft){var tcgH=String(ft).startsWith('http')?ft:'https://www.tcgplayer.com/product/'+ft;h+='<a href="'+tcgH+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--green);border:1px solid var(--green);border-radius:3px;padding:1px 4px">TCGPlayer ↗</a>';}
@@ -1935,7 +1938,9 @@ function openInvMod(ek){
     var o=app.offers.find(function(x){return String(x.id)===String(e.offerId);})||null;
     var isSales=e.status==='whatnot'||e.status==='vend'||e.status==='direct';
     rows+='<tr style="border-bottom:1px solid var(--border)">';
-    rows+='<td style="padding:7px 5px;font-size:11px;color:var(--purple);font-weight:700">'+e.cond+'</td>';
+    rows+='<td style="padding:7px 5px">'+'<select class="sel" style="font-size:12px;padding:4px 6px;color:var(--purple);font-weight:700;border-color:var(--border)" onchange="updInvCond(\''+e.id+'\',this.value)">';
+    CONDS.forEach(function(cd){rows+='<option value="'+cd+'"'+(e.cond===cd?' selected':'')+'>'+cd+'</option>';});
+    rows+='</select></td>';
     rows+='<td style="padding:7px 5px;font-size:11px;text-align:center">'+e.qty+'</td>';
     rows+='<td style="padding:4px 5px;font-size:11px">';
     rows+='<div style="font-size:9px;color:var(--text3);margin-bottom:2px">Card #</div>';
@@ -1978,6 +1983,11 @@ function openInvMod(ek){
   g('inv-modal').style.display='';
 }
 
+function updInvCond(id,val){
+  var e=findInv(id);if(!e)return;
+  e.cond=val;
+  saveInv();stats();renderInv();
+}
 function updInvMkt(id,val,ek){
   var e=findInv(id);if(!e)return;
   e.mkt=parseFloat(val)||null;
@@ -2198,6 +2208,13 @@ function drawChart(){
 
 // ─── Sales History ────────────────────────────────────────────────────────────
 function recShow(){recSale('whatnot');}
+function updShowChannel(ch){
+  var isRef=ch==='refund';
+  var shipEl=g('sh-ship');var cogsEl=g('sh-cogs');var qtyEl=g('sh-qty');
+  [shipEl,cogsEl,qtyEl].forEach(function(el){if(el)el.closest('div[style]').style.display=isRef?'none':'';});
+  if(g('sh-rev')){g('sh-rev').closest('div[style]').querySelector('.ml').textContent=isRef?'Refund Amount ($) — money returned to you':'Gross Revenue ($) — total before anything';}
+  updShowCalc();
+}
 function recSale(channel){
   var today=new Date();
   g('sh-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
@@ -2235,16 +2252,18 @@ function updShowCalc(){
 }
 function saveShow(){
   var dateVal=g('sh-date').value;if(!dateVal){toast('⚠️ Date required.');return;}
+  var ch=g('sh-channel')?g('sh-channel').value:'whatnot';
+  var isRefund=ch==='refund';
   var rev=parseFloat(g('sh-rev').value)||0;
+  if(isRefund)rev=-Math.abs(rev);
   var ship=parseFloat(g('sh-ship').value)||0;
   var cogs=parseFloat(g('sh-cogs')?g('sh-cogs').value:0)||0;
   var qty=parseInt(g('sh-qty').value)||0;
-  var net=rev-ship-cogs;
+  var net=isRefund?rev:rev-ship-cogs;
   var pp=parseFloat(g('sh-pp')?g('sh-pp').value:0)||0;
   var bk=parseFloat(g('sh-bank')?g('sh-bank').value:0)||0;
   var ca=parseFloat(g('sh-cash')?g('sh-cash').value:0)||0;
   var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
-  var ch=g('sh-channel')?g('sh-channel').value:'whatnot';
   if(pp>0){fin.paypal=(fin.paypal||0)+pp;g('f-pp').value=fin.paypal.toFixed(2);}
   if(bk>0){fin.bank=(fin.bank||0)+bk;g('f-bank').value=fin.bank.toFixed(2);}
   if(ca>0){fin.cash=(fin.cash||0)+ca;g('f-cash').value=fin.cash.toFixed(2);}
@@ -2265,7 +2284,7 @@ function renderShows(){
   h+='<div class="wstat"><div class="wstat-l">Cards Sold</div><div class="wstat-v" style="color:var(--purple);font-size:18px">'+totQty+'</div></div></div>';
   shows.forEach(function(s){
     var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):0;
-    var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct'};
+    var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct',refund:'↩️ Refund'};
     h+='<div class="show-row">';
     h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:var(--purple);font-size:11px">'+(chLabels[s.channel]||'📺')+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:var(--purple);font-size:12px">'+s.date+'</div></div>';
