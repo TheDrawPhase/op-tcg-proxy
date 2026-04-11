@@ -2221,6 +2221,11 @@ function drawChart(){
       if(isTop){var r=3;ctx.moveTo(x+r,yTop);ctx.lineTo(x+bw-r,yTop);ctx.quadraticCurveTo(x+bw,yTop,x+bw,yTop+r);ctx.lineTo(x+bw,yTop+h);ctx.lineTo(x,yTop+h);ctx.lineTo(x,yTop+r);ctx.quadraticCurveTo(x,yTop,x+r,yTop);}
       else{ctx.rect(x,yTop,bw,h);}
       ctx.fill();
+      // Label inside segment if tall enough
+      if(h>=14){
+        ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font='bold 9px system-ui';ctx.textAlign='center';
+        ctx.fillText('$'+seg.toFixed(0),x+bw/2,yTop+h/2+3.5);
+      }
     });
     ctx.fillStyle='#555';ctx.font='10px system-ui';ctx.textAlign='center';
     ctx.fillText(d.date,x+bw/2,H-pad.b+13);
