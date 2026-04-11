@@ -400,6 +400,10 @@ button{cursor:pointer}a{text-decoration:none}
     <div id="f-break" style="font-size:11px;color:var(--text3);margin-top:5px"></div>
     <button class="btn" style="margin-top:10px;font-size:12px;padding:7px 16px" onclick="snapshot()">📸 Save Snapshot</button>
   </div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);font-size:12px;padding:7px 14px" onclick="openPaymentMod('out')">💸 Record Payment Out</button>
+    <button class="btn" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green);font-size:12px;padding:7px 14px" onclick="openPaymentMod('in')">💰 Record Payment In</button>
+  </div>
   <div class="fgrid">
     <div class="fcard"><div class="fcard-t">📦 Inventory Value</div><div id="f-inv" style="font-size:26px;font-weight:700;color:var(--yellow)">$0.00</div><div id="f-inv-sub" style="font-size:11px;color:var(--text3)"></div></div>
     <div class="fcard"><div class="fcard-t">💳 PayPal</div><input type="number" class="finp" id="f-pp" value="0" step="0.01" min="0" oninput="saveFin();updFin()"/></div>
@@ -675,6 +679,7 @@ button{cursor:pointer}a{text-decoration:none}
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
         <button onclick="addTradeOutRow('inv')" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:600;cursor:pointer">+ From Sales Lane</button>
         <button onclick="addTradeOutRow('manual')" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;cursor:pointer">+ Manual</button>
+        <button onclick="openTradeSearch('out')" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--purple);color:var(--purple);font-size:12px;font-weight:600;cursor:pointer">🔍 Search</button>
       </div>
     </div>
     <!-- THEIR CARDS IN -->
@@ -684,7 +689,10 @@ button{cursor:pointer}a{text-decoration:none}
         <span id="trade-in-total" style="font-weight:700;color:var(--blue);font-size:13px">$0.00</span>
       </div>
       <div id="trade-in-rows"></div>
-      <button onclick="addTradeInRow()" style="margin-top:8px;padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--blue);color:var(--blue);font-size:12px;font-weight:600;cursor:pointer">+ Add Card</button>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button onclick="addTradeInRow('','')" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--blue);color:var(--blue);font-size:12px;font-weight:600;cursor:pointer">+ Manual</button>
+        <button onclick="openTradeSearch('in')" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--purple);color:var(--purple);font-size:12px;font-weight:600;cursor:pointer">🔍 Search</button>
+      </div>
     </div>
     <!-- CASH ADJUSTMENT -->
     <div style="background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:var(--radius);padding:12px;margin-bottom:10px">
@@ -715,6 +723,18 @@ button{cursor:pointer}a{text-decoration:none}
       <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Cash adjustment</span><span id="trade-c-cash" style="color:var(--yellow);font-weight:600">—</span></div>
       <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span style="font-weight:700">Net to you</span><span id="trade-c-diff" style="font-weight:700;font-size:15px">$0.00</span></div>
     </div>
+    <!-- Search panel (shows when search mode active) -->
+    <div id="trade-search-panel" style="display:none;background:var(--bg2);border:1px solid var(--purple);border-radius:var(--radius);padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div id="trade-search-label" style="font-weight:700;font-size:12px;color:var(--purple);text-transform:uppercase;letter-spacing:.4px"></div>
+        <button onclick="closeTradeSearch()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0">×</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <input class="inp" id="trade-q" placeholder="Search cards..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter')tradeSearch()"/>
+        <button class="btn" id="trade-sbtn" onclick="tradeSearch()" style="padding:7px 14px;font-size:13px">Search</button>
+      </div>
+      <div id="trade-results" style="max-height:200px;overflow-y:auto;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface)"></div>
+    </div>
     <div style="margin-bottom:12px"><div class="ml">Notes</div><textarea class="inp full" id="trade-notes" rows="2" placeholder="Optional..."></textarea></div>
     <div class="row">
       <button class="btn btn-g" style="flex:1" onclick="confirmTrade()">✅ Confirm Trade</button>
@@ -726,6 +746,31 @@ button{cursor:pointer}a{text-decoration:none}
 
 <button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"
   style="position:fixed;bottom:24px;left:20px;width:40px;height:40px;border-radius:50%;background:var(--text);color:#fff;border:none;font-size:18px;cursor:pointer;box-shadow:var(--shadow-md);display:none;z-index:997;line-height:1;transition:opacity .2s">↑</button>
+
+
+<!-- Payment In/Out modal -->
+<div class="overlay" id="payment-modal" style="display:none" onclick="if(event.target===this)closePaymentMod()">
+  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div id="payment-mod-title" style="font-weight:700;font-size:15px;color:var(--text)">💸 Record Payment</div>
+      <button onclick="closePaymentMod()" style="background:none;border:none;color:var(--red);font-size:21px;cursor:pointer">×</button>
+    </div>
+    <div style="margin-bottom:10px"><div class="ml">Date</div><input class="inp full" id="pay-date" type="date"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Amount ($)</div><input type="number" class="inp full" id="pay-amt" placeholder="0.00" step="0.01" min="0"/></div>
+    <div style="margin-bottom:10px"><div class="ml">Via</div>
+      <select class="inp full" id="pay-via">
+        <option value="paypal">💳 PayPal</option>
+        <option value="bank">🏦 Bank</option>
+        <option value="cash">💵 Cash</option>
+      </select>
+    </div>
+    <div style="margin-bottom:14px"><div class="ml">Notes / Reason</div><input class="inp full" id="pay-notes" placeholder="e.g. Refund to customer, shipping overpay..."/></div>
+    <div class="row">
+      <button class="btn btn-g" style="flex:1" id="pay-confirm-btn" onclick="confirmPayment()">✅ Confirm</button>
+      <button class="btn btn-r" onclick="closePaymentMod()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 <div class="sel-tooltip" id="sel-tooltip" style="display:none"></div>
@@ -2510,6 +2555,40 @@ function showAddedFlash(img,name,detail){
   el._t=setTimeout(function(){
     el.style.opacity='0';el.style.transform='translateY(10px)';
   },2200);
+}
+
+
+// ─── Payment In/Out ───────────────────────────────────────────────────────────
+var _paymentDir='out';
+function openPaymentMod(dir){
+  _paymentDir=dir;
+  var isOut=dir==='out';
+  g('payment-mod-title').textContent=isOut?'💸 Record Payment Out':'💰 Record Payment In';
+  g('pay-confirm-btn').style.background=isOut?'var(--red)':'var(--green)';
+  var today=new Date();
+  g('pay-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  g('pay-amt').value='';g('pay-notes').value='';
+  g('payment-modal').style.display='';
+}
+function closePaymentMod(){g('payment-modal').style.display='none';}
+function confirmPayment(){_snapshot();
+  var amt=parseFloat(g('pay-amt').value)||0;
+  if(!amt){toast('⚠️ Enter an amount.');return;}
+  var via=g('pay-via').value;
+  var notes=g('pay-notes').value.trim();
+  var adj=_paymentDir==='out'?-amt:amt;
+  if(via==='paypal'){fin.paypal=(fin.paypal||0)+adj;if(g('f-pp'))g('f-pp').value=fin.paypal.toFixed(2);}
+  else if(via==='bank'){fin.bank=(fin.bank||0)+adj;if(g('f-bank'))g('f-bank').value=fin.bank.toFixed(2);}
+  else{fin.cash=(fin.cash||0)+adj;if(g('f-cash'))g('f-cash').value=fin.cash.toFixed(2);}
+  var dateVal=g('pay-date').value;
+  var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
+  if(!fin.shows)fin.shows=[];
+  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:'refund',
+    rev:adj,ship:0,cogs:0,qty:0,net:adj,
+    pp:via==='paypal'?adj:0,bank:via==='bank'?adj:0,cash:via==='cash'?adj:0,
+    notes:(_paymentDir==='out'?'Payment Out':'Payment In')+(_paymentDir==='out'?' (refund/expense)':' (income)')+( notes?' — '+notes:'')});
+  saveFin();stats();closePaymentMod();updFin();
+  toast((_paymentDir==='out'?'💸 Paid out: ':'💰 Received: ')+nm(amt)+' via '+via);
 }
 
 // ─── Sellers ──────────────────────────────────────────────────────────────────
