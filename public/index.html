@@ -1855,7 +1855,7 @@ function renderInv(){
     h+='<div class="irow">';
     h+='<input type="checkbox" class="chk inv-grp-chk" '+(isGrpSel?'checked':'')+' data-ids="'+entryIds+'" onclick="event.stopPropagation();togInvGrp(this)"/>';
     h+=grp.img?'<img class="ithumb" src="'+grp.img+'" onerror="this.hidden=1" onclick="openInvMod(\''+ek+'\')"/>':'<div class="inoimg" onclick="openInvMod(\''+ek+'\')">?</div>';
-    h+='<div class="iname" onclick="openInvMod(\''+ek+'\')" style="cursor:pointer"><div class="iname-m" style="display:flex;align-items:center;gap:7px">'+grp.name+'<span style="font-size:12px;font-weight:700;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1px 8px">×'+grp.tq+'</span></div>';
+    h+='<div class="iname" onclick="openInvMod(\''+ek+'\')" style="cursor:pointer"><div class="iname-m">'+grp.name+'</div>';
     h+='<div class="iname-s">'+(grp.num||'')+' • '+(grp.set||'')+(variant?' • <span style="color:var(--purple);font-weight:700">'+variant+'</span>':'')+'</div>';
     h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">';
     if(ft){var tcgH=String(ft).startsWith('http')?ft:'https://www.tcgplayer.com/product/'+ft;h+='<a href="'+tcgH+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--green);border:1px solid var(--green);border-radius:3px;padding:1px 4px">TCGPlayer ↗</a>';}
