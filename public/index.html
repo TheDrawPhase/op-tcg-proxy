@@ -353,13 +353,13 @@ button{cursor:pointer}a{text-decoration:none}
     <button class="btn" style="font-size:12px;padding:5px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text3)" onclick="clearInvSel()">☐ Deselect</button>
     <button class="btn btn-r" style="font-size:12px;padding:5px 10px" onclick="bulkDeleteInv()">🗑 Delete</button>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;padding:4px 13px;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px" id="inv-col-header">
+  <div style="display:flex;align-items:center;gap:8px;padding:4px 14px;font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border2);margin-bottom:4px" id="inv-col-header">
     <div style="width:16px;flex-shrink:0"></div>
-    <div style="width:34px;flex-shrink:0"></div>
+    <div style="width:62px;flex-shrink:0"></div>
     <div style="flex:2;min-width:120px">Card</div>
-    <div style="flex:2">Condition / Status</div>
-    <div style="flex:1;text-align:right;min-width:80px;color:var(--yellow)">Cost /ea · tot</div>
-    <div style="flex:1;text-align:right;min-width:80px;color:var(--green)">Value /ea · tot</div>
+    <div style="flex:0;min-width:fit-content;text-align:center">Cond / Status</div>
+    <div style="flex:1;text-align:center;color:var(--yellow)">Cost /ea · tot</div>
+    <div style="flex:1;text-align:center;color:var(--green)">Value /ea · tot</div>
   </div>
   <div id="inv-list"></div>
 </div>
@@ -1843,7 +1843,7 @@ function renderInv(){
       var badgeCls=sk.length>1?(hasSales?'bw':'bpart'):(SB[sk[0]]||'bp');
       var badgeTxt=sk.length>1?'Mix':(SL[sk[0]]||'').slice(0,4);
       chips+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:11px;display:inline-flex;gap:4px;align-items:center">';
-      chips+='<span style="color:var(--purple);font-weight:700">'+c+'</span><span style="color:var(--text)">×'+q+'</span>';
+      chips+='<span style="color:var(--purple);font-weight:700">'+c+'</span><span style="color:var(--text);font-weight:800;font-size:13px">×'+q+'</span>';
       chips+='<span class="badge '+badgeCls+'" style="padding:2px 5px;font-size:10px;margin:0">'+badgeTxt+'</span></span>';
     });
     var variant=grp.entries[0]?grp.entries[0].variant||'':'';
