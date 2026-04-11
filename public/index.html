@@ -582,6 +582,92 @@ button{cursor:pointer}a{text-decoration:none}
   </div>
 </div>
 
+
+<!-- Sell Lane modal -->
+<div class="overlay" id="sell-modal" style="display:none" onclick="if(event.target===this)closeSellMod()">
+  <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div id="sell-mod-title" style="font-weight:700;font-size:15px;color:var(--text)">💰 Record Sale</div>
+      <button onclick="closeSellMod()" style="background:none;border:none;color:var(--red);font-size:21px;cursor:pointer">×</button>
+    </div>
+    <div id="sell-mod-cards" style="max-height:280px;overflow-y:auto;margin-bottom:14px;border:1px solid var(--border);border-radius:var(--radius)"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px">
+      <div><div class="ml">Date</div><input class="inp full" id="sell-date" type="date"/></div>
+      <div><div class="ml">Channel</div>
+        <select class="inp full" id="sell-channel">
+          <option value="whatnot">📺 Whatnot</option>
+          <option value="vend">🏪 Vend</option>
+          <option value="direct">💬 Direct</option>
+        </select>
+      </div>
+      <div><div class="ml">Platform Fee ($)</div><input type="number" class="inp full" id="sell-fee" placeholder="0.00" step="0.01" min="0" value="0" oninput="updSellCalc()"/></div>
+      <div><div class="ml">Shipping Cost ($)</div><input type="number" class="inp full" id="sell-ship" placeholder="0.00" step="0.01" min="0" value="0" oninput="updSellCalc()"/></div>
+    </div>
+    <div id="sell-calc" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Total Sale Price</span><span id="sell-c-rev" style="color:var(--green);font-weight:600"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">— Fees &amp; Shipping</span><span id="sell-c-fees" style="color:var(--red)"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">— Cost of Goods</span><span id="sell-c-cogs" style="color:var(--yellow)"></span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span style="font-weight:700">Net Profit</span><span id="sell-c-net" style="font-weight:700;font-size:15px"></span></div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)">Payment received via</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+        <div><div class="ml">💳 PayPal</div><input type="number" class="pinp pp" id="sell-pp" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updSellCalc()"/></div>
+        <div><div class="ml">🏦 Bank</div><input type="number" class="pinp pp" id="sell-bk" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updSellCalc()"/></div>
+        <div><div class="ml">💵 Cash</div><input type="number" class="pinp pp" id="sell-ca" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updSellCalc()"/></div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px"><div class="ml">Notes</div><textarea class="inp full" id="sell-notes" rows="2" placeholder="Optional..."></textarea></div>
+    <div class="row">
+      <button class="btn btn-g" style="flex:1" onclick="confirmSell()">✅ Confirm Sale</button>
+      <button class="btn btn-r" onclick="closeSellMod()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Trade modal -->
+<div class="overlay" id="trade-modal" style="display:none" onclick="if(event.target===this)closeTradeMod()">
+  <div class="modal" style="max-width:500px" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-weight:700;font-size:15px;color:var(--text)">🔄 Record Trade</div>
+      <button onclick="closeTradeMod()" style="background:none;border:none;color:var(--red);font-size:21px;cursor:pointer">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Customer trades cards toward the purchase of one of your cards. Their cards go into your inventory; your card gets sold.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px">
+      <div><div class="ml">Date</div><input class="inp full" id="trade-date" type="date"/></div>
+      <div><div class="ml">Channel</div>
+        <select class="inp full" id="trade-channel">
+          <option value="vend">🏪 Vend</option>
+          <option value="direct">💬 Direct</option>
+        </select>
+      </div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;color:var(--green)">📦 Your Card Sold</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        <div><div class="ml">Card Name</div><input class="inp full" id="trade-out-name" placeholder="e.g. Roronoa Zoro SR"/></div>
+        <div><div class="ml">Sale Value ($)</div><input type="number" class="inp full" id="trade-out-val" placeholder="0.00" step="0.01" min="0" oninput="updTradeCalc()"/></div>
+        <div><div class="ml">Your Cost ($)</div><input type="number" class="inp full" id="trade-out-cost" placeholder="0.00" step="0.01" min="0" oninput="updTradeCalc()"/></div>
+      </div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;color:var(--blue)">📥 Their Cards (Trade-In)</div>
+      <div id="trade-in-rows"></div>
+      <button onclick="addTradeInRow()" style="margin-top:6px;padding:4px 10px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);font-size:12px;cursor:pointer;font-weight:600">+ Add Card</button>
+    </div>
+    <div id="trade-calc" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Your card value</span><span id="trade-c-out" style="color:var(--green);font-weight:600"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Trade-in value</span><span id="trade-c-in" style="color:var(--blue);font-weight:600"></span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span style="font-weight:700">Cash diff (you receive)</span><span id="trade-c-diff" style="font-weight:700;font-size:15px"></span></div>
+    </div>
+    <div style="margin-bottom:12px"><div class="ml">Notes</div><textarea class="inp full" id="trade-notes" rows="2" placeholder="Optional..."></textarea></div>
+    <div class="row">
+      <button class="btn btn-g" style="flex:1" onclick="confirmTrade()">✅ Confirm Trade</button>
+      <button class="btn btn-r" onclick="closeTradeMod()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div class="sel-tooltip" id="sel-tooltip" style="display:none"></div>
 
@@ -2090,7 +2176,11 @@ function renderWhatnot(){
     lanesH+='<div class="panel" style="border-color:'+lane.border+'">';
     lanesH+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
     lanesH+='<div style="font-weight:700;color:'+lane.color+';font-size:14px">'+lane.label+' <span style="font-size:11px;color:var(--text3)">('+items.length+')</span></div>';
-    lanesH+='<button onclick="clearLane(\''+lane.key+'\')" style="padding:3px 9px;border-radius:4px;background:var(--red-bg);border:none;color:var(--red);font-size:11px;cursor:pointer">🗑 Clear</button>';
+    lanesH+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
+    lanesH+='<button onclick="openSellMod(\''+lane.key+'\',null)" style="padding:3px 9px;border-radius:4px;background:var(--green-bg);border:1px solid var(--green);color:var(--green);font-size:11px;font-weight:700;cursor:pointer">💰 Sell All</button>';
+    if(lane.key!=='whatnot')lanesH+='<button onclick="openTradeMod(\''+lane.key+'\')" style="padding:3px 9px;border-radius:4px;background:var(--blue-bg);border:1px solid var(--blue);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer">🔄 Trade</button>';
+    lanesH+='<button onclick="clearLane(\''+lane.key+'\')" style="padding:3px 9px;border-radius:4px;background:var(--red-bg);border:1px solid var(--red);color:var(--red);font-size:11px;cursor:pointer">🗑 Clear</button>';
+    lanesH+='</div>';
     lanesH+='</div>';
     if(items.length)lanesH+='<div style="font-size:11px;color:var(--text3);margin-bottom:8px"><span style="color:var(--yellow)">Cost: '+nm(ltc)+'</span> • <span style="color:var(--green)">Value: '+nm(ltv)+'</span></div>';
     else lanesH+='<div class="empty" style="padding:20px;font-size:12px">No cards here</div>';
@@ -2103,7 +2193,8 @@ function renderWhatnot(){
       lanesH+='<div style="font-size:10px"><span style="color:var(--yellow)">Cost: <b>'+nm((i.cost||0)*i.qty)+'</b></span> • <span style="color:var(--green)">Value: <b>'+nm((i.mkt||0)*i.qty)+'</b></span></div></div>';
       lanesH+='<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">';
       lanesH+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:9px;color:var(--yellow);border:1px solid var(--yellow);border-radius:3px;padding:1px 4px">eBay ↗</a>';
-      lanesH+='<button onclick="restoreWN(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:var(--green-bg);border:none;color:var(--green);font-size:10px;cursor:pointer">↩</button>';
+      lanesH+='<button onclick="restoreWN(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:var(--green-bg);border:1px solid var(--green);color:var(--green);font-size:10px;cursor:pointer">↩</button>';
+      lanesH+='<button onclick="openSellMod(\''+i.status+'\',\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:10px;font-weight:600;cursor:pointer">💰 Sell</button>';
       lanesH+='<button onclick="rmInv(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:var(--red-bg);border:none;color:var(--red);font-size:10px;cursor:pointer">✕</button>';
       lanesH+='</div></div>';
     });
@@ -2113,6 +2204,172 @@ function renderWhatnot(){
 }
 function clearLane(status){if(!confirm('Remove all '+SL[status]+' cards?'))return;app.inv=app.inv.filter(function(i){return i.status!==status;});saveInv();stats();renderWhatnot();toast('✅ Cleared.');}
 function restoreWN(id){var e=findInv(id);if(e)e.status='onhand';saveInv();stats();renderWhatnot();toast('↩ Restored to On Hand.');}
+
+
+// ─── Sell Modal ───────────────────────────────────────────────────────────────
+var _sellItems=[], _sellSingleId=null;
+
+function openSellMod(laneKey, singleId){
+  _sellSingleId=singleId||null;
+  var items=singleId
+    ? app.inv.filter(function(i){return i.id===singleId;})
+    : app.inv.filter(function(i){return i.status===laneKey;});
+  _sellItems=items.map(function(i){return{id:i.id,name:i.name,cond:i.cond,qty:i.qty,cost:i.cost||0,mkt:i.mkt||0,salePrice:(i.mkt||0)*i.qty};});
+  var label=singleId?'Sell Card':('Sell All — '+SL[laneKey]);
+  g('sell-mod-title').textContent='💰 '+label;
+  g('sell-channel').value=laneKey==='whatnot'?'whatnot':laneKey==='vend'?'vend':'direct';
+  var today=new Date();
+  g('sell-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  g('sell-fee').value=0;g('sell-ship').value=0;
+  g('sell-pp').value='';g('sell-bk').value='';g('sell-ca').value='';
+  g('sell-notes').value='';
+  renderSellCards();updSellCalc();
+  g('sell-modal').style.display='';
+}
+function closeSellMod(){g('sell-modal').style.display='none';}
+
+function renderSellCards(){
+  var h='';
+  _sellItems.forEach(function(item,idx){
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border)">';
+    var inv=findInv(item.id);
+    var img=inv&&inv.img?'<img src="'+inv.img+'" style="width:28px;height:38px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:28px;height:38px;background:var(--bg2);border-radius:3px;flex-shrink:0"></div>';
+    h+=img;
+    h+='<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+item.name+'</div>';
+    h+='<div style="font-size:11px;color:var(--text3)">'+item.cond+' ×'+item.qty+' • Cost: '+nm(item.cost*item.qty)+'</div></div>';
+    h+='<div style="text-align:right;flex-shrink:0"><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Sale Price $</div>';
+    h+='<input type="number" step="0.01" min="0" value="'+item.salePrice.toFixed(2)+'" class="pinp pp" style="width:80px;font-size:13px" data-idx="'+idx+'" onchange="updSellPrice('+idx+',this.value)"/></div>';
+    h+='</div>';
+  });
+  g('sell-mod-cards').innerHTML=h||'<div class="empty" style="padding:20px">No cards</div>';
+}
+
+function updSellPrice(idx,val){
+  _sellItems[idx].salePrice=parseFloat(val)||0;
+  updSellCalc();
+}
+
+function updSellCalc(){
+  var rev=0,cogs=0;
+  _sellItems.forEach(function(item){rev+=item.salePrice;cogs+=item.cost*item.qty;});
+  var fee=parseFloat(g('sell-fee').value)||0;
+  var ship=parseFloat(g('sell-ship').value)||0;
+  var net=rev-fee-ship-cogs;
+  g('sell-c-rev').textContent=nm(rev);
+  g('sell-c-fees').textContent='-'+nm(fee+ship);
+  g('sell-c-cogs').textContent='-'+nm(cogs);
+  g('sell-c-net').textContent=nm(net);
+  g('sell-c-net').style.color=net>=0?'var(--green)':'var(--red)';
+}
+
+function confirmSell(){
+  if(!_sellItems.length)return;
+  var rev=0,cogs=0;
+  _sellItems.forEach(function(item){rev+=item.salePrice;cogs+=item.cost*item.qty;});
+  var fee=parseFloat(g('sell-fee').value)||0;
+  var ship=parseFloat(g('sell-ship').value)||0;
+  var net=rev-fee-ship-cogs;
+  var pp=parseFloat(g('sell-pp').value)||0;
+  var bk=parseFloat(g('sell-bk').value)||0;
+  var ca=parseFloat(g('sell-ca').value)||0;
+  var ch=g('sell-channel').value;
+  var dateVal=g('sell-date').value;
+  var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
+  // Update wallets
+  if(pp>0){fin.paypal=(fin.paypal||0)+pp;g('f-pp').value=fin.paypal.toFixed(2);}
+  if(bk>0){fin.bank=(fin.bank||0)+bk;g('f-bank').value=fin.bank.toFixed(2);}
+  if(ca>0){fin.cash=(fin.cash||0)+ca;g('f-cash').value=fin.cash.toFixed(2);}
+  // Record in sales history
+  var cardNames=_sellItems.map(function(i){return i.name;}).join(', ');
+  if(!fin.shows)fin.shows=[];
+  fin.shows.unshift({
+    id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,
+    rev:rev,ship:ship,cogs:cogs,qty:_sellItems.reduce(function(s,i){return s+i.qty;},0),
+    net:net,pp:pp,bank:bk,cash:ca,notes:(g('sell-notes').value.trim()||'')+(_sellItems.length>0?' | Cards: '+cardNames:''),
+    cards:_sellItems.map(function(i){return{name:i.name,cond:i.cond,qty:i.qty,salePrice:i.salePrice,cost:i.cost};})
+  });
+  // Remove sold cards from inventory
+  var soldIds=_sellItems.map(function(i){return i.id;});
+  app.inv=app.inv.filter(function(inv){return soldIds.indexOf(inv.id)===-1;});
+  saveFin();saveInv();stats();closeSellMod();renderWhatnot();
+  toast('✅ Sale recorded! Net: '+nm(net));
+}
+
+// ─── Trade Modal ──────────────────────────────────────────────────────────────
+var _tradeInCount=0;
+
+function openTradeMod(laneKey){
+  var today=new Date();
+  g('trade-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  g('trade-channel').value=laneKey||'vend';
+  g('trade-out-name').value='';g('trade-out-val').value='';g('trade-out-cost').value='';
+  g('trade-notes').value='';
+  _tradeInCount=0;g('trade-in-rows').innerHTML='';
+  addTradeInRow();updTradeCalc();
+  g('trade-modal').style.display='';
+}
+function closeTradeMod(){g('trade-modal').style.display='none';}
+
+function addTradeInRow(){
+  var idx=_tradeInCount++;
+  var row=document.createElement('div');
+  row.id='trade-in-'+idx;
+  row.style.cssText='display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:6px;align-items:center';
+  row.innerHTML='<input class="inp" placeholder="Card name" style="font-size:12px" id="ti-name-'+idx+'"/>'
+    +'<input type="number" step="0.01" min="0" class="pinp pp" placeholder="Value $" style="width:80px;font-size:12px" id="ti-val-'+idx+'" oninput="updTradeCalc()"/>'
+    +'<button onclick="this.parentElement.remove();updTradeCalc()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;flex-shrink:0">×</button>';
+  g('trade-in-rows').appendChild(row);
+}
+
+function updTradeCalc(){
+  var outVal=parseFloat(g('trade-out-val').value)||0;
+  var inTotal=0;
+  document.querySelectorAll('[id^="ti-val-"]').forEach(function(el){inTotal+=parseFloat(el.value)||0;});
+  var diff=outVal-inTotal;
+  g('trade-c-out').textContent=nm(outVal);
+  g('trade-c-in').textContent=nm(inTotal);
+  g('trade-c-diff').textContent=nm(diff);
+  g('trade-c-diff').style.color=diff>=0?'var(--green)':'var(--red)';
+}
+
+function confirmTrade(){
+  var outName=g('trade-out-name').value.trim();
+  var outVal=parseFloat(g('trade-out-val').value)||0;
+  var outCost=parseFloat(g('trade-out-cost').value)||0;
+  var ch=g('trade-channel').value;
+  var dateVal=g('trade-date').value;
+  if(!outName||!dateVal){toast('⚠️ Card name and date required.');return;}
+  var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
+  // Gather trade-ins
+  var tradeIns=[];
+  document.querySelectorAll('[id^="ti-name-"]').forEach(function(el){
+    var idx=el.id.replace('ti-name-','');
+    var valEl=g('ti-val-'+idx);
+    var n=el.value.trim(),v=parseFloat(valEl?valEl.value:0)||0;
+    if(n)tradeIns.push({name:n,value:v});
+  });
+  if(!tradeIns.length){toast('⚠️ Add at least one trade-in card.');return;}
+  var inTotal=tradeIns.reduce(function(s,t){return s+t.value;},0);
+  var diff=outVal-inTotal; // positive = cash you receive
+  // Add trade-ins to inventory as pending onhand
+  tradeIns.forEach(function(t){
+    app.inv.push({
+      id:uid(),catalogId:null,name:t.name,num:'',set:'',color:'',rarity:'',img:null,tcgId:null,
+      cond:'NM',qty:1,mkt:t.value,cost:0,perc:null,
+      seller:'Trade-In',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true
+    });
+  });
+  // Record as sale in history
+  if(!fin.shows)fin.shows=[];
+  fin.shows.unshift({
+    id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,
+    rev:outVal,ship:0,cogs:outCost,qty:1,net:outVal-outCost,pp:0,bank:0,cash:diff>0?diff:0,
+    notes:'TRADE — Your card: '+outName+' | Trade-ins: '+tradeIns.map(function(t){return t.name+'('+nm(t.value)+')';}).join(', '),
+    isTradeOut:true,tradeIns:tradeIns,tradeOutName:outName,tradeOutVal:outVal,tradeInTotal:inTotal,tradeDiff:diff
+  });
+  saveFin();saveInv();stats();closeTradeMod();renderWhatnot();
+  toast('🔄 Trade recorded! Cash diff: '+nm(diff));
+}
 
 // ─── Sellers ──────────────────────────────────────────────────────────────────
 function renderSellers(){
@@ -2315,15 +2572,21 @@ function renderShows(){
   shows.forEach(function(s){
     var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):0;
     var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct',refund:'↩️ Refund'};
-    h+='<div class="show-row">';
-    h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:var(--purple);font-size:11px">'+(chLabels[s.channel]||'📺')+'</div></div>';
+    h+='<div class="show-row"'+(s.isTradeOut?' style="border-color:var(--blue)"':s.channel==='refund'?' style="border-color:var(--red)"':'')+'>';
+    h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:var(--purple);font-size:11px">'+(s.isTradeOut?'🔄 Trade':(chLabels[s.channel]||'📺'))+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:var(--purple);font-size:12px">'+s.date+'</div></div>';
     if(s.pp||s.bank||s.cash){var sp=[];if(s.pp)sp.push('💳'+nm(s.pp));if(s.bank)sp.push('🏦'+nm(s.bank));if(s.cash)sp.push('💵'+nm(s.cash));h+='<div style="font-size:10px;color:var(--text3);flex-basis:100%">Split: '+sp.join(' + ')+'</div>';}
     h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:var(--green)">'+nm(s.rev)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Net</div><div class="show-stat-v" style="color:'+(s.net>=0?'#f0c040':'#f87171')+'">'+nm(s.net)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Margin</div><div class="show-stat-v" style="color:var(--blue);font-size:14px">'+margin+'%</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Sold</div><div class="show-stat-v" style="font-size:14px">'+s.qty+'</div></div>';
-    if(s.notes)h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">📝 '+s.notes+'</div>';
+    if(s.isTradeOut){
+      h+='<div style="font-size:11px;color:var(--blue);flex:1;min-width:100px">🔄 Out: '+s.tradeOutName+' ('+nm(s.tradeOutVal)+') | In: '+s.tradeIns.map(function(t){return t.name+'('+nm(t.value)+')';}).join(', ')+'</div>';
+      if(s.tradeDiff!==0)h+='<div style="font-size:11px;font-weight:600;color:'+(s.tradeDiff>0?'var(--green)':'var(--red)')+'">Cash: '+nm(s.tradeDiff)+'</div>';
+    } else {
+      if(s.cards&&s.cards.length)h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">'+s.cards.map(function(card){return card.name+' ('+nm(card.salePrice)+')';}).join(', ')+'</div>';
+      else if(s.notes)h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">📝 '+s.notes+'</div>';
+    }
     h+='<button onclick="delShow(\''+s.id+'\')" style="padding:3px 8px;border-radius:4px;background:var(--red-bg);border:none;color:var(--red);font-size:11px;cursor:pointer">🗑</button>';
     h+='</div>';
   });
