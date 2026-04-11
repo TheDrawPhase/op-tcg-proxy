@@ -183,6 +183,8 @@ button{cursor:pointer}a{text-decoration:none}
 
 /* ── Toast & Misc ── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);border-radius:var(--radius);padding:11px 24px;font-size:13px;font-weight:600;color:#fff;z-index:999;box-shadow:var(--shadow-md);display:none;white-space:nowrap}
+@keyframes inv-added{0%{box-shadow:0 0 0 0 rgba(26,122,74,.6);background:var(--green-bg)}60%{box-shadow:0 0 0 10px rgba(26,122,74,0)}100%{box-shadow:0 0 0 0 rgba(26,122,74,0);background:var(--surface)}}
+.inv-flash{animation:inv-added 0.7s ease-out;}
 .empty{text-align:center;color:var(--text3);padding:60px;font-size:14px}
 .tbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
 .hint{font-size:12px;color:var(--text3);margin-bottom:10px}
@@ -209,7 +211,7 @@ button{cursor:pointer}a{text-decoration:none}
   <div style="font-size:22px">🏴‍☠️</div>
   <div><div class="htitle">The Draw Phase</div><div class="hsub">Database Manager</div></div>
   <div class="hright">
-    <span id="sync-ui" style="font-size:11px;color:var(--text3);font-weight:500">☁️ Loading...</span>
+    <button id="undo-btn" onclick="undoLast()" title="Undo last action" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:5px 11px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;opacity:0.35;transition:opacity .15s">↩ Undo</button><span id="sync-ui" style="font-size:11px;color:var(--text3);font-weight:500">☁️ Loading...</span>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <div class="stat"><div class="stat-l">Cards</div><div class="stat-v" id="s-cards" style="color:var(--purple)">0</div></div>
       <div class="stat"><div class="stat-l">Cost</div><div class="stat-v" id="s-cost" style="color:var(--yellow)">$0.00</div></div>
@@ -698,6 +700,44 @@ var invSel={};
 var expandedOffer=null;
 var searchCache={};
 
+// Undo stack — snapshots full app state before each mutating action
+var _undoStack=[], _MAX_UNDO=20;
+function _snapshot(){
+  _undoStack.push({
+    inv:JSON.stringify(app.inv),
+    offers:JSON.stringify(app.offers),
+    sellers:JSON.stringify(app.sellers),
+    catalog:JSON.stringify(app.catalog),
+    tiers:JSON.stringify(app.tiers),
+    fin:JSON.stringify(fin)
+  });
+  if(_undoStack.length>_MAX_UNDO)_undoStack.shift();
+  _updUndoBtn();
+}
+function _updUndoBtn(){
+  var btn=g('undo-btn');
+  if(btn)btn.style.opacity=_undoStack.length?'1':'0.35';
+}
+function undoLast(){
+  if(!_undoStack.length){toast('Nothing to undo.');return;}
+  if(!confirm('Undo last action? This cannot be re-done.'))return;
+  var prev=_undoStack.pop();
+  app.inv=JSON.parse(prev.inv);
+  app.offers=JSON.parse(prev.offers);
+  app.sellers=JSON.parse(prev.sellers);
+  app.catalog=JSON.parse(prev.catalog);
+  app.tiers=JSON.parse(prev.tiers);
+  fin=JSON.parse(prev.fin);
+  ls('inv',app.inv);ls('offers',app.offers);ls('sellers',app.sellers);
+  ls('catalog',app.catalog);ls('tiers',app.tiers);ls('fin',fin);
+  dbSave('inventory',app.inv);dbSave('offers',app.offers);
+  dbSave('finances',fin);dbSave('custom_catalog',app.catalog);
+  stats();_updUndoBtn();
+  var renders={buylist:renderOffer,offers:renderOffers,inventory:renderInv,whatnot:renderWhatnot,sellers:renderSellers,finance:updFin};
+  if(renders[app.tab])renders[app.tab]();
+  toast('\u21a9 Undone!');
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function g(id){return document.getElementById(id);}
 function td(){var n=new Date();return String(n.getMonth()+1).padStart(2,'0')+'/'+String(n.getDate()).padStart(2,'0')+'/'+String(n.getFullYear()).slice(2);}
@@ -877,7 +917,7 @@ function save(key,val){
   clearTimeout(syncT);
   syncT=setTimeout(function(){dbSave(key,val);},1200);
 }
-function saveInv(){save('inventory',app.inv);}
+function saveInv(){_snapshot();save('inventory',app.inv);}
 function saveOffers(){
   ls('offers',app.offers); // always local first
   syncUI('sync');
@@ -885,13 +925,13 @@ function saveOffers(){
   dbSave('offers',app.offers); // immediate push
   syncT=setTimeout(function(){dbSave('offers',app.offers);},4000); // retry after 4s
 }
-function saveSellers(){save('sellers',app.sellers);}
-function saveTiers(){save('tiers',app.tiers);}
-function saveFin(){
+function saveSellers(){_snapshot();save('sellers',app.sellers);}
+function saveTiers(){_snapshot();save('tiers',app.tiers);}
+function saveFin(){_snapshot();
   fin={paypal:parseFloat(g('f-pp').value)||0,bank:parseFloat(g('f-bank').value)||0,cash:parseFloat(g('f-cash').value)||0,history:fin.history||[],shows:fin.shows||[]};
   save('finances',fin);
 }
-function saveCatalog(cat){
+function saveCatalog(cat){_snapshot();
   app.catalog=cat;
   ls('catalog',cat);
   syncUI('sync');
@@ -1168,7 +1208,7 @@ function readSelInputs(){
   if(cEl)app.selCost=cEl.value.trim()!==''?parseFloat(cEl.value):null;
   if(pEl)app.selPerc=pEl.value.trim()!==''?parseFloat(pEl.value):null;
 }
-function addToSess(){
+function addToSess(){_snapshot();
   var c=app.selCard;if(!c)return;
   readSelInputs();
   var name=c.name||c.name_numbered||'';
@@ -1192,7 +1232,7 @@ function addToSess(){
 
 
 
-function addDirect(){
+function addDirect(){_snapshot();
   var c=app.selCard;if(!c)return;
   readSelInputs();
   // Build entry with base calculated values first
@@ -1213,6 +1253,11 @@ function addDirect(){
   var isf=g('inv-sf');if(isf)isf.value='';
   renderInv();
   toast('✅ '+entry.name+' → Inventory ('+CF[entry.cond]+' ×'+entry.qty+')');
+  // Flash the card image in the sel-panel
+  var selPanel=g('sel-panel');
+  if(selPanel){selPanel.classList.remove('inv-flash');void selPanel.offsetWidth;selPanel.classList.add('inv-flash');setTimeout(function(){selPanel.classList.remove('inv-flash');},700);}
+  // Show floating card-added indicator
+  showAddedFlash(entry.img,entry.name,CF[entry.cond]+' ×'+entry.qty);
 }
 
 function onSelChg(){g('new-sname-wrap').style.display=g('o-seller').value==='__new__'?'':'none';}
@@ -1277,9 +1322,9 @@ function updSessCost(i,v){
   saveSess();renderOffer();
 }
 function updSessQty(i,v){var q=parseInt(v);if(!app.sess[i]||isNaN(q)||q<1)return;app.sess[i].qty=q;saveSess();renderOffer();}
-function rmSess(id){app.sess=app.sess.filter(function(e){return e.id!==id;});saveSess();renderOffer();}
+function rmSess(id){_snapshot();app.sess=app.sess.filter(function(e){return e.id!==id;});saveSess();renderOffer();}
 
-function clearSess(){
+function clearSess(){_snapshot();
   if(app.sess.length&&!confirm('Clear current offer?'))return;
   app.sess=[];app.editOffer=null;
   ls('sess',[]);ls('editOffer',null);
@@ -1290,7 +1335,7 @@ function clearSess(){
   renderOffer();
 }
 
-function saveOffer(){
+function saveOffer(){_snapshot();
   if(!app.sess.length)return;
   var sv=g('o-seller').value,sn='',sid=null;
   if(!sv){alert('Please select a seller before saving.');return;}
@@ -1461,14 +1506,14 @@ function saveCat(e){
   if(invUpdated)saveInv();
 }
 
-function saveManualCatalogOnly(){
+function saveManualCatalogOnly(){_snapshot();
   var e=getManual();if(!e)return;
   saveCat(e);clearManual();closeManualMod();
   if(app.tab==='settings')renderCatalog();
   toast('💾 Saved to catalog!');
 }
 
-function manualToOffer(){
+function manualToOffer(){_snapshot();
   var e=getManual();if(!e)return;
   saveCat(e);
   var sc=makeSessCard({
@@ -1491,7 +1536,7 @@ function manualToOffer(){
   toast('✅ '+e.name+' added to offer!');
 }
 
-function manualToInv(){
+function manualToInv(){_snapshot();
   var e=getManual();if(!e)return;
   saveCat(e);
   var cardLike={isCustom:true,id:e.id,name:e.name,card_number:e.num||'',
@@ -1690,7 +1735,7 @@ function buildOfferDetailHTML(o){
 
 function offerCheckAll(oid){document.querySelectorAll('.offer-chk[data-oid="'+oid+'"]').forEach(function(c){c.checked=true;});}
 function offerUncheckAll(oid){document.querySelectorAll('.offer-chk[data-oid="'+oid+'"]').forEach(function(c){c.checked=false;});}
-function offerBulkStatus(oid,status){
+function offerBulkStatus(oid,status){_snapshot();
   if(!status){toast('⚠️ Choose a status first.');return;}
   var o=findOffer(oid);if(!o)return;
   var checked=document.querySelectorAll('.offer-chk[data-oid="'+oid+'"]:checked');
@@ -1728,7 +1773,7 @@ function editCard(oid,i,f,v){
   saveInv();
 }
 
-function restoreCardToInv(oid,idx){
+function restoreCardToInv(oid,idx){_snapshot();
   var o=findOffer(oid);if(!o||!o.cards[idx])return;
   var card=o.cards[idx];
   // Check it's not already in inventory
@@ -1761,7 +1806,7 @@ function restoreCardToInv(oid,idx){
   toast('✅ '+card.name+' restored to inventory!');
 }
 
-function restoreCardToInv(oid,idx){
+function restoreCardToInv(oid,idx){_snapshot();
   var o=findOffer(oid);if(!o||!o.cards[idx])return;
   var card=o.cards[idx];
   var exists=app.inv.some(function(iv){return String(iv.offerId)===String(oid)&&iv.name===card.name&&iv.cond===card.cond;});
@@ -1770,7 +1815,7 @@ function restoreCardToInv(oid,idx){
   saveInv();stats();renderOffers();
   toast('✅ '+card.name+' restored to inventory!');
 }
-function rmCard(oid,i){
+function rmCard(oid,i){_snapshot();
   var o=findOffer(oid);if(!o)return;
   if(!confirm('Remove "'+o.cards[i].name+'" from this offer?'))return;
   var rm=o.cards.splice(i,1)[0];
@@ -1781,7 +1826,7 @@ function rmCard(oid,i){
   toast('🗑 '+rm.name+' removed.');
 }
 
-function setStatus(oid,i,status){
+function setStatus(oid,i,status){_snapshot();
   var o=findOffer(oid);if(!o)return;
   o.cards[i].status=status;
   saveOffers();
@@ -1789,7 +1834,7 @@ function setStatus(oid,i,status){
   saveInv();stats();renderOffers();
 }
 
-function updOfferSeller(oid,val){
+function updOfferSeller(oid,val){_snapshot();
   var o=findOffer(oid);if(!o)return;
   if(val==='__ip__'){o.seller='In Person / Vending';o.sellerId=null;}
   else{var s=app.sellers.find(function(x){return String(x.id)===String(val);});if(s){o.seller=s.name;o.sellerId=s.id;}}
@@ -1807,7 +1852,7 @@ function updOfferTotal(oid,val){
   o.total=parseFloat(val)||o.total;
   saveOffers();renderOffers();
 }
-function delOffer(id){
+function delOffer(id){_snapshot();
   if(!confirm('Delete this offer sheet and remove its inventory cards?'))return;
   app.offers=app.offers.filter(function(o){return String(o.id)!==String(id);});
   app.inv=app.inv.filter(function(i){return String(i.offerId)!==String(id);});
@@ -1974,18 +2019,18 @@ function updBulkBar(){
   if(n>0){bar.classList.add('on');g('inv-bulk-count').textContent=n+' selected';}
   else bar.classList.remove('on');
 }
-function bulkMoveInv(){
+function bulkMoveInv(){_snapshot();
   var status=g('inv-bulk-status').value;if(!status){toast('⚠️ Choose a status.');return;}
   var ids=Object.keys(invSel);if(!ids.length){toast('⚠️ Nothing selected.');return;}
   ids.forEach(function(id){var e=findInv(id);if(e)e.status=status;});
   saveInv();stats();invSel={};renderInv();toast('✅ '+ids.length+' cards → '+SL[status]);
 }
-function bulkToWhatnot(){
+function bulkToWhatnot(){_snapshot();
   var ids=Object.keys(invSel);if(!ids.length){toast('⚠️ Nothing selected.');return;}
   ids.forEach(function(id){var e=findInv(id);if(e)e.status='whatnot';});
   saveInv();stats();invSel={};renderInv();toast('📺 '+ids.length+' → Whatnot!');
 }
-function bulkDeleteInv(){
+function bulkDeleteInv(){_snapshot();
   var ids=Object.keys(invSel);if(!ids.length){toast('⚠️ Nothing selected.');return;}
   if(!confirm('Permanently delete '+ids.length+' card'+(ids.length!==1?'s':'')+' from inventory?'))return;
   var idSet={};ids.forEach(function(id){idSet[id]=true;});
@@ -2100,7 +2145,7 @@ function updInvMeta(el){
 }
 function closeInvMod(){g('inv-modal').style.display='none';}
 
-function togWhatnot(id,ek,partialQty,channel){
+function togWhatnot(id,ek,partialQty,channel){_snapshot();
   var qty=parseInt(partialQty)||1;var ch=channel||'whatnot';
   for(var i=0;i<app.inv.length;i++){
     if(String(app.inv[i].id)===String(id)){
@@ -2144,7 +2189,7 @@ function fixInv(){
   if(fixed>0){console.log('[fixInv] repaired',fixed,'fields');saveInv();}
   return fixed;
 }
-function rmInv(id){app.inv=app.inv.filter(function(i){return String(i.id)!==String(id);});saveInv();stats();renderInv();}
+function rmInv(id){_snapshot();app.inv=app.inv.filter(function(i){return String(i.id)!==String(id);});saveInv();stats();renderInv();}
 
 // ─── Sales (Whatnot / Vend / Direct) ─────────────────────────────────────────
 function renderWhatnot(){
@@ -2202,8 +2247,8 @@ function renderWhatnot(){
   });
   g('wn-lanes').innerHTML=lanesH;
 }
-function clearLane(status){if(!confirm('Remove all '+SL[status]+' cards?'))return;app.inv=app.inv.filter(function(i){return i.status!==status;});saveInv();stats();renderWhatnot();toast('✅ Cleared.');}
-function restoreWN(id){var e=findInv(id);if(e)e.status='onhand';saveInv();stats();renderWhatnot();toast('↩ Restored to On Hand.');}
+function clearLane(status){_snapshot();if(!confirm('Remove all '+SL[status]+' cards?'))return;app.inv=app.inv.filter(function(i){return i.status!==status;});saveInv();stats();renderWhatnot();toast('✅ Cleared.');}
+function restoreWN(id){_snapshot();var e=findInv(id);if(e)e.status='onhand';saveInv();stats();renderWhatnot();toast('↩ Restored to On Hand.');}
 
 
 // ─── Sell Modal ───────────────────────────────────────────────────────────────
@@ -2262,7 +2307,7 @@ function updSellCalc(){
   g('sell-c-net').style.color=net>=0?'var(--green)':'var(--red)';
 }
 
-function confirmSell(){
+function confirmSell(){_snapshot();
   if(!_sellItems.length)return;
   var rev=0,cogs=0;
   _sellItems.forEach(function(item){rev+=item.salePrice;cogs+=item.cost*item.qty;});
@@ -2332,7 +2377,7 @@ function updTradeCalc(){
   g('trade-c-diff').style.color=diff>=0?'var(--green)':'var(--red)';
 }
 
-function confirmTrade(){
+function confirmTrade(){_snapshot();
   var outName=g('trade-out-name').value.trim();
   var outVal=parseFloat(g('trade-out-val').value)||0;
   var outCost=parseFloat(g('trade-out-cost').value)||0;
@@ -2371,6 +2416,24 @@ function confirmTrade(){
   toast('🔄 Trade recorded! Cash diff: '+nm(diff));
 }
 
+
+function showAddedFlash(img,name,detail){
+  var el=document.getElementById('add-flash');
+  if(!el){el=document.createElement('div');el.id='add-flash';
+    el.style.cssText='position:fixed;bottom:70px;right:20px;background:var(--surface);border:2px solid var(--green);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-md);z-index:998;transition:opacity .4s,transform .4s;font-size:13px;max-width:260px';
+    document.body.appendChild(el);
+  }
+  el.innerHTML=(img?'<img src="'+img+'" style="width:36px;height:50px;border-radius:4px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'')
+    +'<div><div style="font-weight:700;color:var(--green);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Added to Inventory</div>'
+    +'<div style="font-weight:600;font-size:13px;color:var(--text);line-height:1.3">'+name+'</div>'
+    +'<div style="font-size:11px;color:var(--text3)">'+detail+'</div></div>';
+  el.style.opacity='1';el.style.transform='translateY(0)';
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){
+    el.style.opacity='0';el.style.transform='translateY(10px)';
+  },2200);
+}
+
 // ─── Sellers ──────────────────────────────────────────────────────────────────
 function renderSellers(){
   var flt=(g('sel-search')?g('sel-search').value||'':'').toLowerCase();
@@ -2401,14 +2464,14 @@ function openSelMod(id){
   g('sel-modal').style.display='';
 }
 function closeSelMod(){g('sel-modal').style.display='none';}
-function saveSeller(){
+function saveSeller(){_snapshot();
   var n=g('sm-name').value.trim();if(!n){toast('⚠️ Seller name required.');return;}
   var d={name:n,fb:g('sm-fb').value.trim(),ph:g('sm-ph').value.trim(),addr:g('sm-addr').value.trim(),notes:g('sm-notes').value.trim()};
   if(app.editSeller){var s=app.sellers.find(function(x){return String(x.id)===String(app.editSeller);});if(s)Object.assign(s,d);}
   else app.sellers.push(Object.assign({id:uid()},d));
   saveSellers();closeSelMod();renderSellers();toast('✅ Seller saved!');
 }
-function delSeller(id){if(!confirm('Delete this seller?'))return;app.sellers=app.sellers.filter(function(s){return String(s.id)!==String(id);});saveSellers();renderSellers();}
+function delSeller(id){_snapshot();if(!confirm('Delete this seller?'))return;app.sellers=app.sellers.filter(function(s){return String(s.id)!==String(id);});saveSellers();renderSellers();}
 
 // ─── Finances ─────────────────────────────────────────────────────────────────
 function updFin(){
@@ -2537,7 +2600,7 @@ function updShowCalc(){
   if(warn&&net>0&&(pp+bk+ca)>0)warn.style.display=Math.abs(pp+bk+ca-net)>0.02?'':'none';
   else if(warn)warn.style.display='none';
 }
-function saveShow(){
+function saveShow(){_snapshot();
   var dateVal=g('sh-date').value;if(!dateVal){toast('⚠️ Date required.');return;}
   var ch=g('sh-channel')?g('sh-channel').value:'whatnot';
   var isRefund=ch==='refund';
@@ -2592,7 +2655,7 @@ function renderShows(){
   });
   el.innerHTML=h;
 }
-function delShow(id){if(!confirm('Delete this sale record?'))return;fin.shows=fin.shows.filter(function(s){return s.id!==id;});saveFin();renderShows();}
+function delShow(id){_snapshot();if(!confirm('Delete this sale record?'))return;fin.shows=fin.shows.filter(function(s){return s.id!==id;});saveFin();renderShows();}
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 function saveKey(){
@@ -2629,7 +2692,7 @@ function exportSheet(){
   a.click();URL.revokeObjectURL(url);toast('📊 Spreadsheet exported!');
 }
 
-function importBak(input){
+function importBak(input){_snapshot();
   var file=input.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(e){
@@ -2668,8 +2731,8 @@ function renderTiers(){
   el.innerHTML=h;
 }
 function updTier(i,field,val){if(!app.tiers[i])return;app.tiers[i][field]=parseFloat(val)||0;saveTiers();}
-function addTier(){var last=app.tiers[app.tiers.length-1];var newMin=last?last.max+0.01:0;app.tiers.push({id:uid(),min:newMin,max:newMin+9.99,nm:50,lp:40,mp:32,hp:20,dmg:12});saveTiers();renderTiers();}
-function delTier(id){app.tiers=app.tiers.filter(function(t){return t.id!==id;});saveTiers();renderTiers();toast('Tier removed.');}
+function addTier(){_snapshot();var last=app.tiers[app.tiers.length-1];var newMin=last?last.max+0.01:0;app.tiers.push({id:uid(),min:newMin,max:newMin+9.99,nm:50,lp:40,mp:32,hp:20,dmg:12});saveTiers();renderTiers();}
+function delTier(id){_snapshot();app.tiers=app.tiers.filter(function(t){return t.id!==id;});saveTiers();renderTiers();toast('Tier removed.');}
 
 function togCatalogPanel(){
   var inner=g('catalog-panel-inner'),icon=g('catalog-toggle-icon');if(!inner)return;
@@ -2698,7 +2761,7 @@ function renderCatalog(){
   });
   el.innerHTML=h;
 }
-function delCatCard(id){
+function delCatCard(id){_snapshot();
   if(!confirm('Remove this card from catalog?'))return;
   saveCatalog(app.catalog.filter(function(c){return c.id!==id;}));
   renderCatalog();toast('🗑 Removed from catalog.');
