@@ -420,9 +420,30 @@ button{cursor:pointer}a{text-decoration:none}
     <div id="chart-empty" style="text-align:center;color:var(--text3);padding:35px;font-size:13px">No snapshots yet.</div>
   </div>
   <div class="panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
       <div class="pt" style="margin:0">📺 Sales History</div>
-      <button class="btn" style="font-size:12px;padding:7px 14px;background:var(--purple-bg);color:var(--purple);border:1px solid #d946ef" onclick="recSale()">+ Record Sale</button>
+      <div class="row" style="gap:6px">
+        <button class="btn" style="font-size:12px;padding:6px 12px;background:var(--surface);border:1px solid var(--border);color:var(--text)" onclick="exportSalesSheet()">📊 Export</button>
+        <button class="btn" style="font-size:12px;padding:6px 12px;background:var(--purple-bg);color:var(--purple);border:1px solid #d946ef" onclick="recSale()">+ Record Sale</button>
+      </div>
+    </div>
+    <div class="tbar" style="margin-bottom:10px;gap:6px">
+      <input class="inp" id="sh-filter" placeholder="Search sales..." oninput="renderShows()" style="flex:1;font-size:12px"/>
+      <select class="sel" id="sh-sort" onchange="renderShows()" style="font-size:12px">
+        <option value="dd">Newest First</option>
+        <option value="da">Oldest First</option>
+        <option value="rd">Revenue High→Low</option>
+        <option value="nd">Net High→Low</option>
+        <option value="ch">By Channel</option>
+      </select>
+      <select class="sel" id="sh-ch-filter" onchange="renderShows()" style="font-size:12px">
+        <option value="">All Channels</option>
+        <option value="whatnot">📺 Whatnot</option>
+        <option value="vend">🏪 Vend</option>
+        <option value="direct">💬 Direct</option>
+        <option value="refund">↩️ Refund</option>
+        <option value="trade">🔄 Trade</option>
+      </select>
     </div>
     <div id="show-hist"></div>
   </div>
@@ -629,13 +650,13 @@ button{cursor:pointer}a{text-decoration:none}
 
 <!-- Trade modal -->
 <div class="overlay" id="trade-modal" style="display:none" onclick="if(event.target===this)closeTradeMod()">
-  <div class="modal" style="max-width:500px" onclick="event.stopPropagation()">
+  <div class="modal" style="max-width:640px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-weight:700;font-size:15px;color:var(--text)">🔄 Record Trade</div>
       <button onclick="closeTradeMod()" style="background:none;border:none;color:var(--red);font-size:21px;cursor:pointer">×</button>
     </div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Customer trades cards toward the purchase of one of your cards. Their cards go into your inventory; your card gets sold.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px">
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Customer trades their cards toward your cards. Multi-card trades supported — build both sides freely.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
       <div><div class="ml">Date</div><input class="inp full" id="trade-date" type="date"/></div>
       <div><div class="ml">Channel</div>
         <select class="inp full" id="trade-channel">
@@ -644,23 +665,55 @@ button{cursor:pointer}a{text-decoration:none}
         </select>
       </div>
     </div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
-      <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;color:var(--green)">📦 Your Card Sold</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-        <div><div class="ml">Card Name</div><input class="inp full" id="trade-out-name" placeholder="e.g. Roronoa Zoro SR"/></div>
-        <div><div class="ml">Sale Value ($)</div><input type="number" class="inp full" id="trade-out-val" placeholder="0.00" step="0.01" min="0" oninput="updTradeCalc()"/></div>
-        <div><div class="ml">Your Cost ($)</div><input type="number" class="inp full" id="trade-out-cost" placeholder="0.00" step="0.01" min="0" oninput="updTradeCalc()"/></div>
+    <!-- YOUR CARDS OUT -->
+    <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius);padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--green)">📦 Your Cards (Going Out)</div>
+        <span id="trade-out-total" style="font-weight:700;color:var(--green);font-size:13px">$0.00</span>
+      </div>
+      <div id="trade-out-rows"></div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button onclick="addTradeOutRow('inv')" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:600;cursor:pointer">+ From Sales Lane</button>
+        <button onclick="addTradeOutRow('manual')" style="padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;cursor:pointer">+ Manual</button>
       </div>
     </div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
-      <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;color:var(--blue)">📥 Their Cards (Trade-In)</div>
+    <!-- THEIR CARDS IN -->
+    <div style="background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--radius);padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--blue)">📥 Their Cards (Coming In)</div>
+        <span id="trade-in-total" style="font-weight:700;color:var(--blue);font-size:13px">$0.00</span>
+      </div>
       <div id="trade-in-rows"></div>
-      <button onclick="addTradeInRow()" style="margin-top:6px;padding:4px 10px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);font-size:12px;cursor:pointer;font-weight:600">+ Add Card</button>
+      <button onclick="addTradeInRow()" style="margin-top:8px;padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--blue);color:var(--blue);font-size:12px;font-weight:600;cursor:pointer">+ Add Card</button>
     </div>
-    <div id="trade-calc" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-size:13px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Your card value</span><span id="trade-c-out" style="color:var(--green);font-weight:600"></span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Trade-in value</span><span id="trade-c-in" style="color:var(--blue);font-weight:600"></span></div>
-      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span style="font-weight:700">Cash diff (you receive)</span><span id="trade-c-diff" style="font-weight:700;font-size:15px"></span></div>
+    <!-- CASH ADJUSTMENT -->
+    <div style="background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:var(--radius);padding:12px;margin-bottom:10px">
+      <div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--yellow);margin-bottom:8px">💵 Cash Adjustment</div>
+      <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;align-items:end">
+        <div>
+          <div class="ml">Direction</div>
+          <select class="inp" id="trade-cash-dir" style="font-size:12px" onchange="updTradeCalc()">
+            <option value="none">None</option>
+            <option value="in">Cash In (you receive)</option>
+            <option value="out">Cash Out (you pay)</option>
+          </select>
+        </div>
+        <div><div class="ml">Amount $</div><input type="number" class="pinp" id="trade-cash-amt" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updTradeCalc()"/></div>
+        <div><div class="ml">Via</div>
+          <select class="inp" id="trade-cash-via" style="font-size:12px">
+            <option value="cash">💵 Cash</option>
+            <option value="paypal">💳 PayPal</option>
+            <option value="bank">🏦 Bank</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <!-- CALC -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Your cards value</span><span id="trade-c-out" style="color:var(--green);font-weight:600">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Their cards value</span><span id="trade-c-in" style="color:var(--blue);font-weight:600">$0.00</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Cash adjustment</span><span id="trade-c-cash" style="color:var(--yellow);font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span style="font-weight:700">Net to you</span><span id="trade-c-diff" style="font-weight:700;font-size:15px">$0.00</span></div>
     </div>
     <div style="margin-bottom:12px"><div class="ml">Notes</div><textarea class="inp full" id="trade-notes" rows="2" placeholder="Optional..."></textarea></div>
     <div class="row">
@@ -669,6 +722,10 @@ button{cursor:pointer}a{text-decoration:none}
     </div>
   </div>
 </div>
+
+
+<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"
+  style="position:fixed;bottom:24px;left:20px;width:40px;height:40px;border-radius:50%;background:var(--text);color:#fff;border:none;font-size:18px;cursor:pointer;box-shadow:var(--shadow-md);display:none;z-index:997;line-height:1;transition:opacity .2s">↑</button>
 
 <div class="toast" id="toast"></div>
 <div class="sel-tooltip" id="sel-tooltip" style="display:none"></div>
@@ -2381,42 +2438,60 @@ function updTradeCalc(){
 }
 
 function confirmTrade(){_snapshot();
-  var outName=g('trade-out-name').value.trim();
-  var outVal=parseFloat(g('trade-out-val').value)||0;
-  var outCost=parseFloat(g('trade-out-cost').value)||0;
   var ch=g('trade-channel').value;
   var dateVal=g('trade-date').value;
-  if(!outName||!dateVal){toast('⚠️ Card name and date required.');return;}
+  if(!dateVal){toast('⚠️ Date required.');return;}
   var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
+  // Gather your cards going out
+  var tradeOuts=[];
+  document.querySelectorAll('[id^="to-val-"]').forEach(function(el){
+    var idx2=el.id.replace('to-val-','');
+    var nameEl=g('to-name-'+idx2),invEl=g('to-inv-'+idx2);
+    var name='',invId=null,val=parseFloat(el.value)||0;
+    if(invEl&&invEl.value){invId=invEl.value;var inv=app.inv.find(function(i){return i.id===invId;});if(inv)name=inv.name;}
+    else if(nameEl){name=nameEl.value.trim();}
+    if(name||invId)tradeOuts.push({name:name||'(unnamed)',val:val,invId:invId});
+  });
   // Gather trade-ins
   var tradeIns=[];
   document.querySelectorAll('[id^="ti-name-"]').forEach(function(el){
-    var idx=el.id.replace('ti-name-','');
-    var valEl=g('ti-val-'+idx);
+    var idx2=el.id.replace('ti-name-','');
+    var valEl=g('ti-val-'+idx2);
     var n=el.value.trim(),v=parseFloat(valEl?valEl.value:0)||0;
     if(n)tradeIns.push({name:n,value:v});
   });
-  if(!tradeIns.length){toast('⚠️ Add at least one trade-in card.');return;}
+  if(!tradeOuts.length||!tradeIns.length){toast('⚠️ Add at least one card on each side.');return;}
+  var outTotal=tradeOuts.reduce(function(s,t){return s+t.val;},0);
   var inTotal=tradeIns.reduce(function(s,t){return s+t.value;},0);
-  var diff=outVal-inTotal; // positive = cash you receive
-  // Add trade-ins to inventory as pending onhand
+  var cashDir=g('trade-cash-dir')?g('trade-cash-dir').value:'none';
+  var cashAmt=parseFloat(g('trade-cash-amt')?g('trade-cash-amt').value:0)||0;
+  var cashAdj=cashDir==='in'?cashAmt:cashDir==='out'?-cashAmt:0;
+  var cashVia=g('trade-cash-via')?g('trade-cash-via').value:'cash';
+  var net=outTotal-inTotal+cashAdj;
+  // Update wallets if cash involved
+  if(cashAdj!==0){
+    if(cashVia==='paypal'){fin.paypal=(fin.paypal||0)+cashAdj;if(g('f-pp'))g('f-pp').value=fin.paypal.toFixed(2);}
+    else if(cashVia==='bank'){fin.bank=(fin.bank||0)+cashAdj;if(g('f-bank'))g('f-bank').value=fin.bank.toFixed(2);}
+    else{fin.cash=(fin.cash||0)+cashAdj;if(g('f-cash'))g('f-cash').value=fin.cash.toFixed(2);}
+  }
+  // Remove sold inventory cards
+  var soldIds=tradeOuts.filter(function(t){return t.invId;}).map(function(t){return t.invId;});
+  if(soldIds.length)app.inv=app.inv.filter(function(i){return soldIds.indexOf(i.id)===-1;});
+  // Add trade-in cards to inventory as On Hand
   tradeIns.forEach(function(t){
-    app.inv.push({
-      id:uid(),catalogId:null,name:t.name,num:'',set:'',color:'',rarity:'',img:null,tcgId:null,
-      cond:'NM',qty:1,mkt:t.value,cost:0,perc:null,
-      seller:'Trade-In',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true
-    });
+    app.inv.push({id:uid(),catalogId:null,name:t.name,num:'',set:'',color:'',rarity:'',img:null,tcgId:null,
+      cond:'NM',qty:1,mkt:t.value,cost:0,perc:null,seller:'Trade-In',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true});
   });
-  // Record as sale in history
   if(!fin.shows)fin.shows=[];
   fin.shows.unshift({
     id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,
-    rev:outVal,ship:0,cogs:outCost,qty:1,net:outVal-outCost,pp:0,bank:0,cash:diff>0?diff:0,
-    notes:'TRADE — Your card: '+outName+' | Trade-ins: '+tradeIns.map(function(t){return t.name+'('+nm(t.value)+')';}).join(', '),
-    isTradeOut:true,tradeIns:tradeIns,tradeOutName:outName,tradeOutVal:outVal,tradeInTotal:inTotal,tradeDiff:diff
+    rev:outTotal,ship:0,cogs:0,qty:tradeOuts.length,net:net,
+    pp:cashVia==='paypal'?cashAdj:0,bank:cashVia==='bank'?cashAdj:0,cash:cashVia==='cash'?cashAdj:0,
+    notes:g('trade-notes').value.trim(),
+    isTradeOut:true,tradeOuts:tradeOuts,tradeIns:tradeIns,tradeOutVal:outTotal,tradeInTotal:inTotal,tradeDiff:net,cashAdj:cashAdj,cashDir:cashDir
   });
   saveFin();saveInv();stats();closeTradeMod();renderWhatnot();
-  toast('🔄 Trade recorded! Cash diff: '+nm(diff));
+  toast('🔄 Trade recorded! Net: '+nm(net));
 }
 
 
@@ -2627,27 +2702,47 @@ function saveShow(){_snapshot();
 function closeShowMod(){g('show-modal').style.display='none';}
 function renderShows(){
   var el=g('show-hist');if(!el)return;
-  var shows=fin.shows||[];
-  if(!shows.length){el.innerHTML='<div class="empty" style="padding:24px">No sales recorded yet.</div>';return;}
-  var totRev=0,totNet=0,totQty=0;shows.forEach(function(s){totRev+=s.rev||0;totNet+=s.net||0;totQty+=s.qty||0;});
+  var shows=(fin.shows||[]).slice();
+  // Filter
+  var flt=(g('sh-filter')&&g('sh-filter').value||'').toLowerCase();
+  var chFlt=(g('sh-ch-filter')&&g('sh-ch-filter').value)||'';
+  var srt=(g('sh-sort')&&g('sh-sort').value)||'dd';
+  if(flt)shows=shows.filter(function(s){return(s.notes||'').toLowerCase().includes(flt)||(s.date||'').includes(flt)||((s.tradeOutName||'').toLowerCase().includes(flt))||(s.cards||[]).some(function(card){return(card.name||'').toLowerCase().includes(flt);});});
+  if(chFlt)shows=shows.filter(function(s){return chFlt==='trade'?s.isTradeOut:s.channel===chFlt;});
+  // Sort
+  shows.sort(function(a,b){
+    if(srt==='dd')return(b.ts||0)-(a.ts||0);
+    if(srt==='da')return(a.ts||0)-(b.ts||0);
+    if(srt==='rd')return(b.rev||0)-(a.rev||0);
+    if(srt==='nd')return(b.net||0)-(a.net||0);
+    if(srt==='ch')return(a.channel||'').localeCompare(b.channel||'');
+    return 0;
+  });
+  // Summary stats (all shows, not filtered)
+  var allShows=fin.shows||[];
+  var totRev=0,totNet=0,totQty=0;allShows.forEach(function(s){totRev+=s.rev||0;totNet+=s.net||0;totQty+=s.qty||0;});
+  if(!allShows.length){el.innerHTML='<div class="empty" style="padding:24px">No sales recorded yet.</div>';return;}
   var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">';
-  h+='<div class="wstat"><div class="wstat-l">Sales</div><div class="wstat-v" style="color:var(--purple);font-size:18px">'+shows.length+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Sales</div><div class="wstat-v" style="color:var(--purple);font-size:18px">'+allShows.length+'</div></div>';
   h+='<div class="wstat"><div class="wstat-l">Total Revenue</div><div class="wstat-v" style="color:var(--green);font-size:18px">'+nm(totRev)+'</div></div>';
-  h+='<div class="wstat"><div class="wstat-l">Total Net</div><div class="wstat-v" style="color:'+(totNet>=0?'#f0c040':'#f87171')+';font-size:18px">'+nm(totNet)+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Total Net</div><div class="wstat-v" style="color:'+(totNet>=0?'var(--yellow)':'var(--red)')+';font-size:18px">'+nm(totNet)+'</div></div>';
   h+='<div class="wstat"><div class="wstat-l">Cards Sold</div><div class="wstat-v" style="color:var(--purple);font-size:18px">'+totQty+'</div></div></div>';
+  if(!shows.length){el.innerHTML=h+'<div class="empty" style="padding:20px">No results match filters.</div>';return;}
+  h+='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Showing '+shows.length+' of '+allShows.length+' records</div>';
+  var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct',refund:'↩️ Refund'};
   shows.forEach(function(s){
     var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):0;
-    var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct',refund:'↩️ Refund'};
-    h+='<div class="show-row"'+(s.isTradeOut?' style="border-color:var(--blue)"':s.channel==='refund'?' style="border-color:var(--red)"':'')+'>';
+    h+='<div class="show-row"'+(s.isTradeOut?' style="border-color:var(--blue)"':s.channel==='refund'?' style="border-color:var(--red)"':'')+'>'; 
     h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:var(--purple);font-size:11px">'+(s.isTradeOut?'🔄 Trade':(chLabels[s.channel]||'📺'))+'</div></div>';
-    h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:var(--purple);font-size:12px">'+s.date+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:var(--text);font-size:12px">'+s.date+'</div></div>';
     if(s.pp||s.bank||s.cash){var sp=[];if(s.pp)sp.push('💳'+nm(s.pp));if(s.bank)sp.push('🏦'+nm(s.bank));if(s.cash)sp.push('💵'+nm(s.cash));h+='<div style="font-size:10px;color:var(--text3);flex-basis:100%">Split: '+sp.join(' + ')+'</div>';}
     h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:var(--green)">'+nm(s.rev)+'</div></div>';
-    h+='<div class="show-stat"><div class="show-stat-l">Net</div><div class="show-stat-v" style="color:'+(s.net>=0?'#f0c040':'#f87171')+'">'+nm(s.net)+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Net</div><div class="show-stat-v" style="color:'+(s.net>=0?'var(--yellow)':'var(--red)')+'">'+nm(s.net)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Margin</div><div class="show-stat-v" style="color:var(--blue);font-size:14px">'+margin+'%</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Sold</div><div class="show-stat-v" style="font-size:14px">'+s.qty+'</div></div>';
     if(s.isTradeOut){
-      h+='<div style="font-size:11px;color:var(--blue);flex:1;min-width:100px">🔄 Out: '+s.tradeOutName+' ('+nm(s.tradeOutVal)+') | In: '+s.tradeIns.map(function(t){return t.name+'('+nm(t.value)+')';}).join(', ')+'</div>';
+      h+='<div style="font-size:11px;color:var(--blue);flex:1;min-width:100px">🔄 Out: '+(s.tradeOuts||[{name:s.tradeOutName,val:s.tradeOutVal}]).map(function(t){return t.name+'('+nm(t.val||t.salePrice||0)+')';}).join(', ')+'</div>';
+      h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">In: '+(s.tradeIns||[]).map(function(t){return t.name+'('+nm(t.value||0)+')';}).join(', ')+'</div>';
       if(s.tradeDiff!==0)h+='<div style="font-size:11px;font-weight:600;color:'+(s.tradeDiff>0?'var(--green)':'var(--red)')+'">Cash: '+nm(s.tradeDiff)+'</div>';
     } else {
       if(s.cards&&s.cards.length)h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">'+s.cards.map(function(card){return card.name+' ('+nm(card.salePrice)+')';}).join(', ')+'</div>';
@@ -2658,6 +2753,42 @@ function renderShows(){
   });
   el.innerHTML=h;
 }
+
+function exportSalesSheet(){
+  var shows=fin.shows||[];
+  var cols=['Date','Channel','Type','Revenue','Shipping','COGS','Net','Margin%','Cards Sold','PayPal','Bank','Cash','Cards Detail','Notes'];
+  var rows=[cols.map(function(x){return'"'+x+'"';}).join(',')];
+  shows.forEach(function(s){
+    var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):'0';
+    var type=s.isTradeOut?'Trade':(s.channel==='refund'?'Refund':'Sale');
+    var cardsDetail='';
+    if(s.isTradeOut){cardsDetail='OUT: '+(s.tradeOuts||[]).map(function(t){return t.name+'('+nm(t.val||0)+')';}).join('; ')+' | IN: '+(s.tradeIns||[]).map(function(t){return t.name+'('+nm(t.value||0)+')';}).join('; ');}
+    else if(s.cards&&s.cards.length){cardsDetail=s.cards.map(function(card){return card.name+'('+nm(card.salePrice||0)+')';}).join('; ');}
+    rows.push([
+      '"'+(s.date||'')+'"',
+      '"'+(s.channel||'')+'"',
+      '"'+type+'"',
+      (s.rev||0).toFixed(2),
+      (s.ship||0).toFixed(2),
+      (s.cogs||0).toFixed(2),
+      (s.net||0).toFixed(2),
+      margin,
+      s.qty||0,
+      (s.pp||0).toFixed(2),
+      (s.bank||0).toFixed(2),
+      (s.cash||0).toFixed(2),
+      '"'+cardsDetail.replace(/"/g,"'")+'"',
+      '"'+(s.notes||'').replace(/"/g,"'")+'"'
+    ].join(','));
+  });
+  var blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  var d=new Date();a.download='sales-history-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  toast('📊 Sales history exported!');
+}
+
 function delShow(id){_snapshot();if(!confirm('Delete this sale record?'))return;fin.shows=fin.shows.filter(function(s){return s.id!==id;});saveFin();renderShows();}
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
