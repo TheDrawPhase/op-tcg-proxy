@@ -733,9 +733,12 @@ function undoLast(){
   dbSave('inventory',app.inv);dbSave('offers',app.offers);
   dbSave('finances',fin);dbSave('custom_catalog',app.catalog);
   stats();_updUndoBtn();
-  var renders={buylist:renderOffer,offers:renderOffers,inventory:renderInv,whatnot:renderWhatnot,sellers:renderSellers,finance:updFin};
-  if(renders[app.tab])renders[app.tab]();
-  toast('\u21a9 Undone!');
+  // Re-render everything on current tab immediately
+  show(app.tab);
+  if(g('f-pp'))g('f-pp').value=fin.paypal||0;
+  if(g('f-bank'))g('f-bank').value=fin.bank||0;
+  if(g('f-cash'))g('f-cash').value=fin.cash||0;
+  toast('↩ Undone!');
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
