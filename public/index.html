@@ -5,130 +5,202 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>OP TCG Reseller</title>
 <style>
+/* ── Google Font import — TT Firs Neue not on CDN, use Archivo as close match with similar geometric grotesque feel ── */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400&family=Archivo+Narrow:wght@400;500;600;700&display=swap');
+
+/* ── Design tokens ── */
+:root{
+  --bg:#f5f4f0;
+  --bg2:#eeecea;
+  --bg3:#e6e4e0;
+  --surface:#ffffff;
+  --border:#d4d2ce;
+  --border2:#c8c6c2;
+  --text:#1a1917;
+  --text2:#4a4845;
+  --text3:#8a8885;
+  --accent:#e8352a;
+  --accent2:#c42d22;
+  --green:#1a7a4a;
+  --green-bg:#e8f5ee;
+  --yellow:#a06000;
+  --yellow-bg:#fef3e0;
+  --blue:#1a4a8a;
+  --blue-bg:#e8f0fb;
+  --purple:#5a3aaa;
+  --purple-bg:#f0eafa;
+  --red:#c42d22;
+  --red-bg:#fdecea;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 12px rgba(0,0,0,.1),0 2px 6px rgba(0,0,0,.06);
+  --radius:6px;
+  --radius-lg:10px;
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#0a0a12;color:#e2e8f0;font-size:15px;min-height:100vh}
+html{font-size:16px} /* 125% via 16px base vs previous ~13px effective */
+body{font-family:'Archivo',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:1rem;min-height:100vh;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font-family:inherit;outline:none}
 button{cursor:pointer}a{text-decoration:none}
 
-#header{background:linear-gradient(135deg,#1a1040,#0d0820);border-bottom:1px solid #2d2060;padding:13px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.htitle{font-weight:700;font-size:19px;color:#f0c040}.hsub{font-size:12px;color:#a78bfa}
+/* ── Header ── */
+#header{background:var(--surface);border-bottom:2px solid var(--text);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.htitle{font-weight:900;font-size:18px;color:var(--text);letter-spacing:-.3px;text-transform:uppercase}
+.hsub{font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.3px;text-transform:uppercase}
 .hright{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.stat{background:#1a1040;border-radius:8px;padding:6px 12px;text-align:center;min-width:78px}
-.stat-l{font-size:10px;color:#94a3b8}.stat-v{font-weight:700;font-size:14px}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:6px 14px;text-align:center;min-width:90px}
+.stat-l{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.stat-v{font-weight:700;font-size:15px;color:var(--text)}
 
-#tabs{display:flex;background:#0d0820;border-bottom:1px solid #2d2060;overflow-x:auto}
-.tab{padding:12px 16px;background:none;border:none;border-bottom:2px solid transparent;color:#94a3b8;font-size:13px;white-space:nowrap}
-.tab.on{color:#f0c040;border-bottom-color:#f0c040;font-weight:700}
+/* ── Tabs ── */
+#tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{padding:13px 18px;background:none;border:none;border-bottom:3px solid transparent;color:var(--text3);font-size:13px;font-weight:600;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;transition:color .15s}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
 
-#banner{background:#2d1500;border-bottom:1px solid #f0a040;padding:9px 18px;font-size:13px;color:#fbbf24;text-align:center;display:none}
-#banner button{background:none;border:none;color:#f0c040;font-weight:700;text-decoration:underline;cursor:pointer;font-size:13px}
+/* ── Banner ── */
+#banner{background:#fff8e6;border-bottom:1px solid #f0c040;padding:10px 20px;font-size:13px;color:#7a5000;text-align:center;display:none}
+#banner button{background:none;border:none;color:var(--accent);font-weight:700;text-decoration:underline;cursor:pointer;font-size:13px}
 
-.page{padding:16px;max-width:1280px;margin:0 auto;display:none}
+/* ── Pages & Panels ── */
+.page{padding:20px 24px;max-width:1800px;margin:0 auto;display:none}
 .page.on{display:block}
-.panel{background:#13102a;border-radius:10px;padding:16px;border:1px solid #2d2060;margin-bottom:14px}
-.pt{font-weight:700;color:#a78bfa;font-size:14px;margin-bottom:10px}
+.panel{background:var(--surface);border-radius:var(--radius-lg);padding:18px;border:1px solid var(--border);margin-bottom:16px;box-shadow:var(--shadow)}
+.pt{font-weight:700;color:var(--text);font-size:13px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
 
-/* ── Buylist two-column layout ── */
-#buylist-layout{display:grid;grid-template-columns:1fr 380px;gap:14px;align-items:start}
+/* ── Buylist layout ── */
+#buylist-layout{display:grid;grid-template-columns:1fr 400px;gap:16px;align-items:start}
 #buylist-left{min-width:0}
 #offer-sidebar{position:sticky;top:8px}
-@media(max-width:820px){#buylist-layout{grid-template-columns:1fr}#offer-sidebar{position:static}}
+@media(max-width:900px){#buylist-layout{grid-template-columns:1fr}#offer-sidebar{position:static}}
 
-/* Forms */
+/* ── Forms ── */
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.inp{padding:9px 12px;border-radius:7px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
+.inp{padding:9px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;transition:border-color .15s}
+.inp:focus{border-color:var(--text);outline:none}
 .inp.full{width:100%}
-.sel{padding:8px 11px;border-radius:7px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:13px}
-.btn{padding:8px 16px;border-radius:7px;border:none;font-weight:600;font-size:13px;color:#fff;background:#7c3aed}
-.btn:disabled{background:#4a2090}.btn-g{background:#059669}.btn-r{background:#7f1d1d;color:#fca5a5}
+.sel{padding:9px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px}
+.btn{padding:9px 18px;border-radius:var(--radius);border:none;font-weight:700;font-size:13px;color:#fff;background:var(--text);letter-spacing:.2px;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.4}
+.btn-g{background:var(--green)}
+.btn-r{background:var(--red);color:#fff}
 
-/* Bigger price/% inputs in offer rows */
-.pinp{padding:6px 9px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:14px;font-weight:600;-moz-appearance:textfield}
+/* ── Price inputs ── */
+.pinp{padding:7px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-weight:600;-moz-appearance:textfield;transition:border-color .15s}
 .pinp::-webkit-outer-spin-button,.pinp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.pinp:focus{border-color:#a78bfa;background:#1e1a50}
-.pinp.pp{color:#34d399}.pinp.pperc{color:#a78bfa;border-color:#5b2ecc;background:#160e38}.pinp.pcost{color:#f0c040}
+.pinp:focus{border-color:var(--text)}
+.pinp.pp{color:var(--green)}
+.pinp.pperc{color:var(--purple)}
+.pinp.pcost{color:var(--yellow)}
 
-/* Search */
-.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;margin-top:10px}
-.rcard{background:#1a1040;border:1px solid #3d2080;border-radius:8px;padding:7px;cursor:pointer;text-align:center;transition:border-color .15s}
-.rcard:hover{border-color:#a78bfa}
-.rcard img,.rcard .noimg{width:100%;border-radius:4px;margin-bottom:3px}
-.noimg{height:70px;background:#2d2060;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:9px}
-.rname{font-size:10px;font-weight:600;color:#e2e8f0;line-height:1.3}.rnum{font-size:9px;color:#7c6fcd;margin-top:1px}
-.rprice{font-size:10px;color:#34d399;font-weight:700;margin-top:2px}
+/* ── Search grid ── */
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px;cursor:pointer;text-align:center;transition:border-color .15s,box-shadow .15s}
+.rcard:hover{border-color:var(--text);box-shadow:var(--shadow-md)}
+.rcard img,.rcard .noimg{width:100%;border-radius:4px;margin-bottom:4px}
+.noimg{height:76px;background:var(--bg2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:9px}
+.rname{font-size:11px;font-weight:600;color:var(--text);line-height:1.3}
+.rnum{font-size:10px;color:var(--text3);margin-top:1px}
+.rprice{font-size:11px;color:var(--green);font-weight:700;margin-top:2px}
 
-/* Price table — flipped: Offer | Buy% | TCGPlayer | Condition */
-.ptbl{display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr;gap:2px;font-size:12px;margin-bottom:12px}
-.th{padding:5px 7px;background:#1a1040;color:#94a3b8;font-weight:600}
-.td{padding:5px 7px;background:#1a1640}
+/* ── Price table ── */
+.ptbl{display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr;gap:2px;font-size:13px;margin-bottom:14px}
+.th{padding:6px 8px;background:var(--bg2);color:var(--text3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+.td{padding:6px 8px;background:var(--surface);border-bottom:1px solid var(--border)}
 
-/* Offer rows in sidebar */
-.orow{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1a1640}
-.othumb{width:34px;border-radius:3px;flex-shrink:0}
-.othumb-blank{width:34px;height:47px;background:#2d2060;border-radius:3px;flex-shrink:0}
+/* ── Offer rows ── */
+.orow{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid var(--border)}
+.othumb{width:36px;border-radius:4px;flex-shrink:0}
+.othumb-blank{width:36px;height:50px;background:var(--bg2);border-radius:4px;flex-shrink:0}
 
-/* Inventory */
-.ilist{display:flex;flex-direction:column;gap:4px}
-.irow{display:flex;align-items:center;gap:10px;background:#13102a;border:1px solid #2d2060;border-radius:8px;padding:9px 13px;cursor:pointer;transition:border-color .15s}
-.irow:hover{border-color:#a78bfa}
-.ithumb{width:34px;height:47px;border-radius:3px;object-fit:cover;flex-shrink:0}
-.inoimg{width:34px;height:47px;background:#2d2060;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:#6b7280}
-.iname{flex:2;min-width:120px}.iname-m{font-weight:600;font-size:13px}.iname-s{font-size:10px;color:#7c6fcd}
+/* ── Inventory list ── */
+.ilist{display:flex;flex-direction:column;gap:2px}
+.irow{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 18px;cursor:pointer;transition:border-color .15s,background .15s}
+.irow:hover{border-color:var(--text);background:var(--bg)}
+.ithumb{width:44px;height:61px;border-radius:4px;object-fit:cover;flex-shrink:0}
+.inoimg{width:44px;height:61px;background:var(--bg2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)}
+.iname{flex:2;min-width:120px}
+.iname-m{font-weight:600;font-size:15px;color:var(--text)}
+.iname-s{font-size:12px;color:var(--text3);margin-top:2px}
 .iconds{flex:2;display:flex;flex-wrap:wrap;gap:3px}
-.icost{flex:1;font-size:12px;color:#f0c040;text-align:right;white-space:nowrap}
-.ival{flex:1;font-size:12px;color:#34d399;text-align:right;white-space:nowrap}
+.icost{flex:1;font-size:14px;color:var(--yellow);text-align:right;white-space:nowrap;font-weight:600}
+.ival{flex:1;font-size:14px;color:var(--green);text-align:right;white-space:nowrap;font-weight:600}
 
-/* Checkboxes for bulk actions */
-.chk{width:16px;height:16px;accent-color:#7c3aed;cursor:pointer;flex-shrink:0}
+/* ── Checkboxes ── */
+.chk{width:16px;height:16px;accent-color:var(--text);cursor:pointer;flex-shrink:0}
 
-/* Badges */
-.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
-.bp{background:#2d1a00;color:#f0a040}.bo{background:#0d2010;color:#34d399}.bs{background:#0d1a2d;color:#60a5fa}
-.bm{background:#2d0d0d;color:#f87171}.bw{background:#2d0d2d;color:#d946ef}
-.bpart{background:#1a2d00;color:#a0d040}.bcomp{background:#00261a;color:#34d399}
+/* ── Badges ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.2px;text-transform:uppercase}
+.bp{background:var(--yellow-bg);color:var(--yellow)}
+.bo{background:var(--green-bg);color:var(--green)}
+.bs{background:var(--blue-bg);color:var(--blue)}
+.bm{background:var(--red-bg);color:var(--red)}
+.bw{background:var(--purple-bg);color:var(--purple)}
+.bpart{background:#f0f4e8;color:#4a7020}
+.bcomp{background:var(--green-bg);color:var(--green)}
 
-.sbtn{padding:5px 9px;border-radius:4px;font-size:11px;font-weight:700;border:none;cursor:pointer}
-.sp{background:#2d1a00;color:#f0a040}.so{background:#0d2010;color:#34d399}.ss{background:#0d1a2d;color:#60a5fa}
-.sm{background:#2d0d0d;color:#f87171}.sw{background:#2d0d2d;color:#d946ef}
+/* ── Status buttons ── */
+.sbtn{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;border:none;cursor:pointer;letter-spacing:.2px;text-transform:uppercase}
+.sp{background:var(--yellow-bg);color:var(--yellow)}
+.so{background:var(--green-bg);color:var(--green)}
+.ss{background:var(--blue-bg);color:var(--blue)}
+.sm{background:var(--red-bg);color:var(--red)}
+.sw{background:var(--purple-bg);color:var(--purple)}
 
-.scard{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
-.scard:hover{border-color:#a78bfa}
-.pbar{background:#1a1040;border-radius:4px;height:5px;margin-top:7px;overflow:hidden}
-.pfill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#34d399)}
+/* ── Offer cards ── */
+.scard{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;box-shadow:var(--shadow)}
+.scard:hover{border-color:var(--text)}
+.pbar{background:var(--bg2);border-radius:4px;height:4px;margin-top:8px;overflow:hidden}
+.pfill{height:100%;border-radius:4px;background:var(--text)}
 
-.selcard{background:#13102a;border-radius:10px;border:1px solid #2d2060;padding:14px;margin-bottom:10px}
-.sfield{font-size:12px;color:#94a3b8;margin-bottom:3px}.sfield a{color:#60a5fa}
+/* ── Seller cards ── */
+.selcard{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.sfield{font-size:13px;color:var(--text2);margin-bottom:4px}
+.sfield a{color:var(--blue)}
 
-.wgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-.wstat{background:#1a1040;border:1px solid #2d2060;border-radius:10px;padding:14px;text-align:center}
-.wstat-l{font-size:11px;color:#94a3b8;margin-bottom:4px}.wstat-v{font-weight:700;font-size:21px}
+/* ── Finance / Whatnot stats ── */
+.wgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.wstat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;text-align:center;box-shadow:var(--shadow)}
+.wstat-l{font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.wstat-v{font-weight:700;font-size:22px;color:var(--text)}
 
-.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:12px;margin-bottom:20px}
-.fcard{background:#13102a;border:1px solid #2d2060;border-radius:10px;padding:16px}
-.fcard-t{font-size:12px;color:#94a3b8;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.finp{width:100%;padding:9px 12px;border-radius:6px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:15px;font-weight:700;text-align:right;margin-top:5px}
-.ftotal{background:linear-gradient(135deg,#1a1040,#0d0820);border:1px solid #7c3aed;border-radius:10px;padding:16px;text-align:center;margin-bottom:20px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
+.fcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow)}
+.fcard-t{font-size:11px;color:var(--text3);margin-bottom:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.finp{width:100%;padding:10px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:16px;font-weight:700;text-align:right;margin-top:6px}
+.finp:focus{border-color:var(--text);outline:none}
+.ftotal{background:var(--text);border-radius:var(--radius-lg);padding:18px;text-align:center;margin-bottom:22px;color:#fff}
 
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
-.modal{background:#13102a;border-radius:12px;border:1px solid #2d2060;padding:20px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
-.ml{font-size:11px;color:#94a3b8;margin-bottom:3px}
+/* ── Modals ── */
+.overlay{position:fixed;inset:0;background:rgba(26,25,23,.6);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:24px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-md)}
+.ml{font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
 
-.tier-row{display:flex;align-items:center;gap:5px;margin-bottom:8px;flex-wrap:wrap}
-.tinp{width:68px;padding:6px 7px;border-radius:5px;border:1px solid #3d2080;background:#1a1640;color:#e2e8f0;font-size:12px;text-align:center}
+/* ── Tiers ── */
+.tier-row{display:flex;align-items:center;gap:6px;margin-bottom:9px;flex-wrap:wrap}
+.tinp{width:72px;padding:7px 8px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;text-align:center}
 
-.sel-tooltip{position:fixed;z-index:200;background:#13102a;border:1px solid #7c3aed;border-radius:8px;padding:10px 14px;font-size:12px;min-width:180px;max-width:280px;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.7)}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #7c3aed;border-radius:8px;padding:10px 22px;font-size:13px;color:#e2e8f0;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.6);display:none;white-space:nowrap}
-.empty{text-align:center;color:#6b7280;padding:50px;font-size:13px}
-.tbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
-.hint{font-size:11px;color:#6b7280;margin-bottom:8px}.hint b{color:#a78bfa}
+/* ── Toast & Misc ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);border-radius:var(--radius);padding:11px 24px;font-size:13px;font-weight:600;color:#fff;z-index:999;box-shadow:var(--shadow-md);display:none;white-space:nowrap}
+.empty{text-align:center;color:var(--text3);padding:60px;font-size:14px}
+.tbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.hint{font-size:12px;color:var(--text3);margin-bottom:10px}
+.hint b{color:var(--text);font-weight:600}
 
-.show-row{background:#0d0820;border:1px solid #2d2060;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.show-stat{text-align:center;min-width:70px}.show-stat-l{font-size:10px;color:#94a3b8}.show-stat-v{font-weight:700;font-size:14px}
-.cat-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1640;font-size:12px}
+/* ── Sales history ── */
+.show-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.show-stat{text-align:center;min-width:75px}
+.show-stat-l{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.show-stat-v{font-weight:700;font-size:15px;color:var(--text)}
+.cat-row{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
 
-/* Bulk action bar */
-.bulk-bar{background:#1a1040;border:1px solid #7c3aed;border-radius:8px;padding:8px 12px;margin-bottom:10px;display:none;align-items:center;gap:8px;flex-wrap:wrap}
+/* ── Bulk bar ── */
+.bulk-bar{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:9px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;flex-wrap:wrap}
 .bulk-bar.on{display:flex}
+
+/* ── Sel tooltip ── */
+.sel-tooltip{position:fixed;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;font-size:13px;min-width:180px;max-width:280px;pointer-events:none;box-shadow:var(--shadow-md)}
 </style>
 </head>
 <body>
@@ -137,12 +209,12 @@ button{cursor:pointer}a{text-decoration:none}
   <div style="font-size:22px">🏴‍☠️</div>
   <div><div class="htitle">One Piece TCG Reseller</div><div class="hsub">Buylist &amp; Inventory Manager</div></div>
   <div class="hright">
-    <span id="sync-ui" style="font-size:11px;color:#94a3b8">☁️ Loading...</span>
+    <span id="sync-ui" style="font-size:11px;color:var(--text3);font-weight:500">☁️ Loading...</span>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <div class="stat"><div class="stat-l">Cards</div><div class="stat-v" id="s-cards" style="color:#a78bfa">0</div></div>
-      <div class="stat"><div class="stat-l">Cost</div><div class="stat-v" id="s-cost" style="color:#f0c040">$0.00</div></div>
-      <div class="stat"><div class="stat-l">Value</div><div class="stat-v" id="s-val" style="color:#34d399">$0.00</div></div>
-      <div class="stat"><div class="stat-l">Net Worth</div><div class="stat-v" id="s-net" style="color:#60a5fa">$0.00</div></div>
+      <div class="stat"><div class="stat-l">Cards</div><div class="stat-v" id="s-cards" style="color:var(--purple)">0</div></div>
+      <div class="stat"><div class="stat-l">Cost</div><div class="stat-v" id="s-cost" style="color:var(--yellow)">$0.00</div></div>
+      <div class="stat"><div class="stat-l">Value</div><div class="stat-v" id="s-val" style="color:var(--green)">$0.00</div></div>
+      <div class="stat"><div class="stat-l">Net Worth</div><div class="stat-v" id="s-net" style="color:var(--blue)">$0.00</div></div>
     </div>
   </div>
 </div>
@@ -167,8 +239,8 @@ button{cursor:pointer}a{text-decoration:none}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">
           <div class="pt" style="margin:0">🔍 Card Search</div>
           <div class="row" style="gap:6px">
-            <button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:12px;padding:6px 12px" onclick="openManualMod()">✏️ Manual Entry</button>
-            <span id="sess-badge" style="display:none;background:#1a1040;border:1px solid #7c3aed;border-radius:20px;padding:3px 10px;font-size:11px;color:#a78bfa"></span>
+            <button class="btn" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);font-size:12px;padding:7px 13px;font-weight:600" onclick="openManualMod()">✏️ Manual Entry</button>
+            <span id="sess-badge" style="display:none;background:var(--purple-bg);border:1px solid var(--purple);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--purple);font-weight:600"></span>
           </div>
         </div>
         <div class="hint">Search → pick card → Add to Offer. <b>Build your full list before saving.</b></div>
@@ -188,7 +260,7 @@ button{cursor:pointer}a{text-decoration:none}
           </select>
           <select class="sel" id="s-fset" onchange="applySort()" style="font-size:12px"><option value="">All Sets</option></select>
           <select class="sel" id="s-fcol" onchange="applySort()" style="font-size:12px"><option value="">All Colors</option></select>
-          <span id="s-count" style="font-size:11px;color:#6b7280"></span>
+          <span id="s-count" style="font-size:11px;color:var(--text3)"></span>
         </div>
         <div id="rgrid" class="rgrid"></div>
         <div id="rgrid" class="rgrid"></div>
@@ -200,9 +272,9 @@ button{cursor:pointer}a{text-decoration:none}
     <div id="offer-sidebar">
       <div id="offer-panel" class="panel" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div style="font-weight:700;color:#f0c040;font-size:14px">📋 Offer <span id="o-count" style="font-size:11px;color:#6b7280"></span></div>
+          <div style="font-weight:700;color:var(--text);font-size:14px">📋 Offer <span id="o-count" style="font-size:11px;color:var(--text3)"></span></div>
           <div class="row" style="gap:6px">
-            <span id="o-total" style="color:#34d399;font-weight:700;font-size:15px">$0.00</span>
+            <span id="o-total" style="color:var(--green);font-weight:700;font-size:16px">$0.00</span>
             <button class="btn btn-r" style="padding:3px 8px;font-size:11px" onclick="clearSess()">🗑</button>
           </div>
         </div>
@@ -215,17 +287,17 @@ button{cursor:pointer}a{text-decoration:none}
           <div id="new-sname-wrap" style="display:none"><input id="new-sname" class="inp" placeholder="Name..." style="width:110px;font-size:12px"/></div>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <div style="flex:1"><div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Ship $</div><input type="number" min="0" step="0.01" class="pinp pp" id="fee-ship" value="0" style="width:100%" oninput="calcOffer()"/></div>
-          <div style="flex:1"><div style="font-size:11px;color:#94a3b8;margin-bottom:2px">Other $</div><input type="number" min="0" step="0.01" class="pinp pp" id="fee-other" value="0" style="width:100%" oninput="calcOffer()"/></div>
+          <div style="flex:1"><div style="font-size:11px;color:var(--text3);margin-bottom:2px">Ship $</div><input type="number" min="0" step="0.01" class="pinp pp" id="fee-ship" value="0" style="width:100%" oninput="calcOffer()"/></div>
+          <div style="flex:1"><div style="font-size:11px;color:var(--text3);margin-bottom:2px">Other $</div><input type="number" min="0" step="0.01" class="pinp pp" id="fee-other" value="0" style="width:100%" oninput="calcOffer()"/></div>
         </div>
-        <div id="fee-note" style="font-size:10px;color:#6b7280;margin-bottom:8px"></div>
+        <div id="fee-note" style="font-size:10px;color:var(--text3);margin-bottom:8px"></div>
         <div id="o-rows"></div>
         <div class="row" style="margin-top:10px;gap:6px">
           <button class="btn btn-g" style="flex:1;padding:10px;font-size:12px" onclick="saveOffer()">✅ Save Offer</button>
           <button class="btn btn-r" style="padding:10px 12px;font-size:12px" onclick="clearSess()">Clear</button>
         </div>
       </div>
-      <div id="sidebar-empty" class="panel" style="text-align:center;color:#6b7280;font-size:12px;padding:24px">
+      <div id="sidebar-empty" class="panel" style="text-align:center;color:var(--text3);font-size:13px;padding:28px">
         <div style="font-size:28px;margin-bottom:8px">📋</div>
         Add cards to start an offer
       </div>
@@ -267,27 +339,27 @@ button{cursor:pointer}a{text-decoration:none}
       <option value="na">Name A→Z</option><option value="nd">Name Z→A</option>
     </select>
   </div>
-  <div id="inv-stats" style="font-size:12px;color:#94a3b8;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
+  <div id="inv-stats" style="font-size:12px;color:var(--text3);margin-bottom:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
   <!-- Bulk action bar -->
   <div class="bulk-bar" id="inv-bulk-bar">
-    <span id="inv-bulk-count" style="font-size:12px;color:#a78bfa;font-weight:700"></span>
+    <span id="inv-bulk-count" style="font-size:12px;color:var(--purple);font-weight:700"></span>
     <select class="sel" id="inv-bulk-status" style="font-size:12px">
       <option value="">Move to status...</option>
       <option value="pending">Pending</option><option value="onhand">On Hand</option>
       <option value="shipped">Shipped</option><option value="missing">Missing</option><option value="whatnot">Whatnot</option>
     </select>
     <button class="btn" style="font-size:12px;padding:5px 12px" onclick="bulkMoveInv()">Apply</button>
-    <button class="btn" style="font-size:12px;padding:5px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="bulkToWhatnot()">📺 → Whatnot</button>
-    <button class="btn" style="font-size:12px;padding:5px 10px;background:#1a1040;border:1px solid #2d2060;color:#6b7280" onclick="clearInvSel()">☐ Deselect</button>
+    <button class="btn" style="font-size:12px;padding:5px 12px;background:var(--green-bg);color:var(--green);border:1px solid var(--green)" onclick="bulkToWhatnot()">📺 → Whatnot</button>
+    <button class="btn" style="font-size:12px;padding:5px 10px;background:var(--bg2);border:1px solid var(--border);color:var(--text3)" onclick="clearInvSel()">☐ Deselect</button>
     <button class="btn btn-r" style="font-size:12px;padding:5px 10px" onclick="bulkDeleteInv()">🗑 Delete</button>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;padding:4px 13px;font-size:10px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.4px" id="inv-col-header">
+  <div style="display:flex;align-items:center;gap:10px;padding:4px 13px;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px" id="inv-col-header">
     <div style="width:16px;flex-shrink:0"></div>
     <div style="width:34px;flex-shrink:0"></div>
     <div style="flex:2;min-width:120px">Card</div>
     <div style="flex:2">Condition / Status</div>
-    <div style="flex:1;text-align:right;min-width:80px;color:#f0c040">Cost /ea · tot</div>
-    <div style="flex:1;text-align:right;min-width:80px;color:#34d399">Value /ea · tot</div>
+    <div style="flex:1;text-align:right;min-width:80px;color:var(--yellow)">Cost /ea · tot</div>
+    <div style="flex:1;text-align:right;min-width:80px;color:var(--green)">Value /ea · tot</div>
   </div>
   <div id="inv-list"></div>
 </div>
@@ -303,7 +375,7 @@ button{cursor:pointer}a{text-decoration:none}
       <option value="vd">Value High→Low</option><option value="va">Value Low→High</option>
       <option value="na">Name A→Z</option><option value="cd">Cost High→Low</option>
     </select>
-    <button class="btn" style="font-size:12px;padding:6px 12px;background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="recSale()">+ Record Sale</button>
+    <button class="btn" style="font-size:12px;padding:6px 12px;background:var(--green-bg);color:var(--green);border:1px solid var(--green)" onclick="recSale()">+ Record Sale</button>
   </div>
   <!-- 3 lanes -->
   <div id="wn-lanes" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px"></div>
@@ -321,13 +393,13 @@ button{cursor:pointer}a{text-decoration:none}
 <!-- FINANCES -->
 <div id="p-finance" class="page">
   <div class="ftotal">
-    <div style="font-size:12px;color:#a78bfa;margin-bottom:6px">💰 Total Business Net Worth</div>
-    <div id="f-net" style="font-size:36px;font-weight:700;color:#f0c040">$0.00</div>
-    <div id="f-break" style="font-size:11px;color:#94a3b8;margin-top:5px"></div>
+    <div style="font-size:12px;color:var(--purple);margin-bottom:6px">💰 Total Business Net Worth</div>
+    <div id="f-net" style="font-size:36px;font-weight:700;color:var(--yellow)">$0.00</div>
+    <div id="f-break" style="font-size:11px;color:var(--text3);margin-top:5px"></div>
     <button class="btn" style="margin-top:10px;font-size:12px;padding:7px 16px" onclick="snapshot()">📸 Save Snapshot</button>
   </div>
   <div class="fgrid">
-    <div class="fcard"><div class="fcard-t">📦 Inventory Value</div><div id="f-inv" style="font-size:26px;font-weight:700;color:#f0c040">$0.00</div><div id="f-inv-sub" style="font-size:11px;color:#94a3b8"></div></div>
+    <div class="fcard"><div class="fcard-t">📦 Inventory Value</div><div id="f-inv" style="font-size:26px;font-weight:700;color:var(--yellow)">$0.00</div><div id="f-inv-sub" style="font-size:11px;color:var(--text3)"></div></div>
     <div class="fcard"><div class="fcard-t">💳 PayPal</div><input type="number" class="finp" id="f-pp" value="0" step="0.01" min="0" oninput="saveFin();updFin()"/></div>
     <div class="fcard"><div class="fcard-t">🏦 Bank</div><input type="number" class="finp" id="f-bank" value="0" step="0.01" min="0" oninput="saveFin();updFin()"/></div>
     <div class="fcard"><div class="fcard-t">💵 Cash</div><input type="number" class="finp" id="f-cash" value="0" step="0.01" min="0" oninput="saveFin();updFin()"/></div>
@@ -343,12 +415,12 @@ button{cursor:pointer}a{text-decoration:none}
       </div>
     </div>
     <canvas id="chart" style="width:100%;height:200px;display:none"></canvas>
-    <div id="chart-empty" style="text-align:center;color:#6b7280;padding:35px;font-size:13px">No snapshots yet.</div>
+    <div id="chart-empty" style="text-align:center;color:var(--text3);padding:35px;font-size:13px">No snapshots yet.</div>
   </div>
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="pt" style="margin:0">📺 Sales History</div>
-      <button class="btn" style="font-size:12px;padding:7px 14px;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="recSale()">+ Record Sale</button>
+      <button class="btn" style="font-size:12px;padding:7px 14px;background:var(--purple-bg);color:var(--purple);border:1px solid #d946ef" onclick="recSale()">+ Record Sale</button>
     </div>
     <div id="show-hist"></div>
   </div>
@@ -360,40 +432,40 @@ button{cursor:pointer}a{text-decoration:none}
   <div style="max-width:560px;display:flex;flex-direction:column;gap:14px">
     <div class="panel">
       <div class="pt">🔑 RapidAPI Key (TCGgo)</div>
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:10px">Find at <a href="https://rapidapi.com/tcggopro/api/one-piece-tcg-prices/playground" target="_blank" style="color:#a78bfa">RapidAPI Playground ↗</a> — look for <b style="color:#e2e8f0">X-RapidAPI-Key</b></div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Find at <a href="https://rapidapi.com/tcggopro/api/one-piece-tcg-prices/playground" target="_blank" style="color:var(--purple)">RapidAPI Playground ↗</a> — look for <b style="color:var(--text)">X-RapidAPI-Key</b></div>
       <div class="row"><input type="password" class="inp" id="api-key-inp" placeholder="Paste key here..." style="flex:1"/><button class="btn" onclick="saveKey()">Save</button></div>
-      <div id="key-ok" style="margin-top:6px;font-size:12px;color:#34d399;display:none"></div>
+      <div id="key-ok" style="margin-top:6px;font-size:12px;color:var(--green);display:none"></div>
     </div>
     <div class="panel">
       <div class="pt">💾 Backup &amp; Restore</div>
       <div class="row" style="margin-bottom:12px">
         <button class="btn btn-g" onclick="exportBak()">📥 Export Backup</button>
-        <button class="btn" style="background:#0d2010;color:#34d399;border:1px solid #1a4030" onclick="exportSheet()">📊 Export Spreadsheet</button>
+        <button class="btn" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green)" onclick="exportSheet()">📊 Export Spreadsheet</button>
         <button class="btn" onclick="document.getElementById('bak-file').click()">📤 Import Backup</button>
         <input type="file" id="bak-file" accept=".json" style="display:none" onchange="importBak(this)"/>
       </div>
-      <div style="background:#0d0820;border-radius:8px;padding:10px;font-size:12px;color:#94a3b8">⚠️ <b style="color:#f0c040">Tip:</b> Export after every buying session.</div>
+      <div style="background:var(--bg2);border-radius:8px;padding:10px;font-size:12px;color:var(--text3)">⚠️ <b style="color:var(--yellow)">Tip:</b> Export after every buying session.</div>
       <div id="bak-status" style="margin-top:8px;font-size:12px"></div>
     </div>
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:0" onclick="togCatalogPanel()">
         <div class="pt" style="margin:0">📁 My Card Catalog</div>
-        <span id="catalog-toggle-icon" style="font-size:11px;color:#6b7280">▼ show</span>
+        <span id="catalog-toggle-icon" style="font-size:11px;color:var(--text3)">▼ show</span>
       </div>
       <div id="catalog-panel-inner" style="display:none;margin-top:12px">
-        <p style="font-size:13px;color:#94a3b8;margin-bottom:10px">Manually entered cards appear in search results. Click ✏️ to edit.</p>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:10px">Manually entered cards appear in search results. Click ✏️ to edit.</p>
         <input class="inp full" id="catalog-search" placeholder="Search catalog..." oninput="renderCatalog()" style="margin-bottom:10px;font-size:12px"/>
         <div id="catalog-list"></div>
       </div>
     </div>
     <div class="panel">
       <div class="pt">⚙️ Tiered Buy Percentages</div>
-      <p style="font-size:12px;color:#94a3b8;margin-bottom:10px">Set buy % based on card market price. First matching tier wins.</p>
-      <div style="display:grid;grid-template-columns:68px 68px 52px 52px 52px 52px 52px auto;gap:4px;font-size:11px;color:#94a3b8;margin-bottom:5px">
+      <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Set buy % based on card market price. First matching tier wins.</p>
+      <div style="display:grid;grid-template-columns:68px 68px 52px 52px 52px 52px 52px auto;gap:4px;font-size:11px;color:var(--text3);margin-bottom:5px">
         <div>Min($)</div><div>Max($)</div><div>NM%</div><div>LP%</div><div>MP%</div><div>HP%</div><div>DMG%</div><div></div>
       </div>
       <div id="tier-list"></div>
-      <button class="btn" style="margin-top:8px;font-size:12px;padding:6px 13px;background:#1a1640;color:#a78bfa;border:1px solid #3d2080" onclick="addTier()">+ Add Tier</button>
+      <button class="btn" style="margin-top:8px;font-size:12px;padding:6px 13px;background:var(--surface);color:var(--purple);border:1px solid var(--border)" onclick="addTier()">+ Add Tier</button>
     </div>
   </div>
 </div>
@@ -403,7 +475,7 @@ button{cursor:pointer}a{text-decoration:none}
 <!-- Seller modal -->
 <div class="overlay" id="sel-modal" style="display:none" onclick="if(event.target===this)closeSelMod()">
   <div class="modal" onclick="event.stopPropagation()">
-    <div style="font-weight:700;font-size:15px;color:#f0c040;margin-bottom:14px" id="sel-mod-title">Add Seller</div>
+    <div style="font-weight:700;font-size:15px;color:var(--yellow);margin-bottom:14px" id="sel-mod-title">Add Seller</div>
     <div style="margin-bottom:10px"><div class="ml">Name *</div><input class="inp full" id="sm-name" placeholder="Seller name"/></div>
     <div style="margin-bottom:10px"><div class="ml">Facebook Messenger</div><input class="inp full" id="sm-fb" placeholder="https://m.me/..."/></div>
     <div style="margin-bottom:10px"><div class="ml">Phone</div><input class="inp full" id="sm-ph" placeholder="+1 555 000-0000"/></div>
@@ -417,8 +489,8 @@ button{cursor:pointer}a{text-decoration:none}
 <div class="overlay" id="inv-modal" style="display:none" onclick="if(event.target===this)closeInvMod()">
   <div class="modal" style="max-width:580px" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-      <div id="inv-mod-title" style="font-weight:700;font-size:15px;color:#f0c040"></div>
-      <button onclick="closeInvMod()" style="background:none;border:none;color:#f87171;font-size:21px;line-height:1;cursor:pointer">×</button>
+      <div id="inv-mod-title" style="font-weight:700;font-size:15px;color:var(--text)"></div>
+      <button onclick="closeInvMod()" style="background:none;border:none;color:var(--red);font-size:21px;line-height:1;cursor:pointer">×</button>
     </div>
     <div id="inv-mod-content"></div>
   </div>
@@ -428,20 +500,20 @@ button{cursor:pointer}a{text-decoration:none}
 <div class="overlay" id="manual-modal" style="display:none">
   <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-weight:700;font-size:15px;color:#a78bfa">✏️ Manual Card Entry</div>
-      <button onclick="closeManualMod()" style="background:none;border:none;color:#f87171;font-size:21px;cursor:pointer">×</button>
+      <div style="font-weight:700;font-size:15px;color:var(--text)">✏️ Manual Card Entry</div>
+      <button onclick="closeManualMod()" style="background:none;border:none;color:var(--red);font-size:21px;cursor:pointer">×</button>
     </div>
     <!-- TCGPlayer paste-to-autofill -->
-    <div style="background:#0d0820;border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px">
-      <div style="color:#a78bfa;font-weight:700;margin-bottom:5px">🔗 Auto-fill from TCGPlayer URL</div>
-      <div style="color:#94a3b8;margin-bottom:7px">Paste a TCGPlayer One Piece card URL to auto-fill name &amp; set. You can also find it via the links below.</div>
+    <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;margin-bottom:16px;font-size:13px;border:1px solid var(--border)">
+      <div style="color:var(--text);font-weight:700;margin-bottom:6px">🔗 Auto-fill from TCGPlayer URL</div>
+      <div style="color:var(--text3);margin-bottom:8px">Paste a TCGPlayer One Piece card URL to auto-fill name &amp; set. You can also find it via the links below.</div>
       <div class="row">
         <input class="inp" id="me-tcg-url" placeholder="https://www.tcgplayer.com/product/..." style="flex:1;font-size:12px"/>
         <button class="btn" style="font-size:12px;padding:7px 12px" onclick="autofillTCG()">Fill</button>
       </div>
       <div class="row" style="margin-top:8px;gap:6px">
-        <a href="https://www.tcgplayer.com/categories/trading-and-collectible-card-games/one-piece-card-game/cards" target="_blank" class="btn" style="font-size:11px;padding:5px 10px;background:#1a3a2a;color:#34d399;border:1px solid #1a4030">TCGPlayer One Piece ↗</a>
-        <a href="https://www.ebay.com/sch/i.html?_nkw=one+piece+card+game&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" class="btn" style="font-size:11px;padding:5px 10px;background:#3a2a00;color:#f0c040;border:1px solid #4a3800">eBay Sold Listings ↗</a>
+        <a href="https://www.tcgplayer.com/categories/trading-and-collectible-card-games/one-piece-card-game/cards" target="_blank" class="btn" style="font-size:11px;padding:5px 10px;background:var(--green-bg);color:var(--green);border:1px solid var(--green)">TCGPlayer One Piece ↗</a>
+        <a href="https://www.ebay.com/sch/i.html?_nkw=one+piece+card+game&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" class="btn" style="font-size:11px;padding:5px 10px;background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow)">eBay Sold Listings ↗</a>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px">
@@ -465,7 +537,7 @@ button{cursor:pointer}a{text-decoration:none}
     <div class="row">
       <button class="btn" style="flex:1" onclick="manualToOffer()">+ Add to Offer</button>
       <button class="btn btn-g" style="flex:1" onclick="manualToInv()">+ Add to Inventory</button>
-      <button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080" onclick="saveManualCatalogOnly()">💾 Save to Catalog</button>
+      <button class="btn" style="background:var(--surface);color:var(--purple);border:1px solid var(--border)" onclick="saveManualCatalogOnly()">💾 Save to Catalog</button>
     </div>
   </div>
 </div>
@@ -473,7 +545,7 @@ button{cursor:pointer}a{text-decoration:none}
 <!-- Record Sale modal -->
 <div class="overlay" id="show-modal" style="display:none" onclick="if(event.target===this)closeShowMod()">
   <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
-    <div style="font-weight:700;font-size:15px;color:#d946ef;margin-bottom:14px">🏪 Record Sale</div>
+    <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:16px">🏪 Record Sale</div>
     <div style="margin-bottom:10px"><div class="ml">Channel</div>
       <select class="inp full" id="sh-channel" onchange="if(this.value==='whatnot'){var wc=0;app.inv.forEach(function(i){if(i.status==='whatnot')wc+=(i.cost||0)*i.qty;});if(wc>0&&g('sh-cogs'))g('sh-cogs').value=wc.toFixed(2);}else{if(g('sh-cogs'))g('sh-cogs').value='';}updShowCalc();">
         <option value="whatnot">📺 Whatnot Stream</option>
@@ -486,24 +558,24 @@ button{cursor:pointer}a{text-decoration:none}
     <div style="margin-bottom:10px"><div class="ml">Shipping Costs ($) — what you paid to ship</div><input type="number" class="inp full" id="sh-ship" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
     <div style="margin-bottom:10px"><div class="ml">Cards Sold (qty)</div><input type="number" class="inp full" id="sh-qty" placeholder="0" min="0"/></div>
     <div style="margin-bottom:10px"><div class="ml">Cost of Goods Sold ($) — what you paid for cards sold</div><input type="number" class="inp full" id="sh-cogs" placeholder="0.00" step="0.01" min="0" oninput="updShowCalc()"/></div>
-    <div id="sh-calc" style="background:#0d0820;border-radius:7px;padding:10px;font-size:12px;margin-bottom:10px;display:none">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:#94a3b8">Gross Revenue</span><span id="sh-c-rev" style="color:#34d399"></span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#94a3b8">- Shipping Costs</span><span id="sh-c-ship" style="color:#f87171"></span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:#94a3b8">- COGS</span><span id="sh-c-cogs" style="color:#f87171"></span></div>
-      <div style="display:flex;justify-content:space-between;border-top:1px solid #2d2060;padding-top:5px"><span style="font-weight:700">Net Revenue</span><span id="sh-c-net" style="font-weight:700;font-size:14px;color:#f0c040"></span></div>
+    <div id="sh-calc" style="background:var(--bg2);border-radius:var(--radius);padding:12px;font-size:13px;margin-bottom:12px;display:none;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--text3)">Gross Revenue</span><span id="sh-c-rev" style="color:var(--green)"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--text3)">- Shipping Costs</span><span id="sh-c-ship" style="color:var(--red)"></span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--text3)">- COGS</span><span id="sh-c-cogs" style="color:var(--red)"></span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:5px"><span style="font-weight:700">Net Revenue</span><span id="sh-c-net" style="font-weight:700;font-size:14px;color:var(--yellow)"></span></div>
     </div>
-    <div style="background:#0d0820;border-radius:7px;padding:10px;margin-bottom:10px;font-size:12px">
-      <div style="color:#a78bfa;font-weight:700;margin-bottom:7px">Split net revenue into:</div>
+    <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;margin-bottom:12px;font-size:13px;border:1px solid var(--border)">
+      <div style="color:var(--purple);font-weight:700;margin-bottom:7px">Split net revenue into:</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
         <div><div class="ml">💳 PayPal</div><input type="number" class="pinp pp" id="sh-pp" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
         <div><div class="ml">🏦 Bank</div><input type="number" class="pinp pp" id="sh-bank" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
         <div><div class="ml">💵 Cash</div><input type="number" class="pinp pp" id="sh-cash" placeholder="0.00" step="0.01" min="0" style="width:100%" oninput="updShowCalc()"/></div>
       </div>
-      <div id="sh-split-warn" style="font-size:11px;color:#f87171;margin-top:5px;display:none">⚠️ Split total doesn't match net revenue</div>
+      <div id="sh-split-warn" style="font-size:11px;color:var(--red);margin-top:5px;display:none">⚠️ Split total doesn't match net revenue</div>
     </div>
     <div style="margin-bottom:10px"><div class="ml">Notes</div><textarea class="inp full" id="sh-notes" rows="2"></textarea></div>
     <div class="row" style="margin-top:12px">
-      <button class="btn" style="flex:1;background:#2d0d2d;color:#d946ef;border:1px solid #d946ef" onclick="saveShow()">💾 Save Sale</button>
+      <button class="btn" style="flex:1;background:var(--purple-bg);color:var(--purple);border:1px solid #d946ef" onclick="saveShow()">💾 Save Sale</button>
       <button class="btn btn-r" onclick="closeShowMod()">Cancel</button>
     </div>
   </div>
@@ -651,7 +723,7 @@ function makeCatEntry(e){
 function syncUI(s){
   var e=g('sync-ui');if(!e)return;
   if(s==='sync'){e.textContent='🔄 Syncing...';e.style.color='#a78bfa';}
-  else if(s==='ok'){e.textContent='☁️ Synced';e.style.color='#34d399';}
+  else if(s==='ok'){e.textContent='☁️ Synced';e.style.color='var(--green)';}
   else{e.textContent='⚠️ Offline';e.style.color='#f0a040';}
 }
 
@@ -803,7 +875,7 @@ function sstat(h){var e=g('s-status');if(e)e.innerHTML=h;}
 
 async function search(){
   var raw=g('q').value.trim();if(!raw)return;
-  if(!app.key){sstat('<span style="color:#f87171;font-size:12px">Add your API key in ⚙️ Settings.</span>');return;}
+  if(!app.key){sstat('<span style="color:var(--red);font-size:12px">Add your API key in ⚙️ Settings.</span>');return;}
   var name=raw.replace(/\b(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc)\b/gi,'').replace(/\s+/g,' ').trim()||raw;
   var btn=g('sbtn');btn.disabled=true;btn.textContent='⏳';
   g('rgrid').innerHTML='';g('rgrid').style.display='';allRes=[];g('sort-bar').style.display='none';
@@ -823,14 +895,14 @@ async function search(){
       mktprice:x.mktprice||null};
   });
 
-  sstat('<span style="color:#a78bfa;font-size:12px">⏳ Searching'+(custom.length?' • 📁 '+custom.length+' catalog':'')+'...</span>');
+  sstat('<span style="color:var(--purple);font-size:12px">⏳ Searching'+(custom.length?' • 📁 '+custom.length+' catalog':'')+'...</span>');
 
   // Check cache
   if(searchCache[name]){
     var all2=searchCache[name];
     var merged0=customCards.concat(all2.filter(function(x){return!customCards.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.card_number===(x.card_number||'');});}));
     allRes=merged0;buildFilters(merged0);applySort();
-    sstat(custom.length?'<span style="color:#a78bfa;font-size:12px">📁 '+custom.length+' catalog</span>':'');
+    sstat(custom.length?'<span style="color:var(--purple);font-size:12px">📁 '+custom.length+' catalog</span>':'');
     btn.disabled=false;btn.textContent='Search';return;
   }
   try{
@@ -844,7 +916,7 @@ async function search(){
     var m1=customCards.concat(cards1.filter(function(x){return!customCards.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.card_number===(x.card_number||'');});}));
     allRes=m1;buildFilters(m1);applySort();
     if(totalPages>1){
-      sstat('<span style="color:#a78bfa;font-size:12px">⏳ Loading '+totalPages+' pages...</span>');
+      sstat('<span style="color:var(--purple);font-size:12px">⏳ Loading '+totalPages+' pages...</span>');
       var pages=[];for(var p2=2;p2<=totalPages;p2++)pages.push(p2);
       var rest=await Promise.all(pages.map(function(pg){
         return fetch(P+'/cards?search='+encodeURIComponent(name)+'&page='+pg+'&per_page=20')
@@ -863,9 +935,9 @@ async function search(){
     }else{
       searchCache[name]=cards1;
     }
-    sstat(custom.length?'<span style="color:#a78bfa;font-size:12px">📁 '+custom.length+' catalog</span>':'');
-    if(!allRes.length){sstat('<span style="color:#f87171;font-size:12px">No results for "'+name+'".</span>');g('sort-bar').style.display='none';}
-  }catch(e){sstat('<span style="color:#f87171;font-size:12px">Search failed: '+e.message+'</span>');}
+    sstat(custom.length?'<span style="color:var(--purple);font-size:12px">📁 '+custom.length+' catalog</span>':'');
+    if(!allRes.length){sstat('<span style="color:var(--red);font-size:12px">No results for "'+name+'".</span>');g('sort-bar').style.display='none';}
+  }catch(e){sstat('<span style="color:var(--red);font-size:12px">Search failed: '+e.message+'</span>');}
   btn.disabled=false;btn.textContent='Search';
 }
 
@@ -913,7 +985,7 @@ function renderResults(cards){
     if(card.isCustom)div.style.borderColor='#7c3aed';
     var img=card.image?'<img src="'+card.image+'" onerror="this.hidden=1" style="width:100%;border-radius:4px;margin-bottom:3px"/>':'<div class="noimg">No image</div>';
     div.innerHTML=img
-      +(card.isCustom?'<div style="font-size:9px;color:#a78bfa;font-weight:700;margin-bottom:2px">📁 Catalog</div>':'')
+      +(card.isCustom?'<div style="font-size:9px;color:var(--purple);font-weight:700;margin-bottom:2px">📁 Catalog</div>':'')
       +'<div class="rname">'+(card.name||card.name_numbered||'')+'</div>'
       +'<div class="rnum">'+(card.card_number||card.cardNumber||'')+'</div>'
       +'<div class="rnum">'+ep+'</div>'
@@ -962,39 +1034,39 @@ function renderSel(){
   var tcgHref=c.tcgplayer_id?(String(c.tcgplayer_id).startsWith('http')?c.tcgplayer_id:'https://www.tcgplayer.com/product/'+c.tcgplayer_id):null;
   var opts='';CONDS.forEach(function(cond){opts+='<option value="'+cond+'"'+(cond===app.selCond?' selected':'')+'>'+CF[cond]+'</option>';});
   var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-  h+='<button onclick="backToResults()" style="background:#1a1640;border:1px solid #3d2080;color:#a78bfa;border-radius:6px;padding:5px 10px;font-size:12px">← Results</button>';
-  h+='<button onclick="app.selCard=null;g(\'sel-panel\').style.display=\'none\'" style="background:none;border:none;color:#f87171;font-size:20px">×</button>';
+  h+='<button onclick="backToResults()" style="background:var(--surface);border:1px solid var(--border);color:var(--purple);border-radius:6px;padding:5px 10px;font-size:12px">← Results</button>';
+  h+='<button onclick="app.selCard=null;g(\'sel-panel\').style.display=\'none\'" style="background:none;border:none;color:var(--red);font-size:20px">×</button>';
   h+='</div><div style="display:flex;gap:14px;align-items:flex-start">';
-  h+=(c.image?'<img src="'+c.image+'" onerror="this.hidden=1" style="width:90px;border-radius:7px;flex-shrink:0"/>':'<div style="width:90px;height:126px;background:#2d2060;border-radius:7px;flex-shrink:0"></div>');
+  h+=(c.image?'<img src="'+c.image+'" onerror="this.hidden=1" style="width:90px;border-radius:7px;flex-shrink:0"/>':'<div style="width:90px;height:126px;background:var(--bg3);border-radius:7px;flex-shrink:0"></div>');
   h+='<div style="flex:1;min-width:0">';
-  h+='<div style="font-weight:700;font-size:15px;color:#f0c040;margin-bottom:2px">'+name+'</div>';
-  h+='<div style="color:#a78bfa;font-size:11px">'+ep+(ep&&cardNum?' • ':'')+cardNum+'</div>';
-  h+='<div style="color:#6b7280;font-size:11px;margin-bottom:8px">'+(c.rarity||'')+(c.rarity&&c.color?' • ':'')+( c.color||'')+'</div>';
+  h+='<div style="font-weight:700;font-size:15px;color:var(--yellow);margin-bottom:2px">'+name+'</div>';
+  h+='<div style="color:var(--purple);font-size:11px">'+ep+(ep&&cardNum?' • ':'')+cardNum+'</div>';
+  h+='<div style="color:var(--text3);font-size:11px;margin-bottom:8px">'+(c.rarity||'')+(c.rarity&&c.color?' • ':'')+( c.color||'')+'</div>';
   // Calculate default mkt/cost/perc for current condition
   var _selMkt=cardPrice(c,app.selCond);
   var _selPerc=nmPrice!=null?tieredPerc(nmPrice,app.selCond):null;
   var _selCost=_selMkt!=null&&_selPerc!=null?parseFloat((_selMkt*_selPerc/100).toFixed(2)):null;
   // Always show fresh calculated values — read from DOM at click time
-  if(nmPrice!=null)h+='<div style="font-size:13px;margin-bottom:8px">NM Market: <b style="color:#34d399">'+nm(nmPrice)+'</b></div>';
+  if(nmPrice!=null)h+='<div style="font-size:13px;margin-bottom:8px">NM Market: <b style="color:var(--green)">'+nm(nmPrice)+'</b></div>';
   h+='<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap">';
   h+='<select class="sel" style="font-size:12px" onchange="app.selCond=this.value;app._lastCond=null;renderSel()">'+opts+'</select>';
-  h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:#94a3b8">Qty</span><input id="sel-qty" type="number" class="pinp" style="width:52px;font-size:13px" min="1" value="'+app.selQty+'" oninput="app.selQty=Math.max(1,parseInt(this.value)||1)" onchange="app.selQty=Math.max(1,parseInt(this.value)||1)"/></div>';
+  h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Qty</span><input id="sel-qty" type="number" class="pinp" style="width:52px;font-size:13px" min="1" value="'+app.selQty+'" oninput="app.selQty=Math.max(1,parseInt(this.value)||1)" onchange="app.selQty=Math.max(1,parseInt(this.value)||1)"/></div>';
   h+='</div>';
   // Editable Mkt / Cost row
   h+='<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:8px;flex-wrap:wrap">';
-  h+='<div><div style="font-size:9px;color:#34d399;margin-bottom:2px">Value $</div>';
+  h+='<div><div style="font-size:9px;color:var(--green);margin-bottom:2px">Value $</div>';
   h+='<input type="number" step="0.01" min="0" id="sel-mkt" value="'+(app.selMkt!=null?app.selMkt:(_selMkt!=null?_selMkt:''))+'" placeholder="—" class="pinp pp" style="width:80px;font-size:13px" oninput="app.selMkt=parseFloat(this.value)||null;var cp=g(\'sel-cost\');if(cp&&app.selMkt&&app.selPerc)cp.value=parseFloat((app.selMkt*app.selPerc/100).toFixed(2));"/></div>';
-  h+='<div><div style="font-size:9px;color:#a78bfa;margin-bottom:2px">Buy %</div>';
+  h+='<div><div style="font-size:9px;color:var(--purple);margin-bottom:2px">Buy %</div>';
   h+='<input type="number" step="1" min="1" max="100" id="sel-perc" value="'+(_selPerc!=null?_selPerc:'')+'" placeholder="—" class="pinp pperc" style="width:60px;font-size:13px" oninput="app.selPerc=parseFloat(this.value)||null;var cc=g(\'sel-cost\');if(cc&&app.selMkt&&app.selPerc)cc.value=parseFloat((app.selMkt*app.selPerc/100).toFixed(2));"/></div>';
-  h+='<div><div style="font-size:9px;color:#f0c040;margin-bottom:2px">Cost $</div>';
+  h+='<div><div style="font-size:9px;color:var(--yellow);margin-bottom:2px">Cost $</div>';
   h+='<input type="number" step="0.01" min="0" id="sel-cost" value="'+(app.selCost!=null?app.selCost:(_selCost!=null?_selCost:''))+'" placeholder="—" class="pinp pcost" style="width:80px;font-size:13px" oninput="app.selCost=parseFloat(this.value)||null;if(app.selMkt&&app.selCost)app.selPerc=parseFloat((app.selCost/app.selMkt*100).toFixed(1));"/></div>';
   h+='</div>';
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
   h+='<button class="btn" onclick="addToSess()">+ Add to Offer</button>';
   h+='<button class="btn btn-g" onclick="addDirect()">+ Direct to Inv</button>';
-  if(tcgHref)h+='<a class="btn" style="background:#1a3a2a;color:#34d399;border:1px solid #1a4030;font-size:12px;padding:7px 10px" href="'+tcgHref+'" target="_blank">TCGPlayer ↗</a>';
-  h+='<a class="btn" style="background:#3a2a00;color:#f0c040;border:1px solid #4a3800;font-size:12px;padding:7px 10px" href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank">eBay Sold ↗</a>';
-  if(c.isCustom)h+='<button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:12px;padding:7px 10px" onclick="editCatalogById(\''+c.id+'\')">✏️ Edit</button>';
+  if(tcgHref)h+='<a class="btn" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green);font-size:12px;padding:7px 10px" href="'+tcgHref+'" target="_blank">TCGPlayer ↗</a>';
+  h+='<a class="btn" style="background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow);font-size:12px;padding:7px 10px" href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank">eBay Sold ↗</a>';
+  if(c.isCustom)h+='<button class="btn" style="background:var(--surface);color:var(--purple);border:1px solid var(--border);font-size:12px;padding:7px 10px" onclick="editCatalogById(\''+c.id+'\')">✏️ Edit</button>';
   h+='</div></div></div>';
   g('sel-content').innerHTML=h;
 }
@@ -1082,20 +1154,20 @@ function renderOffer(){
     var im=e.img?'<img class="othumb" src="'+e.img+'" onerror="this.hidden=1"/>':'<div class="othumb-blank"></div>';
     h+='<div class="orow">'+im+'<div style="flex:1;min-width:0">';
     h+='<div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.name+'</div>';
-    h+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:#94a3b8">';
+    h+='<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)">';
     h+='<span>'+(CF[e.cond]||e.cond)+'</span><span>×</span>';
     h+='<input type="number" min="1" value="'+e.qty+'" class="pinp" style="width:42px;font-size:12px;padding:3px 5px" onchange="updSessQty('+i+',this.value)"/>';
     h+='</div>';
     h+='<div style="display:flex;gap:4px;margin-top:5px;align-items:center;flex-wrap:wrap">';
-    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:#94a3b8">Mkt</span>';
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:var(--text3)">Mkt</span>';
     h+='<input type="number" step="0.01" min="0" value="'+(e.mkt!=null?e.mkt:'')+'" placeholder="—" class="pinp pp" style="width:62px" onchange="updSess('+i+',\'mkt\',this.value);recalc('+i+');renderOffer()"/></div>';
-    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:#a78bfa">Buy%</span>';
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:var(--purple)">Buy%</span>';
     h+='<input type="number" step="1" min="1" max="100" value="'+(e.perc!=null?e.perc:'')+'" placeholder="—" class="pinp pperc" style="width:52px" onchange="updSessPerc('+i+',this.value)"/></div>';
-    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:#f0c040">Offer</span>';
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:9px;color:var(--yellow)">Offer</span>';
     h+='<input type="number" step="0.01" min="0" value="'+(e.cost!=null?e.cost:'')+'" placeholder="—" class="pinp pcost" style="width:62px" onchange="updSessCost('+i+',this.value)"/></div>';
-    h+='<span style="font-size:10px;color:#a78bfa;white-space:nowrap">='+nm(e.cost!=null?e.cost*e.qty:null)+'</span>';
+    h+='<span style="font-size:10px;color:var(--purple);white-space:nowrap">='+nm(e.cost!=null?e.cost*e.qty:null)+'</span>';
     h+='</div></div>';
-    h+='<button onclick="rmSess(\''+e.id+'\')" style="background:none;border:none;color:#f87171;font-size:18px;cursor:pointer;flex-shrink:0;align-self:flex-start;padding-top:2px">×</button>';
+    h+='<button onclick="rmSess(\''+e.id+'\')" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;flex-shrink:0;align-self:flex-start;padding-top:2px">×</button>';
     h+='</div>';
   });
   g('o-rows').innerHTML=h;
@@ -1396,31 +1468,31 @@ function renderOffers(){
     var isOpen=expandedOffer===o.id;
     var mktTot=0;o.cards.forEach(function(c){mktTot+=(c.mkt||0)*c.qty;});
     var sb=rec===0?'<span class="badge bp">Pending</span>':rec<tot?'<span class="badge bpart">Partial</span>':'<span class="badge bcomp">Complete</span>';
-    h+='<div class="scard" style="'+(isOpen?'border-color:#7c3aed':'')+'">';
+    h+='<div class="scard" style="'+(isOpen?'border-color:var(--border2)':'')+'">';
     h+='<div data-oid="'+o.id+'" onclick="openOffer(this.dataset.oid)" style="cursor:pointer;padding-bottom:4px">';
     h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">';
-    h+='<div><span style="color:#f0c040;font-weight:700;font-size:14px">🏴‍☠️ '+o.seller+'</span><div style="font-size:11px;color:#94a3b8">'+o.date+'</div></div>';
+    h+='<div><span style="color:var(--yellow);font-weight:700;font-size:14px">🏴‍☠️ '+o.seller+'</span><div style="font-size:11px;color:var(--text3)">'+o.date+'</div></div>';
     h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">';
-    h+='<button onclick="event.stopPropagation();delOffer(\''+o.id+'\')" style="background:#3f0f0f;border:none;color:#f87171;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>';
+    h+='<button onclick="event.stopPropagation();delOffer(\''+o.id+'\')" style="background:var(--red-bg);border:none;color:var(--red);border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>';
     h+=sb;
-    h+='<div style="font-size:11px;color:#34d399;font-weight:600">Value: '+nm(mktTot)+'</div>';
-    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:#f0c040">Paid:</span>';
+    h+='<div style="font-size:11px;color:var(--green);font-weight:600">Value: '+nm(mktTot)+'</div>';
+    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--yellow)">Paid:</span>';
     h+='<input type="number" step="0.01" min="0" value="'+o.total.toFixed(2)+'" class="pinp pcost" style="width:72px;font-size:12px" onclick="event.stopPropagation()" data-oid="'+o.id+'" onchange="updOfferTotal(this.dataset.oid,this.value)"/></div>';
     h+='</div></div>';
-    h+='<div style="font-size:11px;color:#94a3b8;margin-top:4px">'+tot+' cards';
-    h+=' • <span style="color:#34d399">Mkt: '+nm(mktTot)+'</span>';
-    h+=' • <span style="color:#f0c040">Paid: '+nm(o.ct)+'</span>';
+    h+='<div style="font-size:11px;color:var(--text3);margin-top:4px">'+tot+' cards';
+    h+=' • <span style="color:var(--green)">Mkt: '+nm(mktTot)+'</span>';
+    h+=' • <span style="color:var(--yellow)">Paid: '+nm(o.ct)+'</span>';
     if(o.ship>0)h+=' • Ship: '+nm(o.ship);
-    if(mis)h+=' • <span style="color:#f87171">'+mis+' missing</span>';
+    if(mis)h+=' • <span style="color:var(--red)">'+mis+' missing</span>';
     h+='</div>';
     h+='<div class="pbar" style="margin-top:6px;display:flex;overflow:hidden">';
-    h+='<div style="width:'+pctOH+'%;background:#059669;height:5px"></div>';
-    h+='<div style="width:'+pctSH+'%;background:#3b82f6;height:5px"></div>';
-    h+='<div style="width:'+pctMS+'%;background:#ef4444;height:5px"></div></div>';
-    h+='<div style="font-size:10px;color:#6b7280;margin-top:3px">'+rec+'/'+tot+' received ('+pct+'%) '+(isOpen?'▲ collapse':'▼ expand')+'</div>';
+    h+='<div style="width:'+pctOH+'%;background:var(--green);height:5px"></div>';
+    h+='<div style="width:'+pctSH+'%;background:var(--blue);height:5px"></div>';
+    h+='<div style="width:'+pctMS+'%;background:var(--red);height:5px"></div></div>';
+    h+='<div style="font-size:10px;color:var(--text3);margin-top:3px">'+rec+'/'+tot+' received ('+pct+'%) '+(isOpen?'▲ collapse':'▼ expand')+'</div>';
     h+='</div>'; // end clickable header
     if(isOpen){
-      h+='<div id="odetail-'+o.id+'" style="margin-top:12px;border-top:1px solid #2d2060;padding-top:12px">';
+      h+='<div id="odetail-'+o.id+'" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">';
       h+=buildOfferDetailHTML(o);
       h+='</div>';
     }
@@ -1443,9 +1515,9 @@ function buildOfferDetailHTML(o){
   var sel2=app.sellers.find(function(s){return String(s.id)===String(o.sellerId);})||null;
   var sh='';
   if(sel2&&(sel2.fb||sel2.ph||sel2.addr||sel2.notes)){
-    sh='<div style="background:#0d0820;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px">';
-    sh+='<div style="font-weight:600;color:#a78bfa;margin-bottom:5px">Seller Contact</div>';
-    if(sel2.fb)sh+='<div class="sfield">💬 <a href="'+sel2.fb+'" target="_blank" style="color:#60a5fa">Facebook Messenger</a></div>';
+    sh='<div style="background:var(--bg2);border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px">';
+    sh+='<div style="font-weight:600;color:var(--purple);margin-bottom:5px">Seller Contact</div>';
+    if(sel2.fb)sh+='<div class="sfield">💬 <a href="'+sel2.fb+'" target="_blank" style="color:var(--blue)">Facebook Messenger</a></div>';
     if(sel2.ph)sh+='<div class="sfield">📞 '+sel2.ph+'</div>';
     if(sel2.addr)sh+='<div class="sfield">📍 '+sel2.addr+'</div>';
     if(sel2.notes)sh+='<div class="sfield">📝 '+sel2.notes+'</div>';
@@ -1453,9 +1525,9 @@ function buildOfferDetailHTML(o){
   }
   // Bulk controls
   var bh='<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-wrap:wrap">';
-  bh+='<span style="font-size:11px;color:#94a3b8;font-weight:600">Bulk:</span>';
-  bh+='<button onclick="offerCheckAll(\''+o.id+'\')" style="padding:4px 10px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">☑ All</button>';
-  bh+='<button onclick="offerUncheckAll(\''+o.id+'\')" style="padding:4px 10px;border-radius:4px;background:#1a1040;border:1px solid #2d2060;color:#6b7280;font-size:11px;cursor:pointer">☐ None</button>';
+  bh+='<span style="font-size:11px;color:var(--text3);font-weight:600">Bulk:</span>';
+  bh+='<button onclick="offerCheckAll(\''+o.id+'\')" style="padding:4px 10px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);color:var(--purple);font-size:11px;cursor:pointer">☑ All</button>';
+  bh+='<button onclick="offerUncheckAll(\''+o.id+'\')" style="padding:4px 10px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);color:var(--text3);font-size:11px;cursor:pointer">☐ None</button>';
   bh+='<select id="bulk-status-'+o.id+'" class="sel" style="font-size:12px;padding:5px 8px"><option value="">— Move to —</option>';
   SCYC.forEach(function(s){bh+='<option value="'+s+'">'+SL[s]+'</option>';});
   bh+='</select>';
@@ -1472,23 +1544,23 @@ function buildOfferDetailHTML(o){
     ch+=card.img?'<img class="othumb" src="'+card.img+'" onerror="this.hidden=1"/>':'<div class="othumb-blank"></div>';
     ch+='<div style="flex:1;min-width:0">';
     ch+='<div style="font-weight:600;font-size:12px">'+card.name+'</div>';
-    ch+='<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#94a3b8">';
+    ch+='<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3)">';
     ch+='<span>'+(card.num||'')+' • '+(CF[card.cond]||card.cond)+' ×</span>';
     ch+='<input type="number" min="1" value="'+card.qty+'" class="pinp" style="width:42px;font-size:12px;padding:2px 5px" onchange="editCard(\''+o.id+'\','+i+',\'qty\',this.value)"/></div>';
     ch+='<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;align-items:flex-end">';
-    ch+='<div><div style="font-size:9px;color:#94a3b8;margin-bottom:2px">Mkt $</div><input type="number" step="0.01" min="0" value="'+(card.mkt!=null?card.mkt:'')+'" placeholder="—" class="pinp pp" style="width:68px" onchange="editCard(\''+o.id+'\','+i+',\'mkt\',this.value)"/></div>';
-    ch+='<div><div style="font-size:9px;color:#a78bfa;margin-bottom:2px">Buy%</div><input type="number" min="1" max="100" value="'+(card.perc||'')+'" placeholder="—" class="pinp pperc" style="width:58px" onchange="editCard(\''+o.id+'\','+i+',\'perc\',this.value)"/></div>';
-    ch+='<div><div style="font-size:9px;color:#f0c040;margin-bottom:2px">Offer $</div><input type="number" step="0.01" min="0" value="'+(card.cost!=null?card.cost:'')+'" placeholder="—" class="pinp pcost" style="width:68px" onchange="editCard(\''+o.id+'\','+i+',\'cost\',this.value)"/></div>';
-    ch+='<span style="font-size:11px;color:#a78bfa;white-space:nowrap;padding-bottom:2px">='+nm(card.cost!=null?card.cost*card.qty:null)+'</span>';
-    if(card.tcgId){var tcgH=String(card.tcgId).startsWith('http')?card.tcgId:'https://www.tcgplayer.com/product/'+card.tcgId;ch+='<a href="'+tcgH+'" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px;align-self:flex-end">TCG ↗</a>';}
-    ch+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:10px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 5px;align-self:flex-end">eBay ↗</a>';
+    ch+='<div><div style="font-size:9px;color:var(--text3);margin-bottom:2px">Mkt $</div><input type="number" step="0.01" min="0" value="'+(card.mkt!=null?card.mkt:'')+'" placeholder="—" class="pinp pp" style="width:68px" onchange="editCard(\''+o.id+'\','+i+',\'mkt\',this.value)"/></div>';
+    ch+='<div><div style="font-size:9px;color:var(--purple);margin-bottom:2px">Buy%</div><input type="number" min="1" max="100" value="'+(card.perc||'')+'" placeholder="—" class="pinp pperc" style="width:58px" onchange="editCard(\''+o.id+'\','+i+',\'perc\',this.value)"/></div>';
+    ch+='<div><div style="font-size:9px;color:var(--yellow);margin-bottom:2px">Offer $</div><input type="number" step="0.01" min="0" value="'+(card.cost!=null?card.cost:'')+'" placeholder="—" class="pinp pcost" style="width:68px" onchange="editCard(\''+o.id+'\','+i+',\'cost\',this.value)"/></div>';
+    ch+='<span style="font-size:11px;color:var(--purple);white-space:nowrap;padding-bottom:2px">='+nm(card.cost!=null?card.cost*card.qty:null)+'</span>';
+    if(card.tcgId){var tcgH=String(card.tcgId).startsWith('http')?card.tcgId:'https://www.tcgplayer.com/product/'+card.tcgId;ch+='<a href="'+tcgH+'" target="_blank" style="font-size:10px;color:var(--green);border:1px solid var(--green);border-radius:3px;padding:1px 5px;align-self:flex-end">TCG ↗</a>';}
+    ch+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:10px;color:var(--yellow);border:1px solid var(--yellow);border-radius:3px;padding:1px 5px;align-self:flex-end">eBay ↗</a>';
     ch+='</div></div>';
     ch+='<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0">';
     ch+='<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:flex-end">'+sbtns+'</div>';
     // Show → Inv button only if this card is NOT currently in inventory
     var _inInv=app.inv.some(function(iv){return String(iv.offerId)===String(o.id)&&iv.name===card.name&&iv.cond===card.cond;});
-    if(!_inInv)ch+='<button onclick="restoreCardToInv(\''+o.id+'\','+i+')" style="padding:2px 8px;border-radius:4px;background:#0d2010;border:1px solid #1a4030;color:#34d399;font-size:10px;cursor:pointer;margin-top:2px">→ Inv</button>';
-    ch+='<button onclick="rmCard(\''+o.id+'\','+i+')" style="padding:2px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer;margin-top:2px">✕</button>';
+    if(!_inInv)ch+='<button onclick="restoreCardToInv(\''+o.id+'\','+i+')" style="padding:2px 8px;border-radius:4px;background:var(--green-bg);border:1px solid var(--green);color:var(--green);font-size:10px;cursor:pointer;margin-top:2px">→ Inv</button>';
+    ch+='<button onclick="rmCard(\''+o.id+'\','+i+')" style="padding:2px 8px;border-radius:4px;background:var(--red-bg);border:none;color:var(--red);font-size:10px;cursor:pointer;margin-top:2px">✕</button>';
     ch+='</div></div>';
   });
   // Summary row
@@ -1500,32 +1572,32 @@ function buildOfferDetailHTML(o){
   h+='<button class="btn btn-r" style="font-size:12px;padding:6px 10px" onclick="delOffer(\''+o.id+'\')">🗑 Delete</button>';
   h+='</div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
-  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Seller</div>';
+  h+='<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Seller</div>';
   h+='<select class="sel" style="width:100%;font-size:12px" onchange="updOfferSeller(\''+o.id+'\',this.value)">';
   h+='<option value="__ip__"'+(o.seller==='In Person / Vending'?' selected':'')+'>🏪 In Person</option>';
   app.sellers.forEach(function(s){h+='<option value="'+s.id+'"'+(String(o.sellerId)===String(s.id)?' selected':'')+'>'+s.name+'</option>';});
   h+='</select></div>';
-  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Ship $</div><input type="number" step="0.01" min="0" value="'+o.ship.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'ship\',this.value)"/></div>';
-  h+='<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px">Other $</div><input type="number" step="0.01" min="0" value="'+o.other.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'other\',this.value)"/></div>';
+  h+='<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Ship $</div><input type="number" step="0.01" min="0" value="'+o.ship.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'ship\',this.value)"/></div>';
+  h+='<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Other $</div><input type="number" step="0.01" min="0" value="'+o.other.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'other\',this.value)"/></div>';
   h+='</div>';
   h+=sh;
   h+='<div class="row" style="margin-bottom:8px;font-size:13px;flex-wrap:wrap;gap:10px">';
-  h+='<span>Value: <b style="color:#34d399">'+nm(mktTot)+'</b></span>';
-  h+='<span>Paid: <b style="color:#f0c040">'+nm(o.ct)+'</b></span>';
-  if(avgPerc!=null)h+='<span>Avg Buy: <b style="color:#a78bfa">'+avgPerc+'%</b></span>';
-  h+='<span style="color:#94a3b8">Ship: <b>'+nm(o.ship)+'</b></span>';
-  h+='<span style="color:#94a3b8">Other: <b>'+nm(o.other)+'</b></span>';
-  h+='<span>Total Cost: <b style="color:#f0c040">'+nm(o.total)+'</b></span>';
+  h+='<span>Value: <b style="color:var(--green)">'+nm(mktTot)+'</b></span>';
+  h+='<span>Paid: <b style="color:var(--yellow)">'+nm(o.ct)+'</b></span>';
+  if(avgPerc!=null)h+='<span>Avg Buy: <b style="color:var(--purple)">'+avgPerc+'%</b></span>';
+  h+='<span style="color:var(--text3)">Ship: <b>'+nm(o.ship)+'</b></span>';
+  h+='<span style="color:var(--text3)">Other: <b>'+nm(o.other)+'</b></span>';
+  h+='<span>Total Cost: <b style="color:var(--yellow)">'+nm(o.total)+'</b></span>';
   h+='</div>';
   var oh_n=o.cards.filter(function(c){return c.status==='onhand';}).length;
   var sh_n=o.cards.filter(function(c){return c.status==='shipped';}).length;
   var ms_n=o.cards.filter(function(c){return c.status==='missing';}).length;
   var tot2=o.cards.length;
   h+='<div class="pbar" style="display:flex;overflow:hidden">';
-  h+='<div style="width:'+(tot2?Math.round(oh_n/tot2*100):0)+'%;background:#059669;height:5px"></div>';
-  h+='<div style="width:'+(tot2?Math.round(sh_n/tot2*100):0)+'%;background:#3b82f6;height:5px"></div>';
-  h+='<div style="width:'+(tot2?Math.round(ms_n/tot2*100):0)+'%;background:#ef4444;height:5px"></div></div>';
-  h+='<div style="font-size:11px;color:#6b7280;margin-bottom:10px">'+rec+'/'+tot+' received • '+mis+' missing</div>';
+  h+='<div style="width:'+(tot2?Math.round(oh_n/tot2*100):0)+'%;background:var(--green);height:5px"></div>';
+  h+='<div style="width:'+(tot2?Math.round(sh_n/tot2*100):0)+'%;background:var(--blue);height:5px"></div>';
+  h+='<div style="width:'+(tot2?Math.round(ms_n/tot2*100):0)+'%;background:var(--red);height:5px"></div></div>';
+  h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">'+rec+'/'+tot+' received • '+mis+' missing</div>';
   return h+bh+ch;
 }
 
@@ -1685,7 +1757,7 @@ function pdfOffer(id){
       +'<td style="padding:7px 5px;font-size:12px;text-align:center">'+c.qty+'</td>'
       +'<td style="padding:7px 5px;font-size:12px;text-align:right">'+nm(c.mkt)+'</td>'
       +'<td style="padding:7px 5px;font-size:12px;text-align:right;font-weight:700">'+nm(c.cost)+'</td>'
-      +'<td style="padding:7px 5px;font-size:12px;text-align:right;color:#059669;font-weight:700">'+nm(c.cost!=null?c.cost*c.qty:null)+'</td></tr>';
+      +'<td style="padding:7px 5px;font-size:12px;text-align:right;color:var(--green);font-weight:700">'+nm(c.cost!=null?c.cost*c.qty:null)+'</td></tr>';
   });
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offer Sheet</title>'
     +'<style>body{font-family:Arial,sans-serif;margin:0;padding:28px;color:#111;font-size:13px}'
@@ -1700,7 +1772,7 @@ function pdfOffer(id){
     +'<div class="tots"><div class="tr"><span style="color:#555">Cards:</span><span>'+nm(o.ct)+'</span></div>';
   if(o.ship>0)html+='<div class="tr"><span style="color:#555">Shipping:</span><span>'+nm(o.ship)+'</span></div>';
   if(o.other>0)html+='<div class="tr"><span style="color:#555">Other:</span><span>'+nm(o.other)+'</span></div>';
-  html+='<div class="tr gr"><span>Total:</span><span style="color:#059669">'+nm(o.total)+'</span></div></div></body></html>';
+  html+='<div class="tr gr"><span>Total:</span><span style="color:var(--green)">'+nm(o.total)+'</span></div></div></body></html>';
   var w=window.open('','_blank');w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},500);
 }
 
@@ -1746,14 +1818,14 @@ function renderInv(){
   var tc=0,tv=0;app.inv.forEach(function(i){tc+=(i.cost||0)*i.qty;tv+=(i.mkt||0)*i.qty;});
   function byS(s){return app.inv.filter(function(i){return i.status===s;}).length;}
   g('inv-stats').innerHTML='<span>'+ga.length+' unique • '+filtered.length+' entries</span>'
-    +'<span style="color:#f0c040">Cost: '+nm(tc)+'</span><span style="color:#34d399">Value: '+nm(tv)+'</span>'
+    +'<span style="color:var(--yellow)">Cost: '+nm(tc)+'</span><span style="color:var(--green)">Value: '+nm(tv)+'</span>'
     +'<span class="badge bp">Pending: '+byS('pending')+'</span>'
     +'<span class="badge bo">On Hand: '+byS('onhand')+'</span>'
     +'<span class="badge bs">Shipped: '+byS('shipped')+'</span>'
     +'<span class="badge bm">Missing: '+byS('missing')+'</span>'
     +'<span class="badge bw">Sales: '+(byS('whatnot')+byS('vend')+byS('direct'))+'</span>'
-    +'<button onclick="invSelAll()" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">☑ All</button>'
-    +'<button onclick="clearInvSel()" style="padding:3px 8px;border-radius:4px;background:#1a1040;border:1px solid #2d2060;color:#6b7280;font-size:11px;cursor:pointer">☐ None</button>';
+    +'<button onclick="invSelAll()" style="padding:3px 8px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);color:var(--purple);font-size:11px;cursor:pointer">☑ All</button>'
+    +'<button onclick="clearInvSel()" style="padding:3px 8px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);color:var(--text3);font-size:11px;cursor:pointer">☐ None</button>';
   if(!ga.length){g('inv-list').innerHTML='<div class="empty">No matches.</div>';return;}
   var h='<div class="ilist">';
   ga.forEach(function(grp){
@@ -1767,8 +1839,8 @@ function renderInv(){
       var hasSales=sk.some(function(s){return s==='whatnot'||s==='vend'||s==='direct';});
       var badgeCls=sk.length>1?(hasSales?'bw':'bpart'):(SB[sk[0]]||'bp');
       var badgeTxt=sk.length>1?'Mix':(SL[sk[0]]||'').slice(0,4);
-      chips+='<span style="background:#0d0820;border:1px solid #2d2060;border-radius:4px;padding:2px 4px;font-size:9px;display:inline-flex;gap:2px;align-items:center">';
-      chips+='<span style="color:#a78bfa;font-weight:700">'+c+'</span><span style="color:#e2e8f0">×'+q+'</span>';
+      chips+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 4px;font-size:9px;display:inline-flex;gap:2px;align-items:center">';
+      chips+='<span style="color:var(--purple);font-weight:700">'+c+'</span><span style="color:var(--text)">×'+q+'</span>';
       chips+='<span class="badge '+badgeCls+'" style="padding:1px 3px;font-size:8px;margin:0">'+badgeTxt+'</span></span>';
     });
     var variant=grp.entries[0]?grp.entries[0].variant||'':'';
@@ -1781,15 +1853,15 @@ function renderInv(){
     h+='<input type="checkbox" class="chk inv-grp-chk" '+(isGrpSel?'checked':'')+' data-ids="'+entryIds+'" onclick="event.stopPropagation();togInvGrp(this)"/>';
     h+=grp.img?'<img class="ithumb" src="'+grp.img+'" onerror="this.hidden=1" onclick="openInvMod(\''+ek+'\')"/>':'<div class="inoimg" onclick="openInvMod(\''+ek+'\')">?</div>';
     h+='<div class="iname" onclick="openInvMod(\''+ek+'\')" style="cursor:pointer"><div class="iname-m">'+grp.name+'</div>';
-    h+='<div class="iname-s">'+(grp.num||'')+' • '+(grp.set||'')+(variant?' • <span style="color:#a78bfa;font-weight:700">'+variant+'</span>':'')+'</div>';
+    h+='<div class="iname-s">'+(grp.num||'')+' • '+(grp.set||'')+(variant?' • <span style="color:var(--purple);font-weight:700">'+variant+'</span>':'')+'</div>';
     h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">';
-    if(ft){var tcgH=String(ft).startsWith('http')?ft:'https://www.tcgplayer.com/product/'+ft;h+='<a href="'+tcgH+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 4px">TCGPlayer ↗</a>';}
-    h+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay ↗</a>';
+    if(ft){var tcgH=String(ft).startsWith('http')?ft:'https://www.tcgplayer.com/product/'+ft;h+='<a href="'+tcgH+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--green);border:1px solid var(--green);border-radius:3px;padding:1px 4px">TCGPlayer ↗</a>';}
+    h+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--yellow);border:1px solid var(--yellow);border-radius:3px;padding:1px 4px">eBay ↗</a>';
     h+='</div></div>';
     h+='<div class="iconds" onclick="openInvMod(\''+ek+'\')">'+chips+'</div>';
     var fe=grp.entries[0];
-    h+='<div class="icost" onclick="openInvMod(\''+ek+'\')"><div style="font-weight:600">'+nm(fe?fe.cost:null)+'/ea</div><div style="font-size:10px;color:#6b7280">'+nm(grp.tc)+' tot</div></div>';
-    h+='<div class="ival" onclick="openInvMod(\''+ek+'\')"><div style="font-weight:600">'+nm(fe?fe.mkt:null)+'/ea</div><div style="font-size:10px;color:#6b7280">'+nm(grp.tv)+' tot</div></div>';
+    h+='<div class="icost" onclick="openInvMod(\''+ek+'\')"><div style="font-weight:600">'+nm(fe?fe.cost:null)+'/ea</div><div style="font-size:10px;color:var(--text3)">'+nm(grp.tc)+' tot</div></div>';
+    h+='<div class="ival" onclick="openInvMod(\''+ek+'\')"><div style="font-weight:600">'+nm(fe?fe.mkt:null)+'/ea</div><div style="font-size:10px;color:var(--text3)">'+nm(grp.tv)+' tot</div></div>';
     h+='</div>';
     }catch(err){console.error('[renderInv] error on',grp.name,err);}
   });
@@ -1857,50 +1929,50 @@ function openInvMod(ek){
   if(!entries.length)return;
   var f=entries[0];
   var tq=0,tc=0;entries.forEach(function(e){tq+=e.qty;tc+=(e.cost||0)*e.qty;});
-  g('inv-mod-title').innerHTML=name+'<div style="font-size:11px;color:#a78bfa;font-weight:400">'+(f.num||'')+' • ×'+tq+' • Cost: '+nm(tc)+'</div>';
+  g('inv-mod-title').innerHTML=name+'<div style="font-size:11px;color:var(--purple);font-weight:400">'+(f.num||'')+' • ×'+tq+' • Cost: '+nm(tc)+'</div>';
   var rows='';
   entries.forEach(function(e){
     var o=app.offers.find(function(x){return String(x.id)===String(e.offerId);})||null;
     var isSales=e.status==='whatnot'||e.status==='vend'||e.status==='direct';
-    rows+='<tr style="border-bottom:1px solid #1a1640">';
-    rows+='<td style="padding:7px 5px;font-size:11px;color:#a78bfa;font-weight:700">'+e.cond+'</td>';
+    rows+='<tr style="border-bottom:1px solid var(--border)">';
+    rows+='<td style="padding:7px 5px;font-size:11px;color:var(--purple);font-weight:700">'+e.cond+'</td>';
     rows+='<td style="padding:7px 5px;font-size:11px;text-align:center">'+e.qty+'</td>';
     rows+='<td style="padding:4px 5px;font-size:11px">';
-    rows+='<div style="font-size:9px;color:#94a3b8;margin-bottom:2px">Card #</div>';
+    rows+='<div style="font-size:9px;color:var(--text3);margin-bottom:2px">Card #</div>';
     rows+='<input class="inp" value="'+(e.num||'')+'" placeholder="—" style="width:80px;font-size:11px;padding:3px 6px" data-id="'+e.id+'" data-ek="'+ek+'" data-f="num" onchange="updInvMeta(this)">';
-    rows+='<div style="font-size:9px;color:#94a3b8;margin-bottom:2px;margin-top:4px">Set</div>';
+    rows+='<div style="font-size:9px;color:var(--text3);margin-bottom:2px;margin-top:4px">Set</div>';
     rows+='<input class="inp" value="'+(e.set||'')+'" placeholder="—" style="width:120px;font-size:11px;padding:3px 6px" data-id="'+e.id+'" data-ek="'+ek+'" data-f="set" onchange="updInvMeta(this)">';
-    rows+='<div style="font-size:9px;color:#a78bfa;margin-bottom:2px;margin-top:4px">Variant <span style="color:#6b7280">(AA/FA/SP...)</span></div>';
+    rows+='<div style="font-size:9px;color:var(--purple);margin-bottom:2px;margin-top:4px">Variant <span style="color:var(--text3)">(AA/FA/SP...)</span></div>';
     rows+='<input class="inp" value="'+(e.variant||'')+'" placeholder="None" style="width:80px;font-size:11px;padding:3px 6px" data-id="'+e.id+'" data-ek="'+ek+'" data-f="variant" onchange="updInvMeta(this)">';
     rows+='</td>';
-    rows+='<td style="padding:7px 5px;font-size:11px"><div style="display:flex;align-items:center;gap:4px;margin-bottom:4px"><span style="font-size:9px;color:#f0c040">Cost:</span><input type="number" step="0.01" min="0" value="'+(e.cost!=null?e.cost:'')+'" placeholder="—" class="pinp pcost" style="width:72px;font-size:13px" onchange="updInvCost(\''+e.id+'\',this.value,\''+ek+'\')"/></div>';
-    rows+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:9px;color:#34d399">Mkt:</span>';
+    rows+='<td style="padding:7px 5px;font-size:11px"><div style="display:flex;align-items:center;gap:4px;margin-bottom:4px"><span style="font-size:9px;color:var(--yellow)">Cost:</span><input type="number" step="0.01" min="0" value="'+(e.cost!=null?e.cost:'')+'" placeholder="—" class="pinp pcost" style="width:72px;font-size:13px" onchange="updInvCost(\''+e.id+'\',this.value,\''+ek+'\')"/></div>';
+    rows+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:9px;color:var(--green)">Mkt:</span>';
     rows+='<input type="number" step="0.01" min="0" value="'+(e.mkt!=null?e.mkt:'')+'" placeholder="—" class="pinp pp" style="width:72px;font-size:13px" onchange="updInvMkt(\''+e.id+'\',this.value,\''+ek+'\')"/></div></td>';
     rows+='<td style="padding:7px 5px"><span class="badge '+(SB[e.status]||'bp')+'">'+(SL[e.status]||e.status)+'</span></td>';
-    rows+='<td style="padding:7px 5px;font-size:11px">'+(o?'<button onclick="closeInvMod();show(\'offers\');openOffer(\''+o.id+'\')" style="padding:3px 7px;border-radius:4px;background:#1a1040;border:1px solid #3d2080;color:#a78bfa;font-size:10px;cursor:pointer">📋 '+o.seller+'</button>':'<span style="color:#6b7280;font-size:10px">—</span>')+'</td>';
+    rows+='<td style="padding:7px 5px;font-size:11px">'+(o?'<button onclick="closeInvMod();show(\'offers\');openOffer(\''+o.id+'\')" style="padding:3px 7px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);color:var(--purple);font-size:10px;cursor:pointer">📋 '+o.seller+'</button>':'<span style="color:var(--text3);font-size:10px">—</span>')+'</td>';
     rows+='<td style="padding:7px 5px">';
-    if(isSales){rows+='<span style="font-size:10px;font-weight:700;color:#d946ef">'+SL[e.status]+'</span>';}
+    if(isSales){rows+='<span style="font-size:10px;font-weight:700;color:var(--purple)">'+SL[e.status]+'</span>';}
     else{
       rows+='<div style="display:flex;align-items:center;gap:2px">';
       rows+='<input type="number" min="1" max="'+e.qty+'" value="1" id="wn-qty-'+e.id+'" class="pinp" style="width:38px;font-size:11px;padding:2px 4px" onclick="event.stopPropagation()"/>';
       rows+='<select id="wn-ch-'+e.id+'" class="sel" style="font-size:10px;padding:2px 4px" onclick="event.stopPropagation()">';
       rows+='<option value="whatnot">📺</option><option value="vend">🏪</option><option value="direct">💬</option>';
-      rows+='</select><button onclick="event.stopPropagation();togWhatnot(\''+e.id+'\',\''+ek+'\',document.getElementById(\'wn-qty-'+e.id+'\').value,document.getElementById(\'wn-ch-'+e.id+'\').value)" style="padding:2px 6px;border-radius:3px;border:none;font-size:10px;font-weight:700;cursor:pointer;background:#2d0d2d;color:#d946ef">→</button>';
+      rows+='</select><button onclick="event.stopPropagation();togWhatnot(\''+e.id+'\',\''+ek+'\',document.getElementById(\'wn-qty-'+e.id+'\').value,document.getElementById(\'wn-ch-'+e.id+'\').value)" style="padding:2px 6px;border-radius:3px;border:none;font-size:10px;font-weight:700;cursor:pointer;background:var(--purple-bg);color:var(--purple)">→</button>';
       rows+='</div>';
     }
     rows+='</td>';
-    rows+='<td style="padding:7px 5px"><button onclick="rmInv(\''+e.id+'\');openInvMod(\''+ek+'\')" style="padding:3px 7px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button></td>';
+    rows+='<td style="padding:7px 5px"><button onclick="rmInv(\''+e.id+'\');openInvMod(\''+ek+'\')" style="padding:3px 7px;border-radius:4px;background:var(--red-bg);border:none;color:var(--red);font-size:10px;cursor:pointer">✕</button></td>';
     rows+='</tr>';
   });
   var h='<div style="display:flex;gap:11px;margin-bottom:12px">';
   h+=f.img?'<img src="'+f.img+'" style="width:75px;border-radius:6px;flex-shrink:0" onerror="this.hidden=1"/>':'';
-  h+='<div style="font-size:12px"><div style="color:#94a3b8;margin-bottom:2px">'+(f.set||'')+(f.color?' • '+f.color:'')+(f.rarity?' • '+f.rarity:'')+'</div>';
-  h+='<div style="color:#f0c040">Total Cost: '+nm(tc)+'</div>';
-  if(f.manual)h+='<div style="color:#a78bfa;font-size:11px;margin-top:3px">📁 Manual / Catalog card</div>';
-  h+='<button onclick="editCatalogEntry(\''+ek+'\')" style="margin-top:6px;padding:4px 9px;border-radius:4px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">✏️ Edit Card Info</button>';
+  h+='<div style="font-size:12px"><div style="color:var(--text3);margin-bottom:2px">'+(f.set||'')+(f.color?' • '+f.color:'')+(f.rarity?' • '+f.rarity:'')+'</div>';
+  h+='<div style="color:var(--yellow)">Total Cost: '+nm(tc)+'</div>';
+  if(f.manual)h+='<div style="color:var(--purple);font-size:11px;margin-top:3px">📁 Manual / Catalog card</div>';
+  h+='<button onclick="editCatalogEntry(\''+ek+'\')" style="margin-top:6px;padding:4px 9px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--purple);font-size:11px;cursor:pointer">✏️ Edit Card Info</button>';
   h+='</div></div>';
-  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid #2d2060">';
-  ['Cond','Qty','Card # / Set','Cost / Mkt','Status','Offer','Sales Lane',''].forEach(function(x){h+='<th style="padding:5px;text-align:left;font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">'+x+'</th>';});
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid var(--border)">';
+  ['Cond','Qty','Card # / Set','Cost / Mkt','Status','Offer','Sales Lane',''].forEach(function(x){h+='<th style="padding:5px;text-align:left;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase">'+x+'</th>';});
   h+='</tr></thead><tbody>'+rows+'</tbody></table></div>';
   g('inv-mod-content').innerHTML=h;
   g('inv-modal').style.display='';
@@ -1985,14 +2057,14 @@ function renderWhatnot(){
   var tc=0,tv=0;allSales.forEach(function(i){tc+=(i.cost||0)*i.qty;tv+=(i.mkt||0)*i.qty;});
   var pr=tv-tc;
   g('wn-stats').innerHTML=
-    '<div class="wstat"><div class="wstat-l">In Queue</div><div class="wstat-v" style="color:#d946ef">'+allSales.length+'</div></div>'
-    +'<div class="wstat"><div class="wstat-l">Total Cost</div><div class="wstat-v" style="color:#f0c040">'+nm(tc)+'</div></div>'
-    +'<div class="wstat"><div class="wstat-l">Market Value</div><div class="wstat-v" style="color:#34d399">'+nm(tv)+'</div></div>'
+    '<div class="wstat"><div class="wstat-l">In Queue</div><div class="wstat-v" style="color:var(--purple)">'+allSales.length+'</div></div>'
+    +'<div class="wstat"><div class="wstat-l">Total Cost</div><div class="wstat-v" style="color:var(--yellow)">'+nm(tc)+'</div></div>'
+    +'<div class="wstat"><div class="wstat-l">Market Value</div><div class="wstat-v" style="color:var(--green)">'+nm(tv)+'</div></div>'
     +'<div class="wstat"><div class="wstat-l">Potential Profit</div><div class="wstat-v" style="color:'+(pr>=0?'#34d399':'#f87171')+'">'+nm(pr)+'</div></div>';
   var lanes=[
-    {key:'whatnot',label:'📺 Whatnot Stream',color:'#d946ef',border:'#2d0d2d'},
-    {key:'vend',label:'🏪 Vend / In-Person',color:'#f0c040',border:'#2d1a00'},
-    {key:'direct',label:'💬 Direct Sale',color:'#60a5fa',border:'#0d1a2d'}
+    {key:'whatnot',label:'📺 Whatnot Stream',color:'var(--purple)',border:'var(--purple-bg)'},
+    {key:'vend',label:'🏪 Vend / In-Person',color:'var(--yellow)',border:'var(--yellow-bg)'},
+    {key:'direct',label:'💬 Direct Sale',color:'var(--blue)',border:'var(--blue-bg)'}
   ];
   var lanesH='';
   lanes.forEach(function(lane){
@@ -2007,22 +2079,22 @@ function renderWhatnot(){
     var ltc=0,ltv=0;items.forEach(function(i){ltc+=(i.cost||0)*i.qty;ltv+=(i.mkt||0)*i.qty;});
     lanesH+='<div class="panel" style="border-color:'+lane.border+'">';
     lanesH+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
-    lanesH+='<div style="font-weight:700;color:'+lane.color+';font-size:14px">'+lane.label+' <span style="font-size:11px;color:#6b7280">('+items.length+')</span></div>';
-    lanesH+='<button onclick="clearLane(\''+lane.key+'\')" style="padding:3px 9px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">🗑 Clear</button>';
+    lanesH+='<div style="font-weight:700;color:'+lane.color+';font-size:14px">'+lane.label+' <span style="font-size:11px;color:var(--text3)">('+items.length+')</span></div>';
+    lanesH+='<button onclick="clearLane(\''+lane.key+'\')" style="padding:3px 9px;border-radius:4px;background:var(--red-bg);border:none;color:var(--red);font-size:11px;cursor:pointer">🗑 Clear</button>';
     lanesH+='</div>';
-    if(items.length)lanesH+='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px"><span style="color:#f0c040">Cost: '+nm(ltc)+'</span> • <span style="color:#34d399">Value: '+nm(ltv)+'</span></div>';
+    if(items.length)lanesH+='<div style="font-size:11px;color:var(--text3);margin-bottom:8px"><span style="color:var(--yellow)">Cost: '+nm(ltc)+'</span> • <span style="color:var(--green)">Value: '+nm(ltv)+'</span></div>';
     else lanesH+='<div class="empty" style="padding:20px;font-size:12px">No cards here</div>';
     items.forEach(function(i){
       var ebayQ=encodeURIComponent((i.name||'')+(i.num?' '+i.num:''));
-      lanesH+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1640">';
-      lanesH+=i.img?'<img src="'+i.img+'" style="width:30px;height:41px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:30px;height:41px;background:#2d2060;border-radius:3px;flex-shrink:0"></div>';
+      lanesH+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">';
+      lanesH+=i.img?'<img src="'+i.img+'" style="width:30px;height:41px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:30px;height:41px;background:var(--bg3);border-radius:3px;flex-shrink:0"></div>';
       lanesH+='<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+i.name+'</div>';
-      lanesH+='<div style="font-size:10px;color:#94a3b8">'+(CF[i.cond]||i.cond)+' ×'+i.qty+' • '+(i.seller||'')+'</div>';
-      lanesH+='<div style="font-size:10px"><span style="color:#f0c040">Cost: <b>'+nm((i.cost||0)*i.qty)+'</b></span> • <span style="color:#34d399">Value: <b>'+nm((i.mkt||0)*i.qty)+'</b></span></div></div>';
+      lanesH+='<div style="font-size:10px;color:var(--text3)">'+(CF[i.cond]||i.cond)+' ×'+i.qty+' • '+(i.seller||'')+'</div>';
+      lanesH+='<div style="font-size:10px"><span style="color:var(--yellow)">Cost: <b>'+nm((i.cost||0)*i.qty)+'</b></span> • <span style="color:var(--green)">Value: <b>'+nm((i.mkt||0)*i.qty)+'</b></span></div></div>';
       lanesH+='<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">';
-      lanesH+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:9px;color:#f0c040;border:1px solid #4a3800;border-radius:3px;padding:1px 4px">eBay ↗</a>';
-      lanesH+='<button onclick="restoreWN(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:#0d2010;border:none;color:#34d399;font-size:10px;cursor:pointer">↩</button>';
-      lanesH+='<button onclick="rmInv(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:#3f0f0f;border:none;color:#f87171;font-size:10px;cursor:pointer">✕</button>';
+      lanesH+='<a href="https://www.ebay.com/sch/i.html?_nkw='+ebayQ+'&LH_Sold=1&LH_Complete=1&_sop=13" target="_blank" style="font-size:9px;color:var(--yellow);border:1px solid var(--yellow);border-radius:3px;padding:1px 4px">eBay ↗</a>';
+      lanesH+='<button onclick="restoreWN(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:var(--green-bg);border:none;color:var(--green);font-size:10px;cursor:pointer">↩</button>';
+      lanesH+='<button onclick="rmInv(\''+i.id+'\')" style="padding:2px 6px;border-radius:3px;background:var(--red-bg);border:none;color:var(--red);font-size:10px;cursor:pointer">✕</button>';
       lanesH+='</div></div>';
     });
     lanesH+='</div>';
@@ -2042,14 +2114,14 @@ function renderSellers(){
   list.forEach(function(s){
     var n=app.inv.filter(function(i){return String(i.sellerId)===String(s.id);}).length;
     h+='<div class="selcard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">';
-    h+='<div style="font-weight:700;font-size:14px;color:#f0c040">👤 '+s.name+'</div>';
-    h+='<div class="row" style="gap:5px"><button class="btn" style="background:#1a1640;color:#a78bfa;border:1px solid #3d2080;font-size:11px;padding:4px 9px" onclick="openSelMod(\''+s.id+'\')">Edit</button>';
+    h+='<div style="font-weight:700;font-size:14px;color:var(--yellow)">👤 '+s.name+'</div>';
+    h+='<div class="row" style="gap:5px"><button class="btn" style="background:var(--surface);color:var(--purple);border:1px solid var(--border);font-size:11px;padding:4px 9px" onclick="openSelMod(\''+s.id+'\')">Edit</button>';
     h+='<button class="btn btn-r" style="font-size:11px;padding:4px 9px" onclick="delSeller(\''+s.id+'\')">Delete</button></div></div>';
     if(s.fb)h+='<div class="sfield">💬 <a href="'+s.fb+'" target="_blank">Facebook Messenger</a></div>';
     if(s.ph)h+='<div class="sfield">📞 '+s.ph+'</div>';
     if(s.addr)h+='<div class="sfield">📍 '+s.addr+'</div>';
     if(s.notes)h+='<div class="sfield">📝 '+s.notes+'</div>';
-    h+='<div style="font-size:10px;color:#6b7280;margin-top:5px">'+n+' cards in inventory</div></div>';
+    h+='<div style="font-size:10px;color:var(--text3);margin-top:5px">'+n+' cards in inventory</div></div>';
   });
   g('sel-list').innerHTML=h;
 }
@@ -2077,17 +2149,17 @@ function updFin(){
   var pp=parseFloat(g('f-pp').value)||0,bk=parseFloat(g('f-bank').value)||0,ca=parseFloat(g('f-cash').value)||0;
   var net=iv+pp+bk+ca;
   g('f-net').textContent=nm(net);g('f-inv').textContent=nm(iv);
-  g('f-inv-sub').innerHTML='<span style="color:#f0c040">Cost: '+nm(ic)+'</span> • <span style="color:#34d399">Gain: '+nm(iv-ic)+'</span>';
+  g('f-inv-sub').innerHTML='<span style="color:var(--yellow)">Cost: '+nm(ic)+'</span> • <span style="color:var(--green)">Gain: '+nm(iv-ic)+'</span>';
   g('f-break').textContent='Inv '+nm(iv)+' + PayPal '+nm(pp)+' + Bank '+nm(bk)+' + Cash '+nm(ca);
   g('s-net').textContent=nm(net);
   function bSv(statuses){var v=0,c=0,n=0;app.inv.forEach(function(i){if(statuses.indexOf(i.status)>-1){v+=(i.mkt||0)*i.qty;c+=(i.cost||0)*i.qty;n++;}});return{v:v,c:c,n:n};}
   var oh=bSv(['onhand']),pe=bSv(['pending','missing','shipped']),wn=bSv(['whatnot']),vn=bSv(['vend']),dr=bSv(['direct']);
   g('f-breakdown').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:7px;margin-top:7px">'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#34d399;font-weight:700;font-size:12px">On Hand: '+oh.n+'</div><div><span style="color:#34d399">Value: </span>'+nm(oh.v)+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(oh.c)+'</div></div>'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0a040;font-weight:700;font-size:12px">Pending/Ship/Missing: '+pe.n+'</div><div><span style="color:#34d399">Value: </span>'+nm(pe.v)+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(pe.c)+'</div></div>'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#d946ef;font-weight:700;font-size:12px">📺 Whatnot: '+wn.n+'</div><div><span style="color:#34d399">Value: </span>'+nm(wn.v)+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(wn.c)+'</div></div>'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#f0c040;font-weight:700;font-size:12px">🏪 Vend: '+vn.n+'</div><div><span style="color:#34d399">Value: </span>'+nm(vn.v)+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(vn.c)+'</div></div>'
-    +'<div style="background:#0d0820;border-radius:7px;padding:9px"><div style="color:#60a5fa;font-weight:700;font-size:12px">💬 Direct: '+dr.n+'</div><div><span style="color:#34d399">Value: </span>'+nm(dr.v)+'</div><div><span style="color:#f0c040">Cost: </span>'+nm(dr.c)+'</div></div>'
+    +'<div style="background:var(--bg2);border-radius:7px;padding:9px"><div style="color:var(--green);font-weight:700;font-size:12px">On Hand: '+oh.n+'</div><div><span style="color:var(--green)">Value: </span>'+nm(oh.v)+'</div><div><span style="color:var(--yellow)">Cost: </span>'+nm(oh.c)+'</div></div>'
+    +'<div style="background:var(--bg2);border-radius:7px;padding:9px"><div style="color:var(--yellow);font-weight:700;font-size:12px">Pending/Ship/Missing: '+pe.n+'</div><div><span style="color:var(--green)">Value: </span>'+nm(pe.v)+'</div><div><span style="color:var(--yellow)">Cost: </span>'+nm(pe.c)+'</div></div>'
+    +'<div style="background:var(--bg2);border-radius:7px;padding:9px"><div style="color:var(--purple);font-weight:700;font-size:12px">📺 Whatnot: '+wn.n+'</div><div><span style="color:var(--green)">Value: </span>'+nm(wn.v)+'</div><div><span style="color:var(--yellow)">Cost: </span>'+nm(wn.c)+'</div></div>'
+    +'<div style="background:var(--bg2);border-radius:7px;padding:9px"><div style="color:var(--yellow);font-weight:700;font-size:12px">🏪 Vend: '+vn.n+'</div><div><span style="color:var(--green)">Value: </span>'+nm(vn.v)+'</div><div><span style="color:var(--yellow)">Cost: </span>'+nm(vn.c)+'</div></div>'
+    +'<div style="background:var(--bg2);border-radius:7px;padding:9px"><div style="color:var(--blue);font-weight:700;font-size:12px">💬 Direct: '+dr.n+'</div><div><span style="color:var(--green)">Value: </span>'+nm(dr.v)+'</div><div><span style="color:var(--yellow)">Cost: </span>'+nm(dr.c)+'</div></div>'
     +'</div>';
   drawChart();renderShows();
 }
@@ -2112,15 +2184,15 @@ function drawChart(){
   var mn=Math.min.apply(null,vals)*0.97,mx=Math.max.apply(null,vals)*1.03,rn=mx-mn||1;
   function px(i){return pad.l+i*(cw/(data.length-1||1));}
   function py(v){return pad.t+ch-((v-mn)/rn)*ch;}
-  ctx.strokeStyle='#2d2060';ctx.lineWidth=1;
-  for(var gi=0;gi<=4;gi++){var gy=pad.t+(ch/4)*gi;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke();ctx.fillStyle='#94a3b8';ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText('$'+(mx-((rn/4)*gi)).toFixed(0),pad.l-5,gy+4);}
-  var gr=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);gr.addColorStop(0,'rgba(124,58,237,.35)');gr.addColorStop(1,'rgba(124,58,237,.02)');
+  ctx.strokeStyle='var(--border)';ctx.lineWidth=1;
+  for(var gi=0;gi<=4;gi++){var gy=pad.t+(ch/4)*gi;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+cw,gy);ctx.stroke();ctx.fillStyle='var(--text3)';ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText('$'+(mx-((rn/4)*gi)).toFixed(0),pad.l-5,gy+4);}
+  var gr=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);gr.addColorStop(0,'rgba(26,25,23,.12)');gr.addColorStop(1,'rgba(26,25,23,.01)');
   ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));data.forEach(function(d,i){if(i>0)ctx.lineTo(px(i),py(d.net));});
   ctx.lineTo(px(data.length-1),pad.t+ch);ctx.lineTo(px(0),pad.t+ch);ctx.closePath();ctx.fillStyle=gr;ctx.fill();
   ctx.beginPath();ctx.moveTo(px(0),py(data[0].net));data.forEach(function(d,i){if(i>0)ctx.lineTo(px(i),py(d.net));});
-  ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  ctx.strokeStyle='var(--text)';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
   var nth=Math.ceil(data.length/7);
-  data.forEach(function(d,i){var x=px(i),y=py(d.net);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#f0c040';ctx.fill();if(i%nth===0||i===data.length-1){ctx.fillStyle='#6b7280';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText(d.date,x,H-pad.b+13);}});
+  data.forEach(function(d,i){var x=px(i),y=py(d.net);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='var(--accent)';ctx.fill();if(i%nth===0||i===data.length-1){ctx.fillStyle='var(--text3)';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText(d.date,x,H-pad.b+13);}});
   if(data.length>1){var ch2=data[data.length-1].net-data[0].net;ctx.fillStyle=ch2>=0?'#34d399':'#f87171';ctx.font='bold 12px system-ui';ctx.textAlign='left';ctx.fillText((ch2>=0?'▲ +':'▼ ')+'$'+ch2.toFixed(2),pad.l,pad.t-5);}
 }
 
@@ -2187,23 +2259,23 @@ function renderShows(){
   if(!shows.length){el.innerHTML='<div class="empty" style="padding:24px">No sales recorded yet.</div>';return;}
   var totRev=0,totNet=0,totQty=0;shows.forEach(function(s){totRev+=s.rev||0;totNet+=s.net||0;totQty+=s.qty||0;});
   var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">';
-  h+='<div class="wstat"><div class="wstat-l">Sales</div><div class="wstat-v" style="color:#d946ef;font-size:18px">'+shows.length+'</div></div>';
-  h+='<div class="wstat"><div class="wstat-l">Total Revenue</div><div class="wstat-v" style="color:#34d399;font-size:18px">'+nm(totRev)+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Sales</div><div class="wstat-v" style="color:var(--purple);font-size:18px">'+shows.length+'</div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Total Revenue</div><div class="wstat-v" style="color:var(--green);font-size:18px">'+nm(totRev)+'</div></div>';
   h+='<div class="wstat"><div class="wstat-l">Total Net</div><div class="wstat-v" style="color:'+(totNet>=0?'#f0c040':'#f87171')+';font-size:18px">'+nm(totNet)+'</div></div>';
-  h+='<div class="wstat"><div class="wstat-l">Cards Sold</div><div class="wstat-v" style="color:#a78bfa;font-size:18px">'+totQty+'</div></div></div>';
+  h+='<div class="wstat"><div class="wstat-l">Cards Sold</div><div class="wstat-v" style="color:var(--purple);font-size:18px">'+totQty+'</div></div></div>';
   shows.forEach(function(s){
     var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):0;
     var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct'};
     h+='<div class="show-row">';
-    h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:#d946ef;font-size:11px">'+(chLabels[s.channel]||'📺')+'</div></div>';
-    h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:#a78bfa;font-size:12px">'+s.date+'</div></div>';
-    if(s.pp||s.bank||s.cash){var sp=[];if(s.pp)sp.push('💳'+nm(s.pp));if(s.bank)sp.push('🏦'+nm(s.bank));if(s.cash)sp.push('💵'+nm(s.cash));h+='<div style="font-size:10px;color:#94a3b8;flex-basis:100%">Split: '+sp.join(' + ')+'</div>';}
-    h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:#34d399">'+nm(s.rev)+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:var(--purple);font-size:11px">'+(chLabels[s.channel]||'📺')+'</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:var(--purple);font-size:12px">'+s.date+'</div></div>';
+    if(s.pp||s.bank||s.cash){var sp=[];if(s.pp)sp.push('💳'+nm(s.pp));if(s.bank)sp.push('🏦'+nm(s.bank));if(s.cash)sp.push('💵'+nm(s.cash));h+='<div style="font-size:10px;color:var(--text3);flex-basis:100%">Split: '+sp.join(' + ')+'</div>';}
+    h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:var(--green)">'+nm(s.rev)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Net</div><div class="show-stat-v" style="color:'+(s.net>=0?'#f0c040':'#f87171')+'">'+nm(s.net)+'</div></div>';
-    h+='<div class="show-stat"><div class="show-stat-l">Margin</div><div class="show-stat-v" style="color:#60a5fa;font-size:14px">'+margin+'%</div></div>';
+    h+='<div class="show-stat"><div class="show-stat-l">Margin</div><div class="show-stat-v" style="color:var(--blue);font-size:14px">'+margin+'%</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Sold</div><div class="show-stat-v" style="font-size:14px">'+s.qty+'</div></div>';
-    if(s.notes)h+='<div style="font-size:11px;color:#94a3b8;flex:1;min-width:100px">📝 '+s.notes+'</div>';
-    h+='<button onclick="delShow(\''+s.id+'\')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">🗑</button>';
+    if(s.notes)h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">📝 '+s.notes+'</div>';
+    h+='<button onclick="delShow(\''+s.id+'\')" style="padding:3px 8px;border-radius:4px;background:var(--red-bg);border:none;color:var(--red);font-size:11px;cursor:pointer">🗑</button>';
     h+='</div>';
   });
   el.innerHTML=h;
@@ -2267,7 +2339,7 @@ function importBak(input){
 
 function renderTiers(){
   var el=g('tier-list');if(!el)return;
-  if(!app.tiers.length){el.innerHTML='<div style="font-size:12px;color:#6b7280">No tiers. Click + Add Tier.</div>';return;}
+  if(!app.tiers.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">No tiers. Click + Add Tier.</div>';return;}
   var h='';
   app.tiers.forEach(function(t,i){
     h+='<div class="tier-row">';
@@ -2278,7 +2350,7 @@ function renderTiers(){
     h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.mp+'" title="MP%" onchange="updTier('+i+',\'mp\',this.value)"/>';
     h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+t.hp+'" title="HP%" onchange="updTier('+i+',\'hp\',this.value)"/>';
     h+='<input class="tinp" type="number" step="1" min="1" max="100" value="'+(t.dmg||10)+'" title="DMG%" onchange="updTier('+i+',\'dmg\',this.value)"/>';
-    h+='<button onclick="delTier(\''+t.id+'\')" style="padding:4px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>';
+    h+='<button onclick="delTier(\''+t.id+'\')" style="padding:4px 8px;border-radius:4px;background:var(--red-bg);border:none;color:var(--red);font-size:11px;cursor:pointer">✕</button>';
     h+='</div>';
   });
   el.innerHTML=h;
@@ -2299,17 +2371,17 @@ function renderCatalog(){
   var cat=app.catalog;
   var flt=(g('catalog-search')?g('catalog-search').value||'':'').toLowerCase();
   var filtered=flt?cat.filter(function(c){return(c.name||'').toLowerCase().includes(flt)||(c.cardNumber||'').toLowerCase().includes(flt)||(c.set||'').toLowerCase().includes(flt);}):cat;
-  if(!cat.length){el.innerHTML='<div style="font-size:12px;color:#6b7280">No custom cards yet. Use ✏️ Manual Entry on the Buylist tab.</div>';return;}
-  var h='<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">'+filtered.length+(flt?' of ':' ')+cat.length+' card'+(cat.length!==1?'s':'')+' in catalog</div>';
-  if(!filtered.length){el.innerHTML=h+'<div style="font-size:12px;color:#6b7280">No matches.</div>';return;}
+  if(!cat.length){el.innerHTML='<div style="font-size:12px;color:var(--text3)">No custom cards yet. Use ✏️ Manual Entry on the Buylist tab.</div>';return;}
+  var h='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">'+filtered.length+(flt?' of ':' ')+cat.length+' card'+(cat.length!==1?'s':'')+' in catalog</div>';
+  if(!filtered.length){el.innerHTML=h+'<div style="font-size:12px;color:var(--text3)">No matches.</div>';return;}
   filtered.forEach(function(c){
     h+='<div class="cat-row">';
-    h+=c.image?'<img src="'+c.image+'" style="width:28px;height:38px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:28px;height:38px;background:#2d2060;border-radius:3px;flex-shrink:0"></div>';
-    h+='<div style="flex:1"><div style="font-weight:600;color:#e2e8f0">'+c.name+'</div>';
-    h+='<div style="color:#7c6fcd">'+c.cardNumber+' • '+c.set+(c.color?' • '+c.color:'')+(c.mktprice?' • <span style="color:#34d399">'+nm(c.mktprice)+'</span>':'')+'</div></div>';
-    if(c.tcgplayerUrl){var th=String(c.tcgplayerUrl).startsWith('http')?c.tcgplayerUrl:'https://www.tcgplayer.com/product/'+c.tcgplayerUrl;h+='<a href="'+th+'" target="_blank" style="font-size:10px;color:#34d399;border:1px solid #1a4030;border-radius:3px;padding:1px 5px">TCG ↗</a>';}
-    h+='<button onclick="openManualMod(app.catalog.find(function(x){return x.id===\''+c.id+'\';}))" style="padding:3px 8px;border-radius:4px;background:#1a1640;border:1px solid #3d2080;color:#a78bfa;font-size:11px;cursor:pointer">✏️</button>';
-    h+='<button onclick="delCatCard(\''+c.id+'\')" style="padding:3px 8px;border-radius:4px;background:#3f0f0f;border:none;color:#f87171;font-size:11px;cursor:pointer">✕</button>';
+    h+=c.image?'<img src="'+c.image+'" style="width:28px;height:38px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:28px;height:38px;background:var(--bg3);border-radius:3px;flex-shrink:0"></div>';
+    h+='<div style="flex:1"><div style="font-weight:600;color:var(--text)">'+c.name+'</div>';
+    h+='<div style="color:var(--text3)">'+c.cardNumber+' • '+c.set+(c.color?' • '+c.color:'')+(c.mktprice?' • <span style="color:var(--green)">'+nm(c.mktprice)+'</span>':'')+'</div></div>';
+    if(c.tcgplayerUrl){var th=String(c.tcgplayerUrl).startsWith('http')?c.tcgplayerUrl:'https://www.tcgplayer.com/product/'+c.tcgplayerUrl;h+='<a href="'+th+'" target="_blank" style="font-size:10px;color:var(--green);border:1px solid var(--green);border-radius:3px;padding:1px 5px">TCG ↗</a>';}
+    h+='<button onclick="openManualMod(app.catalog.find(function(x){return x.id===\''+c.id+'\';}))" style="padding:3px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--purple);font-size:11px;cursor:pointer">✏️</button>';
+    h+='<button onclick="delCatCard(\''+c.id+'\')" style="padding:3px 8px;border-radius:4px;background:var(--red-bg);border:none;color:var(--red);font-size:11px;cursor:pointer">✕</button>';
     h+='</div>';
   });
   el.innerHTML=h;
