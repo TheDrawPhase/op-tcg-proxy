@@ -63,7 +63,7 @@ button{cursor:pointer}a{text-decoration:none}
 #banner button{background:none;border:none;color:var(--accent);font-weight:700;text-decoration:underline;cursor:pointer;font-size:13px}
 
 /* ── Pages & Panels ── */
-.page{padding:20px 24px;max-width:1800px;margin:0 auto;display:none}
+.page{padding:20px;max-width:1400px;margin:0 auto;display:none}
 .page.on{display:block}
 .panel{background:var(--surface);border-radius:var(--radius-lg);padding:18px;border:1px solid var(--border);margin-bottom:16px;box-shadow:var(--shadow)}
 .pt{font-weight:700;color:var(--text);font-size:13px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
@@ -116,16 +116,16 @@ button{cursor:pointer}a{text-decoration:none}
 
 /* ── Inventory list ── */
 .ilist{display:flex;flex-direction:column;gap:2px}
-.irow{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:9px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.irow{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:9px 14px;cursor:pointer;transition:border-color .15s,background .15s}
 .irow:hover{border-color:var(--text);background:var(--bg)}
 .ithumb{width:58px;height:80px;border-radius:4px;object-fit:cover;flex-shrink:0}
 .inoimg{width:58px;height:80px;background:var(--bg2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)}
 .iname{flex:2;min-width:120px}
 .iname-m{font-weight:600;font-size:15px;color:var(--text)}
 .iname-s{font-size:12px;color:var(--text3);margin-top:2px}
-.iconds{flex:1.2;display:flex;flex-wrap:wrap;gap:3px}
-.icost{flex:0.7;font-size:16px;color:var(--yellow);text-align:right;white-space:nowrap;font-weight:700}
-.ival{flex:0.7;font-size:16px;color:var(--green);text-align:right;white-space:nowrap;font-weight:700}
+.iconds{flex:0;display:flex;flex-wrap:wrap;gap:4px;min-width:fit-content}
+.icost{font-size:16px;color:var(--yellow);text-align:right;white-space:nowrap;font-weight:700;margin-left:auto}
+.ival{font-size:16px;color:var(--green);text-align:right;white-space:nowrap;font-weight:700}
 
 /* ── Checkboxes ── */
 .chk{width:16px;height:16px;accent-color:var(--text);cursor:pointer;flex-shrink:0}
@@ -1839,9 +1839,9 @@ function renderInv(){
       var hasSales=sk.some(function(s){return s==='whatnot'||s==='vend'||s==='direct';});
       var badgeCls=sk.length>1?(hasSales?'bw':'bpart'):(SB[sk[0]]||'bp');
       var badgeTxt=sk.length>1?'Mix':(SL[sk[0]]||'').slice(0,4);
-      chips+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 4px;font-size:9px;display:inline-flex;gap:2px;align-items:center">';
+      chips+='<span style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:11px;display:inline-flex;gap:4px;align-items:center">';
       chips+='<span style="color:var(--purple);font-weight:700">'+c+'</span><span style="color:var(--text)">×'+q+'</span>';
-      chips+='<span class="badge '+badgeCls+'" style="padding:1px 3px;font-size:8px;margin:0">'+badgeTxt+'</span></span>';
+      chips+='<span class="badge '+badgeCls+'" style="padding:2px 5px;font-size:10px;margin:0">'+badgeTxt+'</span></span>';
     });
     var variant=grp.entries[0]?grp.entries[0].variant||'':'';
     var ek=[grp.name,grp.num||'',grp.set||'',variant].map(function(s){return encodeURIComponent(s).replace(/'/g,'%27');}).join('~');
