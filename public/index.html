@@ -116,10 +116,10 @@ button{cursor:pointer}a{text-decoration:none}
 
 /* ── Inventory list ── */
 .ilist{display:flex;flex-direction:column;gap:2px}
-.irow{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 18px;cursor:pointer;transition:border-color .15s,background .15s}
+.irow{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:9px 16px;cursor:pointer;transition:border-color .15s,background .15s}
 .irow:hover{border-color:var(--text);background:var(--bg)}
-.ithumb{width:44px;height:61px;border-radius:4px;object-fit:cover;flex-shrink:0}
-.inoimg{width:44px;height:61px;background:var(--bg2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)}
+.ithumb{width:52px;height:72px;border-radius:4px;object-fit:cover;flex-shrink:0}
+.inoimg{width:52px;height:72px;background:var(--bg2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3)}
 .iname{flex:2;min-width:120px}
 .iname-m{font-weight:600;font-size:15px;color:var(--text)}
 .iname-s{font-size:12px;color:var(--text3);margin-top:2px}
@@ -487,7 +487,7 @@ button{cursor:pointer}a{text-decoration:none}
 
 <!-- Inventory detail modal -->
 <div class="overlay" id="inv-modal" style="display:none" onclick="if(event.target===this)closeInvMod()">
-  <div class="modal" style="max-width:580px" onclick="event.stopPropagation()">
+  <div class="modal" style="max-width:780px" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
       <div id="inv-mod-title" style="font-weight:700;font-size:15px;color:var(--text)"></div>
       <button onclick="closeInvMod()" style="background:none;border:none;color:var(--red);font-size:21px;line-height:1;cursor:pointer">×</button>
