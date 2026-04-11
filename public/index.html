@@ -791,7 +791,7 @@ var RARITY={LEADER:0,'SECRET RARE':1,'SUPER RARE':2,R:3,Rare:3,Common:4,UC:5};
 // ─── State ────────────────────────────────────────────────────────────────────
 var app={
   key:'', tiers:[], inv:[], offers:[], sellers:[], catalog:[], sess:[],
-  selCard:null, selCond:'NM', selQty:1, selMkt:null, selCost:null, selPerc:null, _lastCond:null,
+  selCard:null, selCond:'NM', selQty:1,
   editSeller:null, editOffer:null, tab:'buylist'
 };
 var fin={paypal:0,bank:0,cash:0,history:[],shows:[]};
@@ -1315,7 +1315,6 @@ function readSelInputs(){
 }
 function addToSess(){_snapshot();
   var c=app.selCard;if(!c)return;
-  readSelInputs();
   var name=c.name||c.name_numbered||'';
   var dup=app.sess.find(function(e){return e.name===name&&e.cond===app.selCond;});
   if(dup&&!confirm('⚠️ '+name+' ('+CF[app.selCond]+') is already in this offer. Add another?'))return;
@@ -1339,7 +1338,6 @@ function addToSess(){_snapshot();
 
 function addDirect(){_snapshot();
   var c=app.selCard;if(!c)return;
-  readSelInputs();
   // Build entry with base calculated values first
   var entry=makeInvEntry(c,{seller:'Direct Add',sellerId:null,status:'onhand'});
   // Read directly from DOM — most reliable, bypasses any stale app.sel* state
@@ -1910,16 +1908,6 @@ function restoreCardToInv(oid,idx){_snapshot();
   saveInv();stats();renderOffers();
   toast('✅ '+card.name+' restored to inventory!');
 }
-
-function restoreCardToInv(oid,idx){_snapshot();
-  var o=findOffer(oid);if(!o||!o.cards[idx])return;
-  var card=o.cards[idx];
-  var exists=app.inv.some(function(iv){return String(iv.offerId)===String(oid)&&iv.name===card.name&&iv.cond===card.cond;});
-  if(exists){toast('⚠️ Already in inventory.');return;}
-  app.inv.push({id:uid(),catalogId:card.catalogId||null,name:card.name,num:card.num||'',set:card.set||'',color:card.color||'',rarity:card.rarity||'',img:card.img||null,tcgId:card.tcgId||null,cond:card.cond,qty:card.qty||1,mkt:card.mkt||null,cost:card.cost||0,perc:card.perc||null,seller:o.seller||'',sellerId:o.sellerId||null,status:card.status||'pending',offerId:oid,date:td(),manual:false});
-  saveInv();stats();renderOffers();
-  toast('✅ '+card.name+' restored to inventory!');
-}
 function rmCard(oid,i){_snapshot();
   var o=findOffer(oid);if(!o)return;
   if(!confirm('Remove "'+o.cards[i].name+'" from this offer?'))return;
@@ -2280,20 +2268,6 @@ function fixInv(){
   }
   return fixed;
 }
-
-function fixInv(){
-  var fixed=0;
-  app.inv.forEach(function(i){
-    if(!i.name||i.name===''){i.name='Unknown Card';fixed++;}
-    if(isNaN(i.qty*1)||!i.qty||i.qty<=0){i.qty=1;fixed++;}
-    if(isNaN(i.mkt*1))i.mkt=null;
-    if(isNaN(i.cost*1)){i.cost=0;fixed++;}
-    if(!i.status){i.status='onhand';fixed++;}
-    if(!i.cond){i.cond='NM';fixed++;}
-  });
-  if(fixed>0){console.log('[fixInv] repaired',fixed,'fields');saveInv();}
-  return fixed;
-}
 function rmInv(id){_snapshot();app.inv=app.inv.filter(function(i){return String(i.id)!==String(id);});saveInv();stats();renderInv();}
 
 // ─── Sales (Whatnot / Vend / Direct) ─────────────────────────────────────────
@@ -2447,18 +2421,23 @@ function confirmSell(){_snapshot();
 
 // ─── Trade Modal ──────────────────────────────────────────────────────────────
 var _tradeInCount=0;
-
 function openTradeMod(laneKey){
   var today=new Date();
   g('trade-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   g('trade-channel').value=laneKey||'vend';
-  g('trade-out-name').value='';g('trade-out-val').value='';g('trade-out-cost').value='';
   g('trade-notes').value='';
-  _tradeInCount=0;g('trade-in-rows').innerHTML='';
-  addTradeInRow();updTradeCalc();
+  _tradeInCount=0;_tradeOutCount=0;_tradeSearchMode=null;
+  g('trade-in-rows').innerHTML='';g('trade-out-rows').innerHTML='';
+  g('trade-search-panel').style.display='none';
+  g('trade-q').value='';g('trade-results').innerHTML='';
+  if(g('trade-cash-dir'))g('trade-cash-dir').value='none';
+  if(g('trade-cash-amt'))g('trade-cash-amt').value='';
+  addTradeInRow('','');addTradeOutRow('manual');
+  updTradeCalc();
   g('trade-modal').style.display='';
 }
 function closeTradeMod(){g('trade-modal').style.display='none';}
+
 
 function addTradeInRow(){
   var idx=_tradeInCount++;
