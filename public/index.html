@@ -2439,34 +2439,60 @@ function openTradeMod(laneKey){
 function closeTradeMod(){g('trade-modal').style.display='none';}
 
 
-function addTradeInRow(){
+function addTradeOutRow(type){
+  var idx=_tradeOutCount++;
+  var row=document.createElement('div');
+  row.id='trade-out-row-'+idx;
+  row.style.cssText='display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:6px;align-items:center';
+  if(type==='inv'){
+    var items=app.inv.filter(function(i){return i.status==='vend'||i.status==='direct';});
+    if(!items.length){toast('No cards in Vend/Direct lanes.');_tradeOutCount--;return;}
+    var opts=items.map(function(i){return'<option value="'+i.id+'">'+i.name+' ('+i.cond+') — '+nm(i.mkt)+'</option>';}).join('');
+    row.innerHTML='<select class="inp" style="font-size:12px" id="to-inv-'+idx+'" onchange="selTradeOutInv('+idx+',this.value)"><option value="">— Pick card —</option>'+opts+'</select>'
+      +'<input type="number" step="0.01" min="0" class="pinp pp" placeholder="Val $" style="width:72px;font-size:12px" id="to-val-'+idx+'" oninput="updTradeCalc()"/>'
+      +'<button onclick="this.parentElement.remove();updTradeCalc()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0">×</button>';
+  }else{
+    row.innerHTML='<input class="inp" placeholder="Card name" style="font-size:12px" id="to-name-'+idx+'"/>'
+      +'<input type="number" step="0.01" min="0" class="pinp pp" placeholder="Val $" style="width:72px;font-size:12px" id="to-val-'+idx+'" oninput="updTradeCalc()"/>'
+      +'<button onclick="this.parentElement.remove();updTradeCalc()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0">×</button>';
+  }
+  g('trade-out-rows').appendChild(row);
+}
+function addTradeInRow(name,val){
   var idx=_tradeInCount++;
   var row=document.createElement('div');
-  row.id='trade-in-'+idx;
+  row.id='trade-in-row-'+idx;
   row.style.cssText='display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:6px;align-items:center';
-  row.innerHTML='<input class="inp" placeholder="Card name" style="font-size:12px" id="ti-name-'+idx+'"/>'
-    +'<input type="number" step="0.01" min="0" class="pinp pp" placeholder="Value $" style="width:80px;font-size:12px" id="ti-val-'+idx+'" oninput="updTradeCalc()"/>'
-    +'<button onclick="this.parentElement.remove();updTradeCalc()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;flex-shrink:0">×</button>';
+  row.innerHTML='<input class="inp" placeholder="Card name" style="font-size:12px" id="ti-name-'+idx+'" value="'+(name||'')+'"/>'
+    +'<input type="number" step="0.01" min="0" class="pinp pp" placeholder="Val $" style="width:72px;font-size:12px" id="ti-val-'+idx+'" value="'+(val||'')+'" oninput="updTradeCalc()"/>'
+    +'<button onclick="this.parentElement.remove();updTradeCalc()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0">×</button>';
   g('trade-in-rows').appendChild(row);
 }
-
-function updTradeCalc(){
-  var outVal=parseFloat(g('trade-out-val').value)||0;
-  var inTotal=0;
-  document.querySelectorAll('[id^="ti-val-"]').forEach(function(el){inTotal+=parseFloat(el.value)||0;});
-  var diff=outVal-inTotal;
-  g('trade-c-out').textContent=nm(outVal);
-  g('trade-c-in').textContent=nm(inTotal);
-  g('trade-c-diff').textContent=nm(diff);
-  g('trade-c-diff').style.color=diff>=0?'var(--green)':'var(--red)';
+function selTradeOutInv(idx,invId){
+  var inv=app.inv.find(function(i){return i.id===invId;});
+  var valEl=g('to-val-'+idx);
+  if(inv&&valEl)valEl.value=(inv.mkt||0).toFixed(2);
+  updTradeCalc();
 }
-
+function updTradeCalc(){
+  var outTotal=0,inTotal=0;
+  document.querySelectorAll('[id^="to-val-"]').forEach(function(el){outTotal+=parseFloat(el.value)||0;});
+  document.querySelectorAll('[id^="ti-val-"]').forEach(function(el){inTotal+=parseFloat(el.value)||0;});
+  var cashDir=g('trade-cash-dir')?g('trade-cash-dir').value:'none';
+  var cashAmt=parseFloat(g('trade-cash-amt')?g('trade-cash-amt').value:0)||0;
+  var cashAdj=cashDir==='in'?cashAmt:cashDir==='out'?-cashAmt:0;
+  var net=outTotal-inTotal+cashAdj;
+  if(g('trade-out-total'))g('trade-out-total').textContent=nm(outTotal);
+  if(g('trade-in-total'))g('trade-in-total').textContent=nm(inTotal);
+  if(g('trade-c-out'))g('trade-c-out').textContent=nm(outTotal);
+  if(g('trade-c-in'))g('trade-c-in').textContent=nm(inTotal);
+  if(g('trade-c-cash')){g('trade-c-cash').textContent=cashAdj!==0?(cashAdj>0?'+':'')+nm(cashAdj):'—';g('trade-c-cash').style.color=cashAdj>0?'var(--green)':cashAdj<0?'var(--red)':'var(--text3)';}
+  if(g('trade-c-diff')){g('trade-c-diff').textContent=nm(net);g('trade-c-diff').style.color=net>=0?'var(--green)':'var(--red)';}
+}
 function confirmTrade(){_snapshot();
-  var ch=g('trade-channel').value;
-  var dateVal=g('trade-date').value;
+  var ch=g('trade-channel').value,dateVal=g('trade-date').value;
   if(!dateVal){toast('⚠️ Date required.');return;}
   var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
-  // Gather your cards going out
   var tradeOuts=[];
   document.querySelectorAll('[id^="to-val-"]').forEach(function(el){
     var idx2=el.id.replace('to-val-','');
@@ -2476,7 +2502,6 @@ function confirmTrade(){_snapshot();
     else if(nameEl){name=nameEl.value.trim();}
     if(name||invId)tradeOuts.push({name:name||'(unnamed)',val:val,invId:invId});
   });
-  // Gather trade-ins
   var tradeIns=[];
   document.querySelectorAll('[id^="ti-name-"]').forEach(function(el){
     var idx2=el.id.replace('ti-name-','');
@@ -2492,28 +2517,23 @@ function confirmTrade(){_snapshot();
   var cashAdj=cashDir==='in'?cashAmt:cashDir==='out'?-cashAmt:0;
   var cashVia=g('trade-cash-via')?g('trade-cash-via').value:'cash';
   var net=outTotal-inTotal+cashAdj;
-  // Update wallets if cash involved
   if(cashAdj!==0){
     if(cashVia==='paypal'){fin.paypal=(fin.paypal||0)+cashAdj;if(g('f-pp'))g('f-pp').value=fin.paypal.toFixed(2);}
     else if(cashVia==='bank'){fin.bank=(fin.bank||0)+cashAdj;if(g('f-bank'))g('f-bank').value=fin.bank.toFixed(2);}
     else{fin.cash=(fin.cash||0)+cashAdj;if(g('f-cash'))g('f-cash').value=fin.cash.toFixed(2);}
   }
-  // Remove sold inventory cards
   var soldIds=tradeOuts.filter(function(t){return t.invId;}).map(function(t){return t.invId;});
   if(soldIds.length)app.inv=app.inv.filter(function(i){return soldIds.indexOf(i.id)===-1;});
-  // Add trade-in cards to inventory as On Hand
   tradeIns.forEach(function(t){
     app.inv.push({id:uid(),catalogId:null,name:t.name,num:'',set:'',color:'',rarity:'',img:null,tcgId:null,
       cond:'NM',qty:1,mkt:t.value,cost:0,perc:null,seller:'Trade-In',sellerId:null,status:'onhand',offerId:null,date:td(),manual:true});
   });
   if(!fin.shows)fin.shows=[];
-  fin.shows.unshift({
-    id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,
+  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:ch,
     rev:outTotal,ship:0,cogs:0,qty:tradeOuts.length,net:net,
     pp:cashVia==='paypal'?cashAdj:0,bank:cashVia==='bank'?cashAdj:0,cash:cashVia==='cash'?cashAdj:0,
     notes:g('trade-notes').value.trim(),
-    isTradeOut:true,tradeOuts:tradeOuts,tradeIns:tradeIns,tradeOutVal:outTotal,tradeInTotal:inTotal,tradeDiff:net,cashAdj:cashAdj,cashDir:cashDir
-  });
+    isTradeOut:true,tradeOuts:tradeOuts,tradeIns:tradeIns,tradeOutVal:outTotal,tradeInTotal:inTotal,tradeDiff:net,cashAdj:cashAdj,cashDir:cashDir});
   saveFin();saveInv();stats();closeTradeMod();renderWhatnot();
   toast('🔄 Trade recorded! Net: '+nm(net));
 }
