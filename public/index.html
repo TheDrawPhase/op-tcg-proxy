@@ -1887,14 +1887,31 @@ function syncInvFromOfferCard(oid,card){
 function editCard(oid,i,f,v){
   var o=findOffer(oid);if(!o||!o.cards[i])return;
   var c=o.cards[i];
-  if(f==='perc'){c.perc=parseFloat(v)||null;if(c.mkt!=null&&c.perc)c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));}
-  else if(f==='mkt'){c.mkt=parseFloat(v)||null;if(c.mkt!=null&&c.perc)c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));}
-  else if(f==='cost'){c.cost=parseFloat(v)||null;if(c.cost!=null&&c.mkt!=null&&c.mkt>0)c.perc=parseFloat(((c.cost/c.mkt)*100).toFixed(1));}
-  else if(f==='qty'){c.qty=parseInt(v)||1;}
+  if(f==='perc'){
+    c.perc=parseFloat(v)||null;
+    if(c.mkt!=null&&c.perc!=null){
+      c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));
+      // Update cost input directly in DOM
+      var sel='[onchange*="editCard(\'' +oid+ '\',' +i+ ',\'cost\'"]';
+      var el=document.querySelector(sel);if(el)el.value=c.cost.toFixed(2);
+    }
+  }else if(f==='mkt'){
+    c.mkt=parseFloat(v)||null;
+    if(c.mkt!=null&&c.perc!=null){
+      c.cost=parseFloat(((c.mkt*c.perc)/100).toFixed(2));
+      var sel2='[onchange*="editCard(\'' +oid+ '\',' +i+ ',\'cost\'"]';
+      var el2=document.querySelector(sel2);if(el2)el2.value=c.cost.toFixed(2);
+    }
+  }else if(f==='cost'){
+    c.cost=parseFloat(v)||null;
+    if(c.cost!=null&&c.mkt!=null&&c.mkt>0){
+      c.perc=parseFloat(((c.cost/c.mkt)*100).toFixed(1));
+      var sel3='[onchange*="editCard(\'' +oid+ '\',' +i+ ',\'perc\'"]';
+      var el3=document.querySelector(sel3);if(el3)el3.value=c.perc.toFixed(1);
+    }
+  }else if(f==='qty'){c.qty=parseInt(v)||1;}
   o.ct=0;o.cards.forEach(function(x){o.ct+=(x.cost||0)*x.qty;});o.total=o.ct+o.ship+o.other;
-  saveOffers();
-  syncInvFromOfferCard(oid,c);
-  saveInv();
+  saveOffers();syncInvFromOfferCard(oid,c);saveInv();
 }
 
 function restoreCardToInv(oid,idx){_snapshot();
