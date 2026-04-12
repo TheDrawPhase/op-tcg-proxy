@@ -911,7 +911,7 @@ function makeInvEntry(card,overrides){
     id:uid(),
     catalogId:card.id||null,
     name:card.name||card.name_numbered||'',
-    num:(card.card_number||card.cardNumber||card.number||'').trim(),
+    num:(card.card_number||card.cardNumber||card.number||card.num||'').trim(),
     set:(card.episode&&card.episode.name?card.episode.name:(card.set_name||card.set||'')).trim(),
     color:card.color||'',
     rarity:card.rarity||'',
@@ -927,6 +927,7 @@ function makeInvEntry(card,overrides){
     status:'onhand',
     offerId:null,
     date:td(),
+    variant:card.variant||'',
     manual:!!card.isCustom
   }, overrides||{});
 }
@@ -941,7 +942,7 @@ function makeSessCard(card){
     id:uid(),
     catalogId:card.id||null,
     name:card.name||card.name_numbered||'',
-    num:(card.card_number||card.cardNumber||card.number||'').trim(),
+    num:(card.card_number||card.cardNumber||card.number||card.num||'').trim(),
     set:(card.episode&&card.episode.name?card.episode.name:(card.set_name||card.set||'')).trim(),
     color:card.color||'',
     rarity:card.rarity||'',
@@ -3070,7 +3071,7 @@ function renderShows(){
     h+='<div class="show-row"'+(s.isTradeOut?' style="border-color:var(--blue)"':s.isPayment&&s.payDir==='out'?' style="border-color:var(--red)"':s.isPayment&&s.payDir==='in'?' style="border-color:var(--green)"':s.channel==='refund'?' style="border-color:var(--red)"':'')+'>';
     h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:var(--purple);font-size:11px">'+(s.isTradeOut?'🔄 Trade':(chLabels[s.channel]||'📺'))+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:var(--text);font-size:12px">'+s.date+'</div></div>';
-    if(s.pp||s.bank||s.cash){var sp=[];if(s.pp)sp.push('💳'+nm(s.pp));if(s.bank)sp.push('🏦'+nm(s.bank));if(s.cash)sp.push('💵'+nm(s.cash));h+='<div style="font-size:10px;color:var(--text3);flex-basis:100%">Split: '+sp.join(' + ')+'</div>';}
+    if(!s.isPayment&&(s.pp||s.bank||s.cash)){var sp=[];if(s.pp)sp.push('💳'+nm(s.pp));if(s.bank)sp.push('🏦'+nm(s.bank));if(s.cash)sp.push('💵'+nm(s.cash));h+='<div style="font-size:10px;color:var(--text3);flex-basis:100%">Split: '+sp.join(' + ')+'</div>';}
     h+='<div class="show-stat"><div class="show-stat-l">Revenue</div><div class="show-stat-v" style="color:var(--green)">'+nm(s.rev)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Net</div><div class="show-stat-v" style="color:'+(s.net>=0?'var(--yellow)':'var(--red)')+'">'+nm(s.net)+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Margin</div><div class="show-stat-v" style="color:var(--blue);font-size:14px">'+margin+'%</div></div>';
@@ -3079,6 +3080,13 @@ function renderShows(){
       h+='<div style="font-size:11px;color:var(--blue);flex:1;min-width:100px">🔄 Out: '+(s.tradeOuts||[{name:s.tradeOutName,val:s.tradeOutVal}]).map(function(t){return t.name+'('+nm(t.val||t.salePrice||0)+')';}).join(', ')+'</div>';
       h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">In: '+(s.tradeIns||[]).map(function(t){return t.name+'('+nm(t.value||0)+')';}).join(', ')+'</div>';
       if(s.tradeDiff!==0)h+='<div style="font-size:11px;font-weight:600;color:'+(s.tradeDiff>0?'var(--green)':'var(--red)')+'">Cash: '+nm(s.tradeDiff)+'</div>';
+    } else if(s.isPayment){
+      var viaLabels={paypal:'💳 PayPal',bank:'🏦 Bank',cash:'💵 Cash'};
+      h+='<div style="font-size:11px;flex:1;min-width:120px;display:flex;flex-direction:column;gap:4px">';
+      h+='<span style="font-weight:600;color:var(--text)">'+( viaLabels[s.payVia]||s.payVia||'')+'</span>';
+      if(s.offerShortId&&s.offerId)h+='<button onclick="show(\'offers\');setTimeout(function(){openOffer(\''+s.offerId+'\');},150)" style="text-align:left;background:var(--purple-bg);border:1px solid var(--purple);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--purple);cursor:pointer;width:fit-content">📋 '+s.offerShortId+'</button>';
+      if(s.notes)h+='<span style="font-size:11px;color:var(--text3)">📝 '+s.notes+'</span>';
+      h+='</div>';
     } else {
       if(s.cards&&s.cards.length)h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">'+s.cards.map(function(card){return card.name+' ('+nm(card.salePrice)+')';}).join(', ')+'</div>';
       else if(s.notes)h+='<div style="font-size:11px;color:var(--text3);flex:1;min-width:100px">📝 '+s.notes+'</div>';
