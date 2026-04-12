@@ -2489,6 +2489,75 @@ function updTradeCalc(){
   if(g('trade-c-cash')){g('trade-c-cash').textContent=cashAdj!==0?(cashAdj>0?'+':'')+nm(cashAdj):'—';g('trade-c-cash').style.color=cashAdj>0?'var(--green)':cashAdj<0?'var(--red)':'var(--text3)';}
   if(g('trade-c-diff')){g('trade-c-diff').textContent=nm(net);g('trade-c-diff').style.color=net>=0?'var(--green)':'var(--red)';}
 }
+function openTradeSearch(mode){
+  _tradeSearchMode=mode;
+  var sp=g('trade-search-panel');if(!sp)return;
+  sp.style.display='';
+  g('trade-search-label').textContent=mode==='in'?'Search: Their Cards (Trade-In)':'Search: Your Cards (Trade-Out)';
+  g('trade-q').value='';g('trade-results').innerHTML='';
+  setTimeout(function(){g('trade-q').focus();},50);
+}
+function closeTradeSearch(){
+  var sp=g('trade-search-panel');if(sp)sp.style.display='none';
+  _tradeSearchMode=null;
+}
+async function tradeSearch(){
+  var raw=g('trade-q').value.trim();if(!raw)return;
+  var btn=g('trade-sbtn');btn.disabled=true;btn.textContent='⏳';
+  g('trade-results').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">Searching...</div>';
+  var q2=raw.toLowerCase();
+  var catCards=app.catalog.filter(function(x){
+    return(x.name||'').toLowerCase().includes(q2)||(x.cardNumber||'').toLowerCase().includes(q2);
+  }).map(function(x){return{name:x.name,card_number:x.cardNumber||'',
+    episode:{name:x.set||''},image:x.image||null,
+    prices:x.mktprice?{tcgplayer:{market_price:x.mktprice/EU}}:null,mktprice:x.mktprice||null};});
+  try{
+    var name=raw.replace(/(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc)/gi,'').trim()||raw;
+    var r=await fetch(P+'/cards?search='+encodeURIComponent(name)+'&page=1&per_page=20');
+    var d=r.ok?await r.json():{data:[]};
+    var apiCards=Array.isArray(d)?d:(d.data||[]);
+    apiCards.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
+    var all=catCards.concat(apiCards.filter(function(x){
+      return!catCards.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase();});
+    }));
+    renderTradeResults(all);
+  }catch(e){renderTradeResults(catCards);}
+  btn.disabled=false;btn.textContent='Search';
+}
+function renderTradeResults(cards){
+  if(!cards.length){g('trade-results').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">No results.</div>';return;}
+  var h='';
+  cards.slice(0,20).forEach(function(card){
+    var p=cardNmUsd(card);
+    var name=card.name||'';
+    var ep=card.episode&&card.episode.name?card.episode.name:'';
+    var num=card.card_number||card.cardNumber||'';
+    var safe=encodeURIComponent(JSON.stringify({name:name,mkt:p||0}));
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:7px;border-bottom:1px solid var(--border);cursor:pointer" data-tc="'+safe+'" onclick="addTradeCard(this.dataset.tc)">';
+    h+=card.image?'<img src="'+card.image+'" style="width:28px;height:38px;border-radius:3px;object-fit:cover;flex-shrink:0" onerror="this.hidden=1"/>':'<div style="width:28px;height:38px;background:var(--bg2);border-radius:3px;flex-shrink:0"></div>';
+    h+='<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+name+'</div>';
+    h+='<div style="font-size:10px;color:var(--text3)">'+ep+(num?' • '+num:'')+'</div></div>';
+    h+='<div style="font-size:12px;font-weight:700;color:var(--green);white-space:nowrap">'+nm(p)+'</div></div>';
+  });
+  g('trade-results').innerHTML=h;
+}
+function addTradeCard(encoded){
+  var card=JSON.parse(decodeURIComponent(encoded));
+  var valStr=card.mkt?card.mkt.toFixed(2):'';
+  if(_tradeSearchMode==='in'){
+    addTradeInRow(card.name,valStr);
+  }else{
+    addTradeOutRow('manual');
+    var idx=_tradeOutCount-1;
+    var nameEl=g('to-name-'+idx),valEl=g('to-val-'+idx);
+    if(nameEl)nameEl.value=card.name;
+    if(valEl&&valStr)valEl.value=valStr;
+  }
+  updTradeCalc();
+  closeTradeSearch();
+  toast('Added: '+card.name);
+}
+
 function confirmTrade(){_snapshot();
   var ch=g('trade-channel').value,dateVal=g('trade-date').value;
   if(!dateVal){toast('⚠️ Date required.');return;}
