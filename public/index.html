@@ -777,6 +777,11 @@ button{cursor:pointer}a{text-decoration:none}
         <option value="cash">💵 Cash</option>
       </select>
     </div>
+    <div style="margin-bottom:10px"><div class="ml">Linked Offer (optional)</div>
+      <select class="inp full" id="pay-offer-ref">
+        <option value="">— None —</option>
+      </select>
+    </div>
     <div style="margin-bottom:14px"><div class="ml">Notes / Reason</div><input class="inp full" id="pay-notes" placeholder="e.g. Refund to customer, shipping overpay..."/></div>
     <div class="row">
       <button class="btn btn-g" style="flex:1" id="pay-confirm-btn" onclick="confirmPayment()">✅ Confirm</button>
@@ -1072,6 +1077,7 @@ function loadLocal(){
   app.inv=ll('inv',[]);
   app.offers=ll('offers',[]);
   app.sellers=ll('sellers',[]);
+  app.offers.forEach(function(o){if(!o.shortId)o.shortId='INV-'+o.id.slice(-4).toUpperCase();});
   app.catalog=ll('catalog',[]);
   app.sess=ll('sess',[]);
   app.editOffer=ll('editOffer',null)||null;
@@ -1493,8 +1499,9 @@ function saveOffer(){_snapshot();
 
   // New offer
   var oid=uid();
+  var shortId='INV-'+Math.floor(1000+Math.random()*9000);
   var cards=app.sess.map(function(e){return Object.assign({},e,{status:'pending'});});
-  var sheet={id:oid,seller:sn,sellerId:sid,date:day,ship:sh,other:ot,ct:ct,total:ct+sh+ot,cards:cards};
+  var sheet={id:oid,shortId:shortId,seller:sn,sellerId:sid,date:day,ship:sh,other:ot,ct:ct,total:ct+sh+ot,cards:cards};
   app.offers.unshift(sheet);
   saveOffers();
   // Create inventory entries for each card in the offer
@@ -1719,7 +1726,8 @@ function renderOffers(){
     h+='<div class="scard" style="'+(isOpen?'border-color:var(--border2)':'')+'">';
     h+='<div data-oid="'+o.id+'" onclick="openOffer(this.dataset.oid)" style="cursor:pointer;padding-bottom:4px">';
     h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">';
-    h+='<div><span style="color:var(--yellow);font-weight:700;font-size:14px">🏴‍☠️ '+o.seller+'</span><div style="font-size:11px;color:var(--text3)">'+o.date+'</div></div>';
+    h+='<div><span style="color:var(--yellow);font-weight:700;font-size:14px">🏴‍☠️ '+o.seller+'</span>';
+    h+='<div style="font-size:11px;color:var(--text3)">'+o.date+' <span style="font-weight:700;color:var(--purple);letter-spacing:.5px">'+(o.shortId||o.id.slice(-6).toUpperCase())+'</span></div></div>';
     h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">';
     h+='<button onclick="event.stopPropagation();delOffer(\''+o.id+'\')" style="background:var(--red-bg);border:none;color:var(--red);border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>';
     h+=sb;
@@ -1814,9 +1822,13 @@ function buildOfferDetailHTML(o){
   // Summary row
   var mktTot=0,costTot=0;o.cards.forEach(function(c){mktTot+=(c.mkt||0)*c.qty;costTot+=(c.cost||0)*c.qty;});
   var avgPerc=mktTot>0?parseFloat(((costTot/mktTot)*100).toFixed(1)):null;
-  var h='<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:6px">';
+  var sid=o.shortId||('INV-'+o.id.slice(-4).toUpperCase());
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">';
+  h+='<div class="row" style="gap:6px">';
   h+='<button class="btn btn-g" style="font-size:12px;padding:6px 10px" onclick="addToOffer(\''+o.id+'\')">+ Cards</button>';
   h+='<div style="display:flex;align-items:center;gap:4px">';
+  h+='<button class="btn" style="font-size:12px;padding:6px 10px;background:var(--red-bg);color:var(--red);border:1px solid var(--red)" onclick="openPaymentMod(\'out\',\''+o.id+'\')">💸 Pay Out</button>';
+  h+='<button class="btn" style="font-size:12px;padding:6px 10px;background:var(--green-bg);color:var(--green);border:1px solid var(--green)" onclick="openPaymentMod(\'in\',\''+o.id+'\')">💰 Pay In</button>';
   h+='<select id="pdf-sort-'+o.id+'" class="sel" style="font-size:11px;padding:5px 7px">';
   h+='<option value="default">Original Order</option>';
   h+='<option value="vd">Value High to Low</option>';
@@ -1827,6 +1839,7 @@ function buildOfferDetailHTML(o){
   h+='</div>';
   h+='<button class="btn btn-r" style="font-size:12px;padding:6px 10px" onclick="delOffer(\''+o.id+'\')">🗑 Delete</button>';
   h+='</div>';
+  h+='<div style="display:inline-block;background:var(--purple-bg);border:1px solid var(--purple);border-radius:6px;padding:3px 10px;font-size:13px;font-weight:800;color:var(--purple);letter-spacing:1px;margin-bottom:10px">'+sid+'</div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   h+='<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Seller</div>';
   h+='<select class="sel" style="width:100%;font-size:12px" onchange="updOfferSeller(\''+o.id+'\',this.value)">';
@@ -2746,7 +2759,7 @@ function showAddedFlash(img,name,detail){
 
 // ─── Payment In/Out ───────────────────────────────────────────────────────────
 var _paymentDir='out';
-function openPaymentMod(dir){
+function openPaymentMod(dir,offerId){
   _paymentDir=dir;
   var isOut=dir==='out';
   g('payment-mod-title').textContent=isOut?'💸 Record Payment Out':'💰 Record Payment In';
@@ -2754,6 +2767,19 @@ function openPaymentMod(dir){
   var today=new Date();
   g('pay-date').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   g('pay-amt').value='';g('pay-notes').value='';
+  // Populate offer dropdown
+  var sel=g('pay-offer-ref');
+  if(sel){
+    sel.innerHTML='<option value="">— None —</option>';
+    app.offers.forEach(function(o){
+      var sid=o.shortId||('INV-'+o.id.slice(-4).toUpperCase());
+      var opt=document.createElement('option');
+      opt.value=o.id;
+      opt.textContent=sid+' — '+o.seller+' ('+o.date+') '+nm(o.total);
+      sel.appendChild(opt);
+    });
+    if(offerId)sel.value=offerId;
+  }
   g('payment-modal').style.display='';
 }
 function closePaymentMod(){g('payment-modal').style.display='none';}
@@ -2762,6 +2788,9 @@ function confirmPayment(){_snapshot();
   if(!amt){toast('⚠️ Enter an amount.');return;}
   var via=g('pay-via').value;
   var notes=g('pay-notes').value.trim();
+  var offerRef=g('pay-offer-ref')?g('pay-offer-ref').value:'';
+  var offerLabel='';
+  if(offerRef){var refO=findOffer(offerRef);if(refO)offerLabel=(refO.shortId||'INV-'+refO.id.slice(-4).toUpperCase())+' — '+refO.seller;}
   var adj=_paymentDir==='out'?-amt:amt;
   if(via==='paypal'){fin.paypal=(fin.paypal||0)+adj;if(g('f-pp'))g('f-pp').value=fin.paypal.toFixed(2);}
   else if(via==='bank'){fin.bank=(fin.bank||0)+adj;if(g('f-bank'))g('f-bank').value=fin.bank.toFixed(2);}
