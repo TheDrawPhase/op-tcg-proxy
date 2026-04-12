@@ -446,6 +446,8 @@ button{cursor:pointer}a{text-decoration:none}
         <option value="vend">🏪 Vend</option>
         <option value="direct">💬 Direct</option>
         <option value="refund">↩️ Refund</option>
+        <option value="pay-out">💸 Payment Out</option>
+        <option value="pay-in">💰 Payment In</option>
         <option value="trade">🔄 Trade</option>
       </select>
     </div>
@@ -1727,7 +1729,7 @@ function renderOffers(){
     h+='<div data-oid="'+o.id+'" onclick="openOffer(this.dataset.oid)" style="cursor:pointer;padding-bottom:4px">';
     h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">';
     h+='<div><span style="color:var(--yellow);font-weight:700;font-size:14px">🏴‍☠️ '+o.seller+'</span>';
-    h+='<div style="font-size:11px;color:var(--text3)">'+o.date+' <span style="font-weight:700;color:var(--purple);letter-spacing:.5px">'+(o.shortId||o.id.slice(-6).toUpperCase())+'</span></div></div>';
+    h+='<div style="font-size:11px;color:var(--text3)">'+o.date+' <span style="font-weight:700;color:var(--purple);letter-spacing:.5px">'+(o.shortId||('INV-'+o.id.slice(-4).toUpperCase()))+'</span></div></div>';
     h+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">';
     h+='<button onclick="event.stopPropagation();delOffer(\''+o.id+'\')" style="background:var(--red-bg);border:none;color:var(--red);border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">🗑 Delete</button>';
     h+=sb;
@@ -1739,6 +1741,7 @@ function renderOffers(){
     h+=' • <span style="color:var(--green)">Mkt: '+nm(mktTot)+'</span>';
     h+=' • <span style="color:var(--yellow)">Paid: '+nm(o.ct)+'</span>';
     if(o.ship>0)h+=' • Ship: '+nm(o.ship);
+    if(o.tracking){var turl2=getTrackingUrl(o.tracking,o.carrier||'usps');h+=' • <a href="'+turl2+'" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-weight:600;font-size:11px">📦 Track</a>';}
     if(mis)h+=' • <span style="color:var(--red)">'+mis+' missing</span>';
     h+='</div>';
     h+='<div class="pbar" style="margin-top:6px;display:flex;overflow:hidden">';
@@ -1848,6 +1851,18 @@ function buildOfferDetailHTML(o){
   h+='</select></div>';
   h+='<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Ship $</div><input type="number" step="0.01" min="0" value="'+o.ship.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'ship\',this.value)"/></div>';
   h+='<div><div style="font-size:10px;color:var(--text3);margin-bottom:2px">Other $</div><input type="number" step="0.01" min="0" value="'+o.other.toFixed(2)+'" class="pinp pp" style="width:100%" onchange="updOfferFee(\''+o.id+'\',\'other\',this.value)"/></div>';
+  h+='<div style="grid-column:1/-1">';
+  h+='<div style="font-size:10px;color:var(--text3);margin-bottom:2px">Tracking Number</div>';
+  h+='<div style="display:flex;gap:6px;align-items:center">';
+  h+='<input class="inp" style="flex:1;font-size:12px" placeholder="Enter tracking # or paste URL..." value="'+(o.tracking||'')+'" id="tracking-'+o.id+'" onchange="updOfferTracking(\''+o.id+'\',this.value)"/>';
+  h+='<select class="sel" style="font-size:11px;padding:5px 7px" id="carrier-'+o.id+'" onchange="updOfferTracking(\''+o.id+'\',document.getElementById(\'tracking-'+o.id+'\').value,this.value)">';
+  h+="<option value='usps'"+(o.carrier==='usps'?' selected':'')+">USPS</option>";
+  h+="<option value='ups'"+(o.carrier==='ups'?' selected':'')+">UPS</option>";
+  h+="<option value='fedex'"+(o.carrier==='fedex'?' selected':'')+">FedEx</option>";
+  h+="<option value='url'"+(o.carrier==='url'?' selected':'')+">Custom URL</option>";
+  h+='</select>';
+  if(o.tracking){var turl=getTrackingUrl(o.tracking,o.carrier||'usps');h+='<a href="'+turl+'" target="_blank" style="padding:5px 10px;border-radius:var(--radius);background:var(--blue-bg);border:1px solid var(--blue);color:var(--blue);font-size:11px;font-weight:700;white-space:nowrap">Track →</a>';}
+  h+='</div></div>';
   h+='</div>';
   h+=sh;
   h+='<div class="row" style="margin-bottom:8px;font-size:13px;flex-wrap:wrap;gap:10px">';
@@ -2798,12 +2813,38 @@ function confirmPayment(){_snapshot();
   var dateVal=g('pay-date').value;
   var dp=dateVal.split('-'),fmtDate=dp[1]+'/'+dp[2]+'/'+dp[0].slice(2);
   if(!fin.shows)fin.shows=[];
-  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),channel:'refund',
+  var sid2=offerRef?(function(){var ro=findOffer(offerRef);return ro?(ro.shortId||'INV-'+ro.id.slice(-4).toUpperCase()):''})():'';
+  fin.shows.unshift({id:uid(),date:fmtDate,ts:new Date(dateVal).getTime(),
+    channel:_paymentDir==='out'?'pay-out':'pay-in',
     rev:adj,ship:0,cogs:0,qty:0,net:adj,
     pp:via==='paypal'?adj:0,bank:via==='bank'?adj:0,cash:via==='cash'?adj:0,
-    notes:(_paymentDir==='out'?'Payment Out':'Payment In')+(_paymentDir==='out'?' (refund/expense)':' (income)')+( notes?' — '+notes:'')});
+    notes:notes,isPayment:true,payDir:_paymentDir,payVia:via,
+    offerId:offerRef||null,offerShortId:sid2});
   saveFin();stats();closePaymentMod();updFin();
   toast((_paymentDir==='out'?'💸 Paid out: ':'💰 Received: ')+nm(amt)+' via '+via);
+}
+
+
+function getTrackingUrl(num,carrier){
+  var n=num.trim();
+  if(n.startsWith('http')||n.startsWith('www'))return n.startsWith('http')?n:'https://'+n;
+  if(carrier==='ups')return'https://www.ups.com/track?tracknum='+encodeURIComponent(n);
+  if(carrier==='fedex')return'https://www.fedex.com/fedextrack/?trknbr='+encodeURIComponent(n);
+  // USPS default or auto-detect
+  return'https://tools.usps.com/go/TrackConfirmAction?tLabels='+encodeURIComponent(n);
+}
+function updOfferTracking(oid,num,carrier){
+  var o=findOffer(oid);if(!o)return;
+  o.tracking=num.trim();
+  if(carrier!==undefined)o.carrier=carrier;
+  saveOffers();
+  // Update Track button live
+  var trackBtn=document.getElementById('track-btn-'+oid);
+  if(o.tracking){
+    var url=getTrackingUrl(o.tracking,o.carrier||'usps');
+    if(trackBtn){trackBtn.href=url;trackBtn.style.display='';}
+    else renderOffers();
+  }else if(trackBtn){trackBtn.style.display='none';}
 }
 
 // ─── Sellers ──────────────────────────────────────────────────────────────────
@@ -3023,10 +3064,10 @@ function renderShows(){
   h+='<div class="wstat"><div class="wstat-l">Cards Sold</div><div class="wstat-v" style="color:var(--purple);font-size:18px">'+totQty+'</div></div></div>';
   if(!shows.length){el.innerHTML=h+'<div class="empty" style="padding:20px">No results match filters.</div>';return;}
   h+='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Showing '+shows.length+' of '+allShows.length+' records</div>';
-  var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct',refund:'↩️ Refund'};
+  var chLabels={whatnot:'📺 Whatnot',vend:'🏪 Vend',direct:'💬 Direct',refund:'↩️ Refund','pay-out':'💸 Payment Out','pay-in':'💰 Payment In'};
   shows.forEach(function(s){
     var margin=s.rev>0?((s.net/s.rev)*100).toFixed(1):0;
-    h+='<div class="show-row"'+(s.isTradeOut?' style="border-color:var(--blue)"':s.channel==='refund'?' style="border-color:var(--red)"':'')+'>'; 
+    h+='<div class="show-row"'+(s.isTradeOut?' style="border-color:var(--blue)"':s.isPayment&&s.payDir==='out'?' style="border-color:var(--red)"':s.isPayment&&s.payDir==='in'?' style="border-color:var(--green)"':s.channel==='refund'?' style="border-color:var(--red)"':'')+'>';
     h+='<div class="show-stat"><div class="show-stat-l">Channel</div><div class="show-stat-v" style="color:var(--purple);font-size:11px">'+(s.isTradeOut?'🔄 Trade':(chLabels[s.channel]||'📺'))+'</div></div>';
     h+='<div class="show-stat"><div class="show-stat-l">Date</div><div class="show-stat-v" style="color:var(--text);font-size:12px">'+s.date+'</div></div>';
     if(s.pp||s.bank||s.cash){var sp=[];if(s.pp)sp.push('💳'+nm(s.pp));if(s.bank)sp.push('🏦'+nm(s.bank));if(s.cash)sp.push('💵'+nm(s.cash));h+='<div style="font-size:10px;color:var(--text3);flex-basis:100%">Split: '+sp.join(' + ')+'</div>';}
