@@ -734,6 +734,19 @@ button{cursor:pointer}a{text-decoration:none}
         <button class="btn" id="trade-sbtn" onclick="tradeSearch()" style="padding:7px 14px;font-size:13px">Search</button>
       </div>
       <div id="trade-results" style="max-height:200px;overflow-y:auto;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface)"></div>
+      <div id="trade-page-nav" style="display:none;display:flex;justify-content:space-between;align-items:center;padding:5px 2px;font-size:11px;color:var(--text3);margin-top:4px">
+        <button id="trade-prev-btn" onclick="tradePageNav(-1)" style="padding:3px 10px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);font-size:11px;cursor:pointer">← Prev</button>
+        <span id="trade-page-label"></span>
+        <button id="trade-next-btn" onclick="tradePageNav(1)" style="padding:3px 10px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);font-size:11px;cursor:pointer">Next →</button>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
+        <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Manual Entry</div>
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center">
+          <input class="inp" id="trade-manual-name" placeholder="Card name..." style="font-size:12px"/>
+          <input type="number" class="pinp pp" id="trade-manual-val" placeholder="Val $" step="0.01" min="0" style="width:72px;font-size:12px"/>
+          <button class="btn btn-g" onclick="addTradeManual()" style="padding:6px 12px;font-size:12px">Add</button>
+        </div>
+      </div>
     </div>
     <div style="margin-bottom:12px"><div class="ml">Notes</div><textarea class="inp full" id="trade-notes" rows="2" placeholder="Optional..."></textarea></div>
     <div class="row">
@@ -1803,7 +1816,15 @@ function buildOfferDetailHTML(o){
   var avgPerc=mktTot>0?parseFloat(((costTot/mktTot)*100).toFixed(1)):null;
   var h='<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:6px">';
   h+='<button class="btn btn-g" style="font-size:12px;padding:6px 10px" onclick="addToOffer(\''+o.id+'\')">+ Cards</button>';
-  h+='<button class="btn" style="font-size:12px;padding:6px 10px" onclick="pdfOffer(\''+o.id+'\')">📄 PDF</button>';
+  h+='<div style="display:flex;align-items:center;gap:4px">';
+  h+='<select id="pdf-sort-'+o.id+'" class="sel" style="font-size:11px;padding:5px 7px">';
+  h+='<option value="default">Original Order</option>';
+  h+='<option value="vd">Value High to Low</option>';
+  h+='<option value="va">Value Low to High</option>';
+  h+='<option value="na">Name A to Z</option>';
+  h+='</select>';
+  h+='<button class="btn" style="font-size:12px;padding:6px 10px" onclick="pdfOffer(\''+o.id+'\',document.getElementById(\'pdf-sort-'+o.id+'\').value)">📄 PDF</button>';
+  h+='</div>';
   h+='<button class="btn btn-r" style="font-size:12px;padding:6px 10px" onclick="delOffer(\''+o.id+'\')">🗑 Delete</button>';
   h+='</div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
@@ -1970,34 +1991,57 @@ function addToOffer(id){
   },150);
 }
 
-function pdfOffer(id){
+function pdfOffer(id,sort){
   var o=findOffer(id);if(!o)return;
+  var cards=o.cards.slice();
+  if(sort==='vd')cards.sort(function(a,b){return(b.mkt||0)-(a.mkt||0);});
+  else if(sort==='va')cards.sort(function(a,b){return(a.mkt||0)-(b.mkt||0);});
+  else if(sort==='na')cards.sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
   var rows='';
-  o.cards.forEach(function(c,i){
-    var bg=i%2===0?'background:#f9f9f9':'';
-    var img=c.img?'<img src="'+c.img+'" style="width:36px;border-radius:3px;display:block;margin:auto" onerror="this.hidden=1"/>':'';
-    rows+='<tr style="border-bottom:1px solid #ddd;'+bg+'"><td style="padding:7px 5px;text-align:center">'+img+'</td>'
-      +'<td style="padding:7px 5px;font-size:12px;font-weight:600">'+c.name+'</td>'
-      +'<td style="padding:7px 5px;font-size:12px">'+(c.num||'')+'</td>'
-      +'<td style="padding:7px 5px;font-size:12px;text-align:center">'+c.qty+'</td>'
-      +'<td style="padding:7px 5px;font-size:12px;text-align:right">'+nm(c.mkt)+'</td>'
-      +'<td style="padding:7px 5px;font-size:12px;text-align:right;font-weight:700">'+nm(c.cost)+'</td>'
-      +'<td style="padding:7px 5px;font-size:12px;text-align:right;color:var(--green);font-weight:700">'+nm(c.cost!=null?c.cost*c.qty:null)+'</td></tr>';
+  cards.forEach(function(c,i){
+    var bg=i%2===0?'background:#f7f7f7':'';
+    var img=c.img?'<img src="'+c.img+'" style="width:26px;border-radius:2px;display:block;margin:auto" onerror="this.hidden=1"/>':'';
+    rows+='<tr style="border-bottom:1px solid #e8e8e8;'+bg+'">'
+      +'<td style="padding:3px 4px;text-align:center;width:32px">'+img+'</td>'
+      +'<td style="padding:3px 4px;font-size:11px;font-weight:600">'+c.name+'</td>'
+      +'<td style="padding:3px 4px;font-size:10px;color:#666">'+(c.num||'')+'</td>'
+      +'<td style="padding:3px 4px;font-size:11px;text-align:center">'+c.qty+'</td>'
+      +'<td style="padding:3px 4px;font-size:11px;text-align:right">'+nm(c.mkt)+'</td>'
+      +'<td style="padding:3px 4px;font-size:11px;text-align:right;font-weight:700">'+nm(c.cost)+'</td>'
+      +'<td style="padding:3px 4px;font-size:11px;text-align:right;font-weight:700;color:#059669">'+nm(c.cost!=null?c.cost*c.qty:null)+'</td>'
+      +'</tr>';
   });
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offer Sheet</title>'
-    +'<style>body{font-family:Arial,sans-serif;margin:0;padding:28px;color:#111;font-size:13px}'
-    +'.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #111}'
-    +'table{width:100%;border-collapse:collapse;margin-bottom:14px}thead tr{background:#111;color:#fff}thead td{padding:7px 5px;font-size:11px;text-transform:uppercase}'
-    +'.tots{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.tr{display:flex;gap:36px;font-size:13px}'
-    +'.gr{font-weight:900;font-size:15px;border-top:2px solid #111;padding-top:5px;margin-top:2px}'
-    +'@media print{body{padding:18px}}</style></head><body>'
-    +'<div class="hdr"><div style="font-size:21px;font-weight:900">Offer Sheet — '+o.seller+'</div><div style="font-size:12px;color:#555">'+o.date+'</div></div>'
-    +'<table><thead><tr><td style="width:46px">Photo</td><td>Card Name</td><td>Card #</td><td style="text-align:center">Qty</td><td style="text-align:right">Market</td><td style="text-align:right">Buy/ea</td><td style="text-align:right">Subtotal</td></tr></thead>'
-    +'<tbody>'+rows+'</tbody></table>'
-    +'<div class="tots"><div class="tr"><span style="color:#555">Cards:</span><span>'+nm(o.ct)+'</span></div>';
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,sans-serif;padding:16px 20px;color:#111;font-size:12px}'
+    +'.hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid #111}'
+    +'.hdr-title{font-size:16px;font-weight:900}'
+    +'.hdr-sub{font-size:11px;color:#555}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:10px}'
+    +'thead tr{background:#111;color:#fff}'
+    +'thead td{padding:4px 4px;font-size:9px;text-transform:uppercase;letter-spacing:.4px}'
+    +'.tots{display:flex;flex-direction:column;align-items:flex-end;gap:2px}'
+    +'.tr{display:flex;gap:28px;font-size:11px}'
+    +'.gr{font-weight:900;font-size:13px;border-top:1px solid #111;padding-top:4px;margin-top:2px}'
+    +'@media print{body{padding:10px 14px}@page{margin:.4in}}'
+    +'</style></head><body>'
+    +'<div class="hdr"><div class="hdr-title">Offer Sheet — '+o.seller+'</div><div class="hdr-sub">'+o.date+' &nbsp;|&nbsp; '+o.cards.length+' cards</div></div>'
+    +'<table><thead><tr>'
+    +'<td style="width:32px">Img</td>'
+    +'<td>Card Name</td>'
+    +'<td style="width:80px">Card #</td>'
+    +'<td style="width:28px;text-align:center">Qty</td>'
+    +'<td style="width:60px;text-align:right">Market</td>'
+    +'<td style="width:55px;text-align:right">Buy/ea</td>'
+    +'<td style="width:60px;text-align:right">Subtotal</td>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="tots">'
+    +'<div class="tr"><span style="color:#555">Cards:</span><span>'+nm(o.ct)+'</span></div>';
   if(o.ship>0)html+='<div class="tr"><span style="color:#555">Shipping:</span><span>'+nm(o.ship)+'</span></div>';
   if(o.other>0)html+='<div class="tr"><span style="color:#555">Other:</span><span>'+nm(o.other)+'</span></div>';
-  html+='<div class="tr gr"><span>Total:</span><span style="color:var(--green)">'+nm(o.total)+'</span></div></div></body></html>';
+  html+='<div class="tr gr"><span>Total:</span><span style="color:#059669">'+nm(o.total)+'</span></div>'
+    +'</div></body></html>';
   var w=window.open('','_blank');w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},500);
 }
 
@@ -2505,6 +2549,7 @@ async function tradeSearch(){
   var raw=g('trade-q').value.trim();if(!raw)return;
   var btn=g('trade-sbtn');btn.disabled=true;btn.textContent='⏳';
   g('trade-results').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">Searching...</div>';
+  _tradeAllResults=[];_tradePage=0;
   var q2=raw.toLowerCase();
   var catCards=app.catalog.filter(function(x){
     return(x.name||'').toLowerCase().includes(q2)||(x.cardNumber||'').toLowerCase().includes(q2);
@@ -2512,22 +2557,50 @@ async function tradeSearch(){
     episode:{name:x.set||''},image:x.image||null,
     prices:x.mktprice?{tcgplayer:{market_price:x.mktprice/EU}}:null,mktprice:x.mktprice||null};});
   try{
-    var name=raw.replace(/(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc)/gi,'').trim()||raw;
+    var name=raw.replace(/\b(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc)\b/gi,'').trim()||raw;
+    // Fetch page 1 first
     var r=await fetch(P+'/cards?search='+encodeURIComponent(name)+'&page=1&per_page=20');
     var d=r.ok?await r.json():{data:[]};
-    var apiCards=Array.isArray(d)?d:(d.data||[]);
-    apiCards.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
-    var all=catCards.concat(apiCards.filter(function(x){
+    var page1=Array.isArray(d)?d:(d.data||[]);
+    var totalPages=(d.paging&&d.paging.total)||1;
+    page1.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
+    var allApi=page1.slice();
+    if(totalPages>1){
+      var pages=[];for(var p2=2;p2<=totalPages;p2++)pages.push(p2);
+      var rest=await Promise.all(pages.map(function(pg){
+        return fetch(P+'/cards?search='+encodeURIComponent(name)+'&page='+pg+'&per_page=20')
+          .then(function(r2){return r2.ok?r2.json():null;}).catch(function(){return null;});
+      }));
+      rest.forEach(function(dd){
+        if(!dd)return;
+        var cards=Array.isArray(dd)?dd:(dd.data||[]);
+        cards.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
+        allApi=allApi.concat(cards);
+      });
+    }
+    _tradeAllResults=catCards.concat(allApi.filter(function(x){
       return!catCards.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase();});
     }));
-    renderTradeResults(all);
-  }catch(e){renderTradeResults(catCards);}
+  }catch(e){
+    _tradeAllResults=catCards;
+  }
   btn.disabled=false;btn.textContent='Search';
+  renderTradeResults();
 }
-function renderTradeResults(cards){
-  if(!cards.length){g('trade-results').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">No results.</div>';return;}
+function tradePageNav(dir){
+  var perPage=10;
+  var maxPage=Math.ceil(_tradeAllResults.length/perPage)-1;
+  _tradePage=Math.max(0,Math.min(_tradePage+dir,maxPage));
+  renderTradeResults();
+}
+function renderTradeResults(){
+  var perPage=10;
+  var total=_tradeAllResults.length;
+  if(!total){g('trade-results').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">No results.</div>';g('trade-page-nav').style.display='none';return;}
+  var start=_tradePage*perPage;
+  var page=_tradeAllResults.slice(start,start+perPage);
   var h='';
-  cards.slice(0,20).forEach(function(card){
+  page.forEach(function(card){
     var p=cardNmUsd(card);
     var name=card.name||'';
     var ep=card.episode&&card.episode.name?card.episode.name:'';
@@ -2540,7 +2613,35 @@ function renderTradeResults(cards){
     h+='<div style="font-size:12px;font-weight:700;color:var(--green);white-space:nowrap">'+nm(p)+'</div></div>';
   });
   g('trade-results').innerHTML=h;
+  // Page nav
+  var maxPage=Math.ceil(total/perPage);
+  var nav=g('trade-page-nav');
+  if(maxPage>1){
+    nav.style.display='flex';
+    g('trade-page-label').textContent='Page '+(_tradePage+1)+' of '+maxPage+' ('+total+' results)';
+    g('trade-prev-btn').disabled=_tradePage===0;
+    g('trade-next-btn').disabled=_tradePage>=maxPage-1;
+  }else{
+    nav.style.display='none';
+  }
 }
+function addTradeManual(){
+  var name=g('trade-manual-name').value.trim();
+  var val=g('trade-manual-val').value;
+  if(!name){toast('⚠️ Enter a card name.');return;}
+  if(_tradeSearchMode==='in'){addTradeInRow(name,val);}
+  else{
+    addTradeOutRow('manual');
+    var idx=_tradeOutCount-1;
+    var nameEl=g('to-name-'+idx),valEl=g('to-val-'+idx);
+    if(nameEl)nameEl.value=name;
+    if(valEl&&val)valEl.value=val;
+  }
+  g('trade-manual-name').value='';g('trade-manual-val').value='';
+  updTradeCalc();
+  toast('Added: '+name);
+}
+
 function addTradeCard(encoded){
   var card=JSON.parse(decodeURIComponent(encoded));
   var valStr=card.mkt?card.mkt.toFixed(2):'';
