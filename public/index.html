@@ -558,6 +558,8 @@ button{cursor:pointer}a{text-decoration:none}
       
       <div style="grid-column:1/-1"><div class="ml">Market Price $ (optional — for sorting in search results)</div><input type="number" step="0.01" min="0" class="inp full" id="me-mktprice" placeholder="e.g. 24.99"/></div>
     <div id="me-edit-id" style="display:none"></div>
+    <input type="hidden" id="me-tcgid"/>
+    <input type="hidden" id="me-tcglink"/>
     <div class="row">
       <button class="btn" style="flex:1" onclick="manualToOffer()">+ Add to Offer</button>
       <button class="btn btn-g" style="flex:1" onclick="manualToInv()">+ Add to Inventory</button>
@@ -1471,7 +1473,7 @@ function saveOffer(){_snapshot();
 function openManualMod(catCard){
   g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';
   g('me-rarity').value='';g('me-cond').value='NM';g('me-qty').value=1;
-  if(g('me-img'))g('me-img').value='';
+  if(g('me-img'))g('me-img').value='';if(g('me-tcgid'))g('me-tcgid').value='';if(g('me-tcglink'))g('me-tcglink').value='';
   g('me-edit-id').textContent='';
   if(g('me-mktprice'))g('me-mktprice').value='';
   if(catCard){
@@ -1490,32 +1492,33 @@ function closeManualMod(){g('manual-modal').style.display='none';}
 function autofillTCG(){
   var url=g('tcg-url')?g('tcg-url').value.trim():'';
   if(!url){toast('Paste a TCGPlayer URL first.');return;}
+  if(!url.includes('tcgplayer.com')){toast('Please paste a TCGPlayer URL.');return;}
   // Extract product ID
-  var m=url.match(/\/product\/(\d+)/);
-  if(!m){toast('Could not find product ID in URL.');return;}
-  var pid=m[1];
-  toast('⏳ Fetching card info...');
-  // Fetch both price and card details
-  fetch(P+'/cards/'+pid+'/price')
-    .then(function(r){return r.ok?r.json():null;})
-    .then(function(d){
-      if(!d){toast('Fetch failed — enter details manually.');return;}
-      var mkt=d.market_price||d.marketPrice||d.low_price||0;
-      if(d.name&&g('me-name'))g('me-name').value=d.name;
-      if(d.number&&g('me-num'))g('me-num').value=d.number;
-      if((d.set||d.set_name)&&g('me-set'))g('me-set').value=d.set||d.set_name||'';
-      if((d.color||d.colors)&&g('me-color'))g('me-color').value=Array.isArray(d.colors)?d.colors.join('/'):d.color||'';
-      if(d.rarity&&g('me-rarity'))g('me-rarity').value=d.rarity;
-      if(d.image&&g('me-img'))g('me-img').value=d.image;
-      if(mkt&&g('me-mktprice'))g('me-mktprice').value=mkt.toFixed(2);
-      if(g('tcg-url'))g('tcg-url').value='';
-      var filled=[];
-      if(d.name)filled.push('name');
-      if(mkt)filled.push('price');
-      if(d.image)filled.push('image');
-      toast('✅ Filled: '+filled.join(', ')+'  — check fields and add missing info.');
-    })
-    .catch(function(e){toast('TCGPlayer fetch failed — enter details manually.');});
+  var mPid=url.match(/\/product\/(\d+)/);
+  var pid=mPid?mPid[1]:'';
+  // Extract name from URL slug — everything after the product ID
+  var mSlug=url.match(/\/product\/\d+\/([^?#]+)/);
+  var slug=mSlug?mSlug[1]:'';
+  var nameFromSlug=slug
+    .replace(/one-piece-card-game-[^-]+-[^-]+-[^-]+-/i,'') // strip set prefix
+    .replace(/-/g,' ')
+    .replace(/\b\w/g,function(ch){return ch.toUpperCase();})
+    .trim();
+  var filled=[];
+  if(nameFromSlug&&g('me-name')&&!g('me-name').value){
+    g('me-name').value=nameFromSlug;
+    filled.push('name');
+  }
+  // Store the TCGPlayer URL as the card link
+  if(pid){
+    var tcgLink='https://www.tcgplayer.com/product/'+pid;
+    if(g('me-tcglink'))g('me-tcglink').value=tcgLink;
+    // Store pid in a hidden field for use when saving
+    if(g('me-tcgid'))g('me-tcgid').value=pid;
+    filled.push('TCG link');
+  }
+  if(g('tcg-url'))g('tcg-url').value='';
+  toast(filled.length?'✅ Got: '+filled.join(', ')+' — enter price, card # and save.':'Paste a full TCGPlayer product URL.');
 }
 function saveCat(e){
   var cat=app.catalog.slice();
@@ -1555,6 +1558,29 @@ function saveCat(e){
     }
   });
   if(invUpdated)saveInv();
+}
+
+function getManual(){
+  var name=(g('me-name')&&g('me-name').value||'').trim();
+  if(!name){toast('\u26a0\ufe0f Card name is required.');return null;}
+  var mktRaw=parseFloat(g('me-mktprice')&&g('me-mktprice').value)||0;
+  var editId=g('me-edit-id')&&g('me-edit-id').textContent||'';
+  return{
+    id:editId||uid(),
+    name:name,
+    set:(g('me-set')&&g('me-set').value||'').trim(),
+    cardNumber:(g('me-num')&&g('me-num').value||'').trim(),
+    num:(g('me-num')&&g('me-num').value||'').trim(),
+    color:(g('me-color')&&g('me-color').value||'').trim(),
+    rarity:(g('me-rarity')&&g('me-rarity').value||'').trim(),
+    cond:g('me-cond')&&g('me-cond').value||'NM',
+    qty:parseInt(g('me-qty')&&g('me-qty').value)||1,
+    img:(g('me-img')&&g('me-img').value||'').trim()||null,
+    image:(g('me-img')&&g('me-img').value||'').trim()||null,
+    mktprice:mktRaw||null,
+    tcgId:(g('me-tcgid')&&g('me-tcgid').value||'').trim()||null,
+    tcgplayerUrl:(g('me-tcglink')&&g('me-tcglink').value||'').trim()||null
+  };
 }
 
 function saveManualCatalogOnly(){_snapshot();
@@ -1603,7 +1629,7 @@ function manualToInv(){_snapshot();
 }
 
 function clearManual(){
-  ['me-name','me-set','me-num','me-color','me-rarity','me-img'].forEach(function(id){var el=g(id);if(el)el.value='';});
+  ['me-name','me-set','me-num','me-color','me-rarity','me-img','me-tcgid','me-tcglink'].forEach(function(id){var el=g(id);if(el)el.value='';}  );
   g('me-qty').value=1;g('me-cond').value='NM';g('me-edit-id').textContent='';
   if(g('me-mktprice'))g('me-mktprice').value='';
 }
