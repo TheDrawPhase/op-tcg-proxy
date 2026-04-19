@@ -1143,6 +1143,7 @@ function search(){
   } else {
     sstat('<span style="color:var(--purple);font-size:12px">📁 '+allRes.length+' catalog match'+(allRes.length===1?'':'es')+'</span>');
     g('sort-bar').style.display='';
+    g('rgrid').style.display='';
     renderResults(allRes);
   }
 }
