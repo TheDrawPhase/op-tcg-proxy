@@ -1496,28 +1496,26 @@ function autofillTCG(){
   var m=url.match(/\/product\/(\d+)/);
   if(!m){toast('Could not find product ID in URL.');return;}
   var pid=m[1];
-  var btn=document.querySelector('[onclick="autofillTCG()"]');
-  if(btn){btn.textContent='⏳';btn.disabled=true;}
-  fetch(P+'/cards/'+pid+'/price')
-    .then(function(r){return r.ok?r.json():null;})
-    .then(function(d){
-      if(btn){btn.textContent='Fill';btn.disabled=false;}
-      if(!d){toast('Could not fetch — enter details manually.');return;}
-      var filled=[];
-      if(d.name&&g('me-name')&&!g('me-name').value){g('me-name').value=d.name;filled.push('name');}
-      if(d.image&&g('me-img')&&!g('me-img').value){g('me-img').value=d.image;filled.push('image');}
-      if(d.number&&g('me-num')&&!g('me-num').value){g('me-num').value=d.number;filled.push('card #');}
-      if(d.market_price&&g('me-mktprice')&&!g('me-mktprice').value){g('me-mktprice').value=d.market_price.toFixed(2);filled.push('price');}
-      var tcgLink='https://www.tcgplayer.com/product/'+pid;
-      if(g('me-tcgid'))g('me-tcgid').value=pid;
-      if(g('me-tcglink'))g('me-tcglink').value=tcgLink;
-      if(g('tcg-url'))g('tcg-url').value='';
-      toast(filled.length?'✅ Filled: '+filled.join(', '):'⚠️ Page loaded but no data extracted — fill manually.');
-    })
-    .catch(function(){
-      if(btn){btn.textContent='Fill';btn.disabled=false;}
-      toast('Fetch failed — enter details manually.');
-    });
+  var filled=[];
+  // Image from TCGPlayer CDN — always works, no scraping needed
+  var img='https://product-images.tcgplayer.com/fit-in/456x632/'+pid+'.jpg';
+  if(g('me-img')&&!g('me-img').value){g('me-img').value=img;filled.push('image');}
+  // Name from URL slug
+  var mSlug=url.match(/\/product\/\d+\/([^?#]+)/);
+  if(mSlug&&g('me-name')&&!g('me-name').value){
+    var slug=mSlug[1]
+      .replace(/^one-piece-card-game-/i,'')
+      .replace(/^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+-/i,'') // strip set slug
+      .replace(/-/g,' ')
+      .replace(/\b\w/g,function(ch){return ch.toUpperCase();})
+      .trim();
+    if(slug){g('me-name').value=slug;filled.push('name');}
+  }
+  // Store TCGPlayer link and ID
+  if(g('me-tcgid'))g('me-tcgid').value=pid;
+  if(g('me-tcglink'))g('me-tcglink').value='https://www.tcgplayer.com/product/'+pid;
+  if(g('tcg-url'))g('tcg-url').value='';
+  toast(filled.length?'✅ Filled: '+filled.join(', ')+' — enter price &amp; card # manually.':'⚠️ Could not parse URL.');
 }
 function saveCat(e){
   var cat=app.catalog.slice();
