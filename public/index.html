@@ -1092,7 +1092,7 @@ function loadLocal(){
   fin=ll('fin',{paypal:0,bank:0,cash:0,history:[],shows:[]});
   if(!fin.history)fin.history=[];
   if(!fin.shows)fin.shows=[];
-  if(app.key){
+  if(app.key&&g('key-ok')){
     if(g('api-key-inp'))g('api-key-inp').value=app.key||'';
     g('key-ok').style.display='';
     g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
@@ -1117,9 +1117,9 @@ function show(tab){
   if(tab==='whatnot')renderWhatnot();
   if(tab==='sellers')renderSellers();
   if(tab==='finance')updFin();
-  if(tab==='settings'){renderTiers();renderCatalog();}
+  if(tab==='settings'){renderTiers();renderCatalog();setTimeout(renderMigrate,50);}
 }
-function banner(){g('banner').style.display=(!app.key&&app.tab!=='settings')?'':'none';}
+function banner(){var b=g('banner');if(b)b.style.display='none';}
 
 function stats(){
   g('s-cards').textContent=app.inv.length;
