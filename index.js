@@ -5,10 +5,8 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const RAPIDAPI_KEY  = process.env.RAPIDAPI_KEY;
-const RAPIDAPI_HOST = "one-piece-tcg-prices.p.rapidapi.com";
-const SUPA_URL      = "https://qbmvilndblltfwuqovlq.supabase.co";
-const SUPA_KEY      = process.env.SUPABASE_KEY;
+const SUPA_URL = "https://qbmvilndblltfwuqovlq.supabase.co";
+const SUPA_KEY = process.env.SUPABASE_KEY;
 
 app.use(express.json({ limit: "10mb" }));
 
@@ -26,67 +24,50 @@ app.use(express.static(path.join(__dirname, "public")));
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
-// ── TCGgo: card search ────────────────────────────────────────────────────────
-app.get("/cards", async (req, res) => {
-  try {
-    const params = new URLSearchParams(req.query);
-    if (!params.has("per_page")) params.set("per_page", "20");
-    const response = await fetch(`https://${RAPIDAPI_HOST}/cards?${params}`, {
-      headers: {
-        "x-rapidapi-host": RAPIDAPI_HOST,
-        "x-rapidapi-key":  RAPIDAPI_KEY,
-      },
-    });
-    res.json(await response.json());
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ── TCGgo: episodes / sets ────────────────────────────────────────────────────
-app.get("/episodes", async (req, res) => {
-  try {
-    const params = new URLSearchParams(req.query).toString();
-    const response = await fetch(`https://${RAPIDAPI_HOST}/episodes?${params}`, {
-      headers: {
-        "x-rapidapi-host": RAPIDAPI_HOST,
-        "x-rapidapi-key":  RAPIDAPI_KEY,
-      },
-    });
-    res.json(await response.json());
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ── TCGgo: single card price by TCGPlayer product ID ─────────────────────────
-// Called by autofillTCG() in the HTML when a TCGPlayer URL is pasted.
-// Hits the RapidAPI endpoint that returns pricing for a specific product ID.
-// Returns: { market_price: number | null }
+// ── TCGPlayer card scrape by product ID ───────────────────────────────────────
+// Fetches the TCGPlayer product page and extracts card metadata from meta tags.
+// Returns: { name, image, market_price, number, set }
 app.get("/cards/:id/price", async (req, res) => {
   const { id } = req.params;
+  const url = `https://www.tcgplayer.com/product/${id}`;
   try {
-    // TCGgo exposes a pricing endpoint keyed on tcgplayer_id
-    const response = await fetch(
-      `https://${RAPIDAPI_HOST}/cards?tcgplayer_id=${encodeURIComponent(id)}&per_page=1`,
-      {
-        headers: {
-          "x-rapidapi-host": RAPIDAPI_HOST,
-          "x-rapidapi-key":  RAPIDAPI_KEY,
-        },
-      }
-    );
-    const data = await response.json();
-    const cards = Array.isArray(data) ? data : (data.data || []);
-    const card  = cards[0];
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    });
+    if (!response.ok) return res.json({ market_price: null });
+    const html = await response.text();
 
-    if (!card) return res.json({ market_price: null });
+    // Extract from meta tags
+    const getMeta = (prop) => {
+      const m = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i'))
+               || html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i'));
+      return m ? m[1] : null;
+    };
 
-    // Normalise the price field — TCGgo uses tcg_player or tcgplayer
-    const prices = card.prices?.tcgplayer || card.prices?.tcg_player;
-    const market = prices?.market_price ?? null;
+    // og:image is the card image
+    const image = getMeta('og:image');
+    // og:title is usually "Card Name | TCGPlayer"
+    const ogTitle = getMeta('og:title') || '';
+    const name = ogTitle.replace(/\s*\|.*$/, '').trim() || null;
 
-    res.json({ market_price: market });
+    // Try to extract price from JSON-LD or page data
+    let market_price = null;
+    const priceMatch = html.match(/"lowPrice"\s*:\s*"?([\d.]+)"?/)
+                    || html.match(/"price"\s*:\s*"?([\d.]+)"?/)
+                    || html.match(/market[_\s]price['":\s]+([\d.]+)/i);
+    if (priceMatch) market_price = parseFloat(priceMatch[1]);
+
+    // Extract card number from page content
+    let number = null;
+    const numMatch = html.match(/Card Number[^\w]*([A-Z0-9]{2,}-\d{3})/i)
+                  || html.match(/([A-Z0-9]{2,3}\d{2}-\d{3}[A-Z]?)/);
+    if (numMatch) number = numMatch[1];
+
+    res.json({ name, image, market_price, number, url });
   } catch (e) {
     res.status(500).json({ error: e.message, market_price: null });
   }
@@ -100,7 +81,7 @@ const supaHeaders = () => ({
   "Prefer":        "resolution=merge-duplicates",
 });
 
-// Load all keys at once — returns { inventory, offers, sellers, tiers, finances, custom_catalog, api_key }
+// Load all keys at once
 app.get("/db/load", async (req, res) => {
   try {
     const response = await fetch(
