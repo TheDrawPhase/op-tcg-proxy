@@ -532,8 +532,8 @@ button{cursor:pointer}a{text-decoration:none}
     <div style="background:var(--bg2);border-radius:var(--radius);padding:12px;margin-bottom:16px;font-size:13px;border:1px solid var(--border)">
       <div style="color:var(--text);font-weight:700;margin-bottom:6px">🔗 Auto-fill from TCGPlayer URL</div>
       <div style="color:var(--text3);margin-bottom:8px">Paste a TCGPlayer One Piece card URL to auto-fill name &amp; set. You can also find it via the links below.</div>
-      <div class="row">
-
+        <input class="inp" id="tcg-url" placeholder="Paste TCGPlayer URL..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter')autofillTCG()"/>
+        <button class="btn" onclick="autofillTCG()" style="padding:7px 14px;font-size:13px">Fill</button>
 
       </div>
       <div class="row" style="margin-top:8px;gap:6px">
@@ -1488,7 +1488,26 @@ function openManualMod(catCard){
 function closeManualMod(){g('manual-modal').style.display='none';}
 
 function autofillTCG(){
-  toast('Enter price manually.');
+  var url=g('tcg-url')?g('tcg-url').value.trim():'';
+  if(!url){toast('Paste a TCGPlayer URL first.');return;}
+  var m=url.match(/\/product\/(\d+)/);
+  if(!m){toast('Could not find product ID in URL — paste the full product page URL.');return;}
+  var pid=m[1];
+  toast('⏳ Fetching from TCGPlayer...');
+  fetch(P+'/cards/'+pid+'/price')
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){
+      if(!d){toast('Could not fetch from TCGPlayer — enter details manually.');return;}
+      var mkt=d.market_price||d.marketPrice||d.low_price||0;
+      if(d.name&&g('me-name')&&!g('me-name').value)g('me-name').value=d.name;
+      if(d.number&&g('me-num')&&!g('me-num').value)g('me-num').value=d.number;
+      if(d.set&&g('me-set')&&!g('me-set').value)g('me-set').value=d.set;
+      if(d.image&&g('me-img')&&!g('me-img').value)g('me-img').value=d.image;
+      if(mkt&&g('me-mktprice'))g('me-mktprice').value=mkt.toFixed(2);
+      if(g('tcg-url'))g('tcg-url').value='';
+      toast('✅ Autofilled! Check the fields and adjust as needed.');
+    })
+    .catch(function(){toast('TCGPlayer fetch failed — enter details manually.');});
 }
 function saveCat(e){
   var cat=app.catalog.slice();
