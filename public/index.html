@@ -1094,8 +1094,8 @@ function loadLocal(){
   if(!fin.shows)fin.shows=[];
   if(app.key&&g('key-ok')){
     if(g('api-key-inp'))g('api-key-inp').value=app.key||'';
-    g('key-ok').style.display='';
-    g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
+    if(g('key-ok')){g('key-ok').style.display='';}
+    if(g('key-ok')){g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);}
   }
   g('f-pp').value=fin.paypal||0;
   g('f-bank').value=fin.bank||0;
@@ -3220,7 +3220,7 @@ function delShow(id){_snapshot();if(!confirm('Delete this sale record?'))return;
 function saveKey(){
   toast('API removed — no key needed.');
   return;
-  g('key-ok').style.display='';g('key-ok').textContent='✅ Key saved: ...'+k.slice(-6);
+    if(g('key-ok')){g('key-ok').style.display='';g('key-ok').textContent='✅ Key saved: ...'+k.slice(-6);}
   banner();toast('✅ API key saved!');
   dbSave('api_key',k);
 }
@@ -3334,8 +3334,8 @@ function delCatCard(id){_snapshot();
   stats();
   if(app.key){
     if(g('api-key-inp'))g('api-key-inp').value='';
-    g('key-ok').style.display='';
-    g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
+    if(g('key-ok')){g('key-ok').style.display='';}
+    if(g('key-ok')){g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);}
     banner();
   }
   g('f-pp').value=fin.paypal||0;
