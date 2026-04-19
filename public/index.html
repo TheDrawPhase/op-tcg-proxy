@@ -230,7 +230,7 @@ button{cursor:pointer}a{text-decoration:none}
   <button class="tab" onclick="show('finance')">💵 Finances</button>
   <button class="tab" onclick="show('settings')">⚙️ Settings</button>
 </div>
-<div id="banner"><button onclick="show('settings')">⚙️ Add API key</button> to enable card search.</div>
+<div id="banner" style="display:none"></div>
 
 <!-- BUYLIST -->
 <div id="p-buylist" class="page on">
@@ -459,12 +459,7 @@ button{cursor:pointer}a{text-decoration:none}
 <!-- SETTINGS -->
 <div id="p-settings" class="page">
   <div style="max-width:560px;display:flex;flex-direction:column;gap:14px">
-    <div class="panel">
-      <div class="pt">🔑 RapidAPI Key (TCGgo)</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Find at <a href="https://rapidapi.com/tcggopro/api/one-piece-tcg-prices/playground" target="_blank" style="color:var(--purple)">RapidAPI Playground ↗</a> — look for <b style="color:var(--text)">X-RapidAPI-Key</b></div>
-      <div class="row"><input type="password" class="inp" id="api-key-inp" placeholder="Paste key here..." style="flex:1"/><button class="btn" onclick="saveKey()">Save</button></div>
-      <div id="key-ok" style="margin-top:6px;font-size:12px;color:var(--green);display:none"></div>
-    </div>
+    
     <div class="panel">
       <div class="pt">💾 Backup &amp; Restore</div>
       <div class="row" style="margin-bottom:12px">
@@ -495,6 +490,17 @@ button{cursor:pointer}a{text-decoration:none}
       </div>
       <div id="tier-list"></div>
       <button class="btn" style="margin-top:8px;font-size:12px;padding:6px 13px;background:var(--surface);color:var(--purple);border:1px solid var(--border)" onclick="addTier()">+ Add Tier</button>
+    </div>
+    <div class="panel">
+      <div class="pt">🔄 Migrate API Cards to Catalog</div>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Inventory cards without a catalog link are shown below. Review each one, edit the details, then save to your catalog to properly link them.</p>
+      <div id="migrate-stats" style="font-size:12px;margin-bottom:10px"></div>
+      <div id="migrate-list"></div>
+      <div class="row" style="margin-top:10px;gap:6px">
+        <button class="btn" style="font-size:12px;padding:6px 12px" onclick="renderMigrate()">🔄 Refresh</button>
+        <button class="btn btn-g" style="font-size:12px;padding:6px 12px" onclick="migrateAll()">✅ Save All to Catalog</button>
+      </div>
+    </div>
     </div>
   </div>
 </div>
@@ -537,8 +543,8 @@ button{cursor:pointer}a{text-decoration:none}
       <div style="color:var(--text);font-weight:700;margin-bottom:6px">🔗 Auto-fill from TCGPlayer URL</div>
       <div style="color:var(--text3);margin-bottom:8px">Paste a TCGPlayer One Piece card URL to auto-fill name &amp; set. You can also find it via the links below.</div>
       <div class="row">
-        <input class="inp" id="me-tcg-url" placeholder="https://www.tcgplayer.com/product/..." style="flex:1;font-size:12px"/>
-        <button class="btn" style="font-size:12px;padding:7px 12px" onclick="autofillTCG()">Fill</button>
+
+
       </div>
       <div class="row" style="margin-top:8px;gap:6px">
         <a href="https://www.tcgplayer.com/categories/trading-and-collectible-card-games/one-piece-card-game/cards" target="_blank" class="btn" style="font-size:11px;padding:5px 10px;background:var(--green-bg);color:var(--green);border:1px solid var(--green)">TCGPlayer One Piece ↗</a>
@@ -559,8 +565,7 @@ button{cursor:pointer}a{text-decoration:none}
       </div>
       <div><div class="ml">Qty</div><input type="number" class="inp full" id="me-qty" value="1" min="1"/></div>
       <div><div class="ml">Image URL</div><input class="inp full" id="me-img" placeholder="https://..."/></div>
-      <div style="grid-column:1/-1"><div class="ml">TCGPlayer Product URL (for button links)</div><input class="inp full" id="me-tcglink" placeholder="https://www.tcgplayer.com/product/..."/></div>
-    </div>
+      
       <div style="grid-column:1/-1"><div class="ml">Market Price $ (optional — for sorting in search results)</div><input type="number" step="0.01" min="0" class="inp full" id="me-mktprice" placeholder="e.g. 24.99"/></div>
     <div id="me-edit-id" style="display:none"></div>
     <div class="row">
@@ -820,7 +825,6 @@ var syncT=null;
 var catSyncT=null;
 var invSel={};
 var expandedOffer=null;
-var searchCache={};
 
 // Undo stack — snapshots full app state before each mutating action
 var _undoStack=[], _MAX_UNDO=20;
@@ -1022,7 +1026,7 @@ async function dbLoad(){
       // If local had extras, push merged back to Supabase
       if(merged.length>d.custom_catalog.length)dbSave('custom_catalog',merged);
     }
-    // API key
+    // settings init
     if(d.api_key&&typeof d.api_key==='string'&&d.api_key.length>4){
       app.key=d.api_key; ls('key',app.key);
     }
@@ -1054,7 +1058,8 @@ function saveOffers(){
 function saveSellers(){_snapshot();save('sellers',app.sellers);}
 function saveTiers(){_snapshot();save('tiers',app.tiers);}
 function saveFin(){_snapshot();
-  fin={paypal:parseFloat(g('f-pp').value)||0,bank:parseFloat(g('f-bank').value)||0,cash:parseFloat(g('f-cash').value)||0,history:fin.history||[],shows:fin.shows||[]};
+  fin.paypal=parseFloat(g('f-pp').value)||0;fin.bank=parseFloat(g('f-bank').value)||0;fin.cash=parseFloat(g('f-cash').value)||0;
+  if(!fin.shows)fin.shows=[];
   save('finances',fin);
 }
 function saveCatalog(cat){_snapshot();
@@ -1088,7 +1093,7 @@ function loadLocal(){
   if(!fin.history)fin.history=[];
   if(!fin.shows)fin.shows=[];
   if(app.key){
-    g('api-key-inp').value=app.key;
+    if(g('api-key-inp'))g('api-key-inp').value=app.key||'';
     g('key-ok').style.display='';
     g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
   }
@@ -1127,86 +1132,33 @@ function stats(){
 // ─── Search ───────────────────────────────────────────────────────────────────
 function sstat(h){var e=g('s-status');if(e)e.innerHTML=h;}
 
-async function search(){
+function search(){
   var raw=g('q').value.trim();if(!raw)return;
-  if(!app.key){sstat('<span style="color:var(--red);font-size:12px">Add your API key in ⚙️ Settings.</span>');return;}
-  var name=raw.replace(/\b(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc)\b/gi,'').replace(/\s+/g,' ').trim()||raw;
-  var btn=g('sbtn');btn.disabled=true;btn.textContent='⏳';
-  g('rgrid').innerHTML='';g('rgrid').style.display='';allRes=[];g('sort-bar').style.display='none';
-  app.selCard=null;g('sel-panel').style.display='none';
-
-  // Catalog matches — shown instantly (mixed into single grid)
-  var q2=name.toLowerCase();
-  var custom=app.catalog.filter(function(x){
-    return(x.name||'').toLowerCase().includes(q2)||(x.cardNumber||'').toLowerCase().includes(q2)||(x.set||'').toLowerCase().includes(q2);
-  });
-  // Convert catalog entries to card-like objects for rendering
-  var customCards=custom.map(function(x){
+  var q=raw.toLowerCase();
+  allRes=app.catalog.filter(function(x){
+    return(x.name||'').toLowerCase().includes(q)
+      ||(x.cardNumber||'').toLowerCase().includes(q)
+      ||(x.set||'').toLowerCase().includes(q);
+  }).map(function(x){
     return{isCustom:true,id:x.id,name:x.name,card_number:x.cardNumber||'',
       episode:{name:x.set||''},color:x.color||'',rarity:x.rarity||'',
       image:x.image||null,tcgplayer_id:x.tcgplayerUrl||null,
       prices:x.mktprice?{tcgplayer:{market_price:x.mktprice/EU}}:null,
       mktprice:x.mktprice||null};
   });
-
-  sstat('<span style="color:var(--purple);font-size:12px">⏳ Searching'+(custom.length?' • 📁 '+custom.length+' catalog':'')+'...</span>');
-
-  // Check cache
-  if(searchCache[name]){
-    var all2=searchCache[name];
-    var merged0=customCards.concat(all2.filter(function(x){return!customCards.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.card_number===(x.card_number||'');});}));
-    allRes=merged0;buildFilters(merged0);applySort();
-    sstat(custom.length?'<span style="color:var(--purple);font-size:12px">📁 '+custom.length+' catalog</span>':'');
-    btn.disabled=false;btn.textContent='Search';return;
+  if(!allRes.length){
+    sstat('<span style="color:var(--text3);font-size:12px">No catalog matches — use Manual Entry below to add a new card.</span>');
+    g('rgrid').innerHTML='';g('rgrid').style.display='none';
+    g('sort-bar').style.display='none';
+  } else {
+    sstat('<span style="color:var(--purple);font-size:12px">📁 '+allRes.length+' catalog match'+(allRes.length===1?'':'es')+'</span>');
+    g('sort-bar').style.display='';
+    renderResults(allRes);
   }
-  try{
-    var r1=await fetch(P+'/cards?search='+encodeURIComponent(name)+'&page=1&per_page=20');
-    if(!r1.ok)throw new Error('API '+r1.status);
-    var d1=await r1.json();
-    var cards1=Array.isArray(d1)?d1:(d1.data||[]);
-    cards1.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
-    var totalPages=(d1.paging&&d1.paging.total)||1;
-    // Show page 1 immediately
-    var m1=customCards.concat(cards1.filter(function(x){return!customCards.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.card_number===(x.card_number||'');});}));
-    allRes=m1;buildFilters(m1);applySort();
-    if(totalPages>1){
-      sstat('<span style="color:var(--purple);font-size:12px">⏳ Loading '+totalPages+' pages...</span>');
-      var pages=[];for(var p2=2;p2<=totalPages;p2++)pages.push(p2);
-      var rest=await Promise.all(pages.map(function(pg){
-        return fetch(P+'/cards?search='+encodeURIComponent(name)+'&page='+pg+'&per_page=20')
-          .then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});
-      }));
-      var allApi=cards1.slice();
-      rest.forEach(function(d){
-        if(!d)return;
-        var cards=(Array.isArray(d)?d:(d.data||[]));
-        cards.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
-        allApi=allApi.concat(cards);
-      });
-      searchCache[name]=allApi;
-      var mAll=customCards.concat(allApi.filter(function(x){return!customCards.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase()&&y.card_number===(x.card_number||'');});}));
-      allRes=mAll;buildFilters(mAll);applySort();
-    }else{
-      searchCache[name]=cards1;
-    }
-    sstat(custom.length?'<span style="color:var(--purple);font-size:12px">📁 '+custom.length+' catalog</span>':'');
-    if(!allRes.length){sstat('<span style="color:var(--red);font-size:12px">No results for "'+name+'".</span>');g('sort-bar').style.display='none';}
-  }catch(e){sstat('<span style="color:var(--red);font-size:12px">Search failed: '+e.message+'</span>');}
-  btn.disabled=false;btn.textContent='Search';
 }
 
 function buildFilters(cards){
-  var sets={},colors={};
-  cards.forEach(function(c){
-    var s=c.episode&&c.episode.name?c.episode.name:(c.set_name||c.set||'');
-    if(s)sets[s]=1;if(c.color)colors[c.color]=1;
-  });
-  var se=g('s-fset');se.innerHTML='<option value="">All Sets</option>';
-  Object.keys(sets).sort().forEach(function(s){se.innerHTML+='<option value="'+s+'">'+s+'</option>';});
-  var ce=g('s-fcol');ce.innerHTML='<option value="">All Colors</option>';
-  Object.keys(colors).sort().forEach(function(c){ce.innerHTML+='<option value="'+c+'">'+c+'</option>';});
-  g('s-sort').value='pd';g('s-fset').value='';g('s-fcol').value='';
-  g('sort-bar').style.display='flex';
+  // no-op — catalog-only mode has no filter dropdowns
 }
 
 function applySort(){
@@ -1531,7 +1483,7 @@ function saveOffer(){_snapshot();
 function openManualMod(catCard){
   g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';
   g('me-rarity').value='';g('me-cond').value='NM';g('me-qty').value=1;
-  g('me-img').value='';g('me-tcglink').value='';g('me-tcg-url').value='';
+  g('me-img').value='';g('me-tcglink').value='';
   g('me-edit-id').textContent='';
   if(g('me-mktprice'))g('me-mktprice').value='';
   if(catCard){
@@ -1542,56 +1494,9 @@ function openManualMod(catCard){
     g('me-rarity').value=catCard.rarity||'';
     g('me-img').value=catCard.image||'';
     g('me-tcglink').value=catCard.tcgplayerUrl||'';
-    if(g('me-mktprice'))g('me-mktprice').value=catCard.mktprice||'';
-    g('me-edit-id').textContent=catCard.id||'';
-  }
-  g('manual-modal').style.display='';
-}
-function closeManualMod(){g('manual-modal').style.display='none';}
-
-function getManual(){
-  var n=g('me-name').value.trim();if(!n){toast('⚠️ Card name required.');return null;}
-  // Use existing id or generate a stable new one now
-  var existingId=g('me-edit-id').textContent.trim();
-  var id=existingId||uid();
-  g('me-edit-id').textContent=id; // write back so subsequent calls use same id
-  var mktprice=parseFloat(g('me-mktprice')?g('me-mktprice').value:0)||null;
-  return{
-    id:id,name:n,num:g('me-num').value.trim(),set:g('me-set').value.trim(),
-    color:g('me-color').value.trim(),rarity:g('me-rarity').value.trim(),
-    cond:g('me-cond').value,qty:Math.max(1,parseInt(g('me-qty').value)||1),
-    img:g('me-img').value.trim()||null,tcgId:g('me-tcglink').value.trim()||null,
-    mkt:mktprice,mktprice:mktprice,manual:true
-  };
-}
-
 function autofillTCG(){
-  var url=g('me-tcg-url').value.trim();if(!url)return;
-  g('me-tcglink').value=url;
-  var m=url.match(/\/product\/(\d+)\/?([^?#]*)/);
-  if(!m){toast('⚠️ Could not parse TCGPlayer URL.');return;}
-  var pid=m[1];var slug=m[2]||'';
-  if(slug){
-    var last=(slug.split('/').pop()||'');
-    var parsedName=last.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
-    var setM=slug.match(/(op\d{2}|st\d{2}|eb\d{2})/i);
-    if(setM&&!g('me-set').value)g('me-set').value=setM[1].toUpperCase();
-    if(parsedName&&!g('me-name').value)g('me-name').value=parsedName;
-  }
-  if(!g('me-img').value)g('me-img').value='https://product-images.tcgplayer.com/fit-in/456x632/'+pid+'.jpg';
-  toast('⏳ Fetching price...');
-  fetch(P+'/cards/'+pid+'/price')
-    .then(function(r){return r.ok?r.json():null;})
-    .then(function(d){
-      if(d&&d.market_price!=null){
-        var mkt=parseFloat((d.market_price*EU).toFixed(2));
-        if(g('me-mktprice'))g('me-mktprice').value=mkt;
-        toast('✅ Filled! Market price: '+nm(mkt));
-      }else{toast('✅ URL saved. Enter price manually.');}
-    }).catch(function(){toast('✅ URL saved. Could not fetch price.');});
+  toast('Enter price manually.');
 }
-
-// Save catalog entry and sync inventory/search results
 function saveCat(e){
   var cat=app.catalog.slice();
   var catEntry=makeCatEntry(e);
@@ -1678,7 +1583,7 @@ function manualToInv(){_snapshot();
 }
 
 function clearManual(){
-  ['me-name','me-set','me-num','me-color','me-rarity','me-img','me-tcglink','me-tcg-url'].forEach(function(id){var el=g(id);if(el)el.value='';});
+  ['me-name','me-set','me-num','me-color','me-rarity','me-img','me-tcglink'].forEach(function(id){var el=g(id);if(el)el.value='';});
   g('me-qty').value=1;g('me-cond').value='NM';g('me-edit-id').textContent='';
   if(g('me-mktprice'))g('me-mktprice').value='';
 }
@@ -1797,7 +1702,24 @@ function buildOfferDetailHTML(o){
   var ch='';
   o.cards.forEach(function(card,i){
     var sbtns='';
-    SCYC.forEach(function(s){sbtns+='<button class="sbtn '+SC[s]+'" style="opacity:'+(card.status===s?1:0.35)+'" onclick="setStatus(\''+o.id+'\','+i+',\''+s+'\')">'+SL[s]+'</button>';});
+    // Build per-unit status buttons for qty > 1
+    if(card.qty > 1){
+      if(!card.statuses||card.statuses.length!==card.qty){
+        card.statuses=[];for(var u=0;u<card.qty;u++)card.statuses.push(card.status||'pending');
+      }
+      var sbtns='<div style="font-size:10px;color:var(--text3);margin-bottom:3px;margin-top:2px">Individual copies:</div>';
+      for(var u=0;u<card.qty;u++){(function(u){
+        var uStatus=card.statuses[u]||'pending';
+        sbtns+='<div style="display:flex;align-items:center;gap:3px;margin-bottom:3px">';
+        sbtns+='<span style="font-size:10px;color:var(--text3);width:44px;flex-shrink:0">Copy '+(u+1)+':</span>';
+        SCYC.forEach(function(s){sbtns+='<button class="sbtn '+SC[s]+'" style="opacity:'+(uStatus===s?1:0.3)+';padding:1px 5px;font-size:10px" onclick="setUnitStatus(\''+o.id+'\','+i+','+u+',\''+s+'\')">'+ SL[s] +'</button>';});
+        sbtns+='</div>';
+      })(u);}
+      sbtns = '<div>'+sbtns+'</div>';
+    } else {
+      var sbtns='';
+      SCYC.forEach(function(s){sbtns+='<button class="sbtn '+SC[s]+'" style="opacity:'+(card.status===s?1:0.35)+'" onclick="setStatus(\''+o.id+'\','+i+',\''+s+'\')">'+ SL[s] +'</button>';});
+    }
     var ebayQ=encodeURIComponent(card.name+(card.num?' '+card.num:''));
     ch+='<div class="orow" id="ocard-'+o.id+'-'+i+'">';
     ch+='<input type="checkbox" class="chk offer-chk" data-oid="'+o.id+'" data-idx="'+i+'" style="margin-top:4px"/>';
@@ -1884,6 +1806,8 @@ function buildOfferDetailHTML(o){
   h+='<div style="width:'+(tot2?Math.round(ms_n/tot2*100):0)+'%;background:var(--red);height:5px"></div></div>';
   h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">'+rec+'/'+tot+' received • '+mis+' missing</div>';
   h+='</div></div></div></div>';
+}
+}
   return h+bh+ch;
 }
 
@@ -1985,6 +1909,48 @@ function rmCard(oid,i){_snapshot();
   app.inv=app.inv.filter(function(x){return!(String(x.offerId)===String(oid)&&x.name===rm.name&&x.cond===rm.cond);});
   saveInv();stats();renderOffers();
   toast('🗑 '+rm.name+' removed.');
+}
+
+function setUnitStatus(oid,cardIdx,unit,status){_snapshot();
+  var o=findOffer(oid);if(!o||!o.cards[cardIdx])return;
+  var card=o.cards[cardIdx];
+  if(!card.statuses||card.statuses.length!==card.qty){
+    card.statuses=[];for(var u=0;u<card.qty;u++)card.statuses.push(card.status||'pending');
+  }
+  card.statuses[unit]=status;
+  // Derive overall card status: if any onhand, onhand; if all shipped, shipped; etc.
+  var counts={};card.statuses.forEach(function(s){counts[s]=(counts[s]||0)+1;});
+  if(counts.missing&&counts.missing===card.qty)card.status='missing';
+  else if(counts.shipped&&counts.shipped===card.qty)card.status='shipped';
+  else if(counts.onhand&&counts.onhand===card.qty)card.status='onhand';
+  else card.status='pending';
+  saveOffers();
+  syncInvFromOfferCardUnits(oid,card);
+  saveInv();stats();renderOffers();
+}
+
+function syncInvFromOfferCardUnits(oid,card){
+  // Get all inv entries for this offer card
+  var entries=app.inv.filter(function(i){
+    return String(i.offerId)===String(oid)&&i.name===card.name&&i.cond===card.cond;
+  });
+  if(!entries.length)return;
+  // If qty matches (1 entry per unit), sync each one
+  var statuses=card.statuses||[];
+  // Group statuses by value to merge
+  var statusGroups={};
+  statuses.forEach(function(s){statusGroups[s]=(statusGroups[s]||0)+1;});
+  // Remove all existing entries for this card and rebuild
+  app.inv=app.inv.filter(function(i){
+    return !(String(i.offerId)===String(oid)&&i.name===card.name&&i.cond===card.cond);
+  });
+  var base=entries[0]||{};
+  Object.keys(statusGroups).forEach(function(s){
+    app.inv.push(Object.assign({},base,{
+      id:uid(),qty:statusGroups[s],status:s,
+      cost:card.cost,mkt:card.mkt,perc:card.perc
+    }));
+  });
 }
 
 function setStatus(oid,i,status){_snapshot();
@@ -2256,7 +2222,7 @@ function openInvMod(ek){
     rows+='<td style="padding:7px 5px">'+'<select class="sel" style="font-size:12px;padding:4px 6px;color:var(--purple);font-weight:700;border-color:var(--border)" onchange="updInvCond(\''+e.id+'\',this.value)">';
     CONDS.forEach(function(cd){rows+='<option value="'+cd+'"'+(e.cond===cd?' selected':'')+'>'+cd+'</option>';});
     rows+='</select></td>';
-    rows+='<td style="padding:7px 5px;font-size:11px;text-align:center">'+e.qty+'</td>';
+    rows+='<td style="padding:7px 5px;font-size:11px;text-align:center"><input type="number" min="1" value="'+e.qty+'" class="pinp" style="width:42px;font-size:12px;text-align:center" onchange="updInvQty(\''+e.id+'\',this.value,\''+ek+'\')" onclick="event.stopPropagation()"/></td>';
     rows+='<td style="padding:4px 5px;font-size:11px">';
     rows+='<div style="font-size:9px;color:var(--text3);margin-bottom:2px">Card #</div>';
     rows+='<input class="inp" value="'+(e.num||'')+'" placeholder="—" style="width:80px;font-size:11px;padding:3px 6px" data-id="'+e.id+'" data-ek="'+ek+'" data-f="num" onchange="updInvMeta(this)">';
@@ -2271,7 +2237,7 @@ function openInvMod(ek){
     rows+='<td style="padding:7px 5px"><span class="badge '+(SB[e.status]||'bp')+'">'+(SL[e.status]||e.status)+'</span></td>';
     rows+='<td style="padding:7px 5px;font-size:11px">'+(o?'<button onclick="closeInvMod();show(\'offers\');openOffer(\''+o.id+'\')" style="padding:3px 7px;border-radius:4px;background:var(--bg2);border:1px solid var(--border);color:var(--purple);font-size:10px;cursor:pointer">📋 '+o.seller+'</button>':'<span style="color:var(--text3);font-size:10px">—</span>')+'</td>';
     rows+='<td style="padding:7px 5px">';
-    if(isSales){rows+='<span style="font-size:10px;font-weight:700;color:var(--purple)">'+SL[e.status]+'</span>';}
+    if(isSales){rows+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;font-weight:700;color:var(--purple)">'+SL[e.status]+'</span><div style="display:flex;align-items:center;gap:2px"><input type="number" min="1" max="'+e.qty+'" value="1" id="mv-qty-'+e.id+'" class="pinp" style="width:34px;font-size:10px;padding:2px 4px" onclick="event.stopPropagation()"/><button onclick="event.stopPropagation();moveBackToInv(\''+e.id+'\',\''+ek+'\',(document.getElementById(\'mv-qty-'+e.id+'\')||{value:\'1\'}).value)" style="padding:2px 6px;font-size:10px;border-radius:3px;background:var(--green-bg);border:1px solid var(--green);color:var(--green);cursor:pointer">↩ Move Back</button></div></div>'; }
     else{
       rows+='<div style="display:flex;align-items:center;gap:2px">';
       rows+='<input type="number" min="1" max="'+e.qty+'" value="1" id="wn-qty-'+e.id+'" class="pinp" style="width:38px;font-size:11px;padding:2px 4px" onclick="event.stopPropagation()"/>';
@@ -2418,6 +2384,38 @@ function renderWhatnot(){
   g('wn-lanes').innerHTML=lanesH;
 }
 function clearLane(status){_snapshot();if(!confirm('Remove all '+SL[status]+' cards?'))return;app.inv=app.inv.filter(function(i){return i.status!==status;});saveInv();stats();renderWhatnot();toast('✅ Cleared.');}
+function updInvQty(id,val,ek){
+  var e=findInv(id);if(!e)return;
+  var n=parseInt(val)||1;
+  e.qty=Math.max(1,n);
+  saveInv();
+  // Update title total
+  var entries=app.inv.filter(function(i){return i.name===e.name&&(i.num||'')===(e.num||'')&&(i.set||'')===(e.set||'')&&(i.variant||'')===(e.variant||'');});
+  var tq=0,tc=0;entries.forEach(function(x){tq+=x.qty;tc+=(x.cost||0)*x.qty;});
+  var titleEl=g('inv-mod-title');
+  if(titleEl)titleEl.innerHTML=e.name+'<div style="font-size:11px;color:var(--purple);font-weight:400">'+(e.num||'')+' • ×'+tq+' • Cost: '+nm(tc)+'</div>';
+}
+
+function moveBackToInv(id,ek,qtyVal){_snapshot();
+  var e=findInv(id);if(!e)return;
+  var n=Math.min(parseInt(qtyVal)||1, e.qty);
+  if(n<=0)return;
+  if(n>=e.qty){
+    // Move whole entry back
+    e.status='onhand';
+    saveInv();stats();
+    toast('↩ Moved back to inventory: '+e.name);
+  } else {
+    // Split: reduce sales lane entry qty, create new onhand entry with n qty
+    e.qty=e.qty-n;
+    var newEntry=Object.assign({},e,{id:uid(),qty:n,status:'onhand'});
+    app.inv.push(newEntry);
+    saveInv();stats();
+    toast('↩ Moved '+n+' back to inventory: '+e.name);
+  }
+  openInvMod(ek); // re-open modal to refresh
+}
+
 function restoreWN(id){_snapshot();var e=findInv(id);if(e)e.status='onhand';saveInv();stats();renderWhatnot();toast('↩ Restored to On Hand.');}
 
 
@@ -2594,45 +2592,22 @@ function closeTradeSearch(){
 }
 async function tradeSearch(){
   var raw=g('trade-q').value.trim();if(!raw)return;
-  var btn=g('trade-sbtn');btn.disabled=true;btn.textContent='⏳';
-  g('trade-results').innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">Searching...</div>';
-  _tradeAllResults=[];_tradePage=0;
-  var q2=raw.toLowerCase();
-  var catCards=app.catalog.filter(function(x){
-    return(x.name||'').toLowerCase().includes(q2)||(x.cardNumber||'').toLowerCase().includes(q2);
-  }).map(function(x){return{name:x.name,card_number:x.cardNumber||'',
-    episode:{name:x.set||''},image:x.image||null,
-    prices:x.mktprice?{tcgplayer:{market_price:x.mktprice/EU}}:null,mktprice:x.mktprice||null};});
-  try{
-    var name=raw.replace(/\b(op\d{2}|eb\d{2}|st\d{2}|sec|lr|sr|uc)\b/gi,'').trim()||raw;
-    // Fetch page 1 first
-    var r=await fetch(P+'/cards?search='+encodeURIComponent(name)+'&page=1&per_page=20');
-    var d=r.ok?await r.json():{data:[]};
-    var page1=Array.isArray(d)?d:(d.data||[]);
-    var totalPages=(d.paging&&d.paging.total)||1;
-    page1.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
-    var allApi=page1.slice();
-    if(totalPages>1){
-      var pages=[];for(var p2=2;p2<=totalPages;p2++)pages.push(p2);
-      var rest=await Promise.all(pages.map(function(pg){
-        return fetch(P+'/cards?search='+encodeURIComponent(name)+'&page='+pg+'&per_page=20')
-          .then(function(r2){return r2.ok?r2.json():null;}).catch(function(){return null;});
-      }));
-      rest.forEach(function(dd){
-        if(!dd)return;
-        var cards=Array.isArray(dd)?dd:(dd.data||[]);
-        cards.forEach(function(x){if(x.prices&&x.prices.tcg_player)x.prices.tcgplayer=x.prices.tcg_player;});
-        allApi=allApi.concat(cards);
-      });
-    }
-    _tradeAllResults=catCards.concat(allApi.filter(function(x){
-      return!catCards.find(function(y){return y.name.toLowerCase()===(x.name||'').toLowerCase();});
-    }));
-  }catch(e){
-    _tradeAllResults=catCards;
-  }
-  btn.disabled=false;btn.textContent='Search';
+  var btn=g('trade-sbtn');
+  var q=raw.toLowerCase();
+  _tradeAllResults=app.catalog.filter(function(x){
+    return(x.name||'').toLowerCase().includes(q)
+      ||(x.cardNumber||'').toLowerCase().includes(q)
+      ||(x.set||'').toLowerCase().includes(q);
+  }).map(function(x){
+    return{isCustom:true,id:x.id,name:x.name,card_number:x.cardNumber||'',
+      episode:{name:x.set||''},color:x.color||'',rarity:x.rarity||'',
+      image:x.image||null,
+      prices:x.mktprice?{tcgplayer:{market_price:x.mktprice/EU}}:null,
+      mktprice:x.mktprice||null};
+  });
+  _tradePage=0;
   renderTradeResults();
+  btn.textContent='Search';
 }
 function tradePageNav(dir){
   var perPage=10;
@@ -2847,6 +2822,112 @@ function updOfferTracking(oid,num,carrier){
     if(trackBtn){trackBtn.href=url;trackBtn.style.display='';}
     else renderOffers();
   }else if(trackBtn){trackBtn.style.display='none';}
+}
+
+
+// ─── Catalog Migration ────────────────────────────────────────────────────────
+function renderMigrate(){
+  var el=g('migrate-list');if(!el)return;
+  // Find inv entries with no catalogId or catalogId not in catalog
+  var catIds=app.catalog.map(function(x){return x.id;});
+  var unlinked=app.inv.filter(function(i){
+    return !i.catalogId || catIds.indexOf(i.catalogId)===-1;
+  });
+  // Dedupe by name+num+set
+  var seen={};
+  var unique=unlinked.filter(function(i){
+    var k=(i.name||'')+'||'+(i.num||'')+'||'+(i.set||'');
+    if(seen[k])return false;seen[k]=true;return true;
+  });
+  if(g('migrate-stats'))g('migrate-stats').textContent=unique.length+' unique cards need catalog linking ('+unlinked.length+' total entries)';
+  if(!unique.length){el.innerHTML='<div style="color:var(--green);font-size:12px;padding:8px">✅ All inventory cards are linked to catalog!</div>';return;}
+  var h='';
+  unique.forEach(function(inv,idx){
+    h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px" id="mg-row-'+idx+'" data-name="'+inv.name.replace(/"/g,"&quot;")+'">';
+    h+='<div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start">';
+    // Thumbnail
+    h+=inv.img?'<img src="'+inv.img+'" style="width:44px;height:62px;border-radius:4px;object-fit:cover" onerror="this.hidden=1"/>':'<div style="width:44px;height:62px;background:var(--bg3);border-radius:4px"></div>';
+    h+='<div style="min-width:0">';
+    h+='<div style="font-weight:700;font-size:13px;margin-bottom:6px">'+inv.name+'</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+    h+='<div><div style="font-size:10px;color:var(--text3)">Card #</div><input class="inp" id="mg-num-'+idx+'" value="'+(inv.num||'')+'" style="font-size:12px"/></div>';
+    h+='<div><div style="font-size:10px;color:var(--text3)">Set</div><input class="inp" id="mg-set-'+idx+'" value="'+(inv.set||'')+'" style="font-size:12px"/></div>';
+    h+='<div><div style="font-size:10px;color:var(--text3)">Variant</div><input class="inp" id="mg-var-'+idx+'" value="'+(inv.variant||'')+'" placeholder="SP/AA/FA..." style="font-size:12px"/></div>';
+    h+='<div><div style="font-size:10px;color:var(--text3)">Market Price $</div><input type="number" class="inp" id="mg-mkt-'+idx+'" value="'+(inv.mkt||'')+'" step="0.01" style="font-size:12px"/></div>';
+    h+='</div>';
+    h+='<div style="margin-top:6px;display:flex;gap:6px">';
+    h+='<button class="btn btn-g" style="font-size:11px;padding:4px 10px" data-idx="'+idx+'" onclick="migrateSingle(this.dataset.idx)">💾 Save to Catalog</button>';
+    h+='<button class="btn" style="font-size:11px;padding:4px 10px;background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow)" data-idx="'+idx+'" onclick="migrateSkip(this.dataset.idx)">Skip</button>';
+    h+='</div>';
+    h+='</div></div></div>';
+  });
+  el.innerHTML=h;
+  // Store unique list for migrateAll
+  el._unique=unique;
+}
+
+function migrateSingle(idx){
+  var row=g('mg-row-'+idx);if(!row)return;
+  var name=row.dataset.name;
+  var numEl=g('mg-num-'+idx),setEl=g('mg-set-'+idx),varEl=g('mg-var-'+idx),mktEl=g('mg-mkt-'+idx);
+  var num=numEl?numEl.value.trim():'';
+  var set=setEl?setEl.value.trim():'';
+  var variant=varEl?varEl.value.trim():'';
+  var mkt=parseFloat(mktEl?mktEl.value:0)||0;
+  // Find existing catalog entry or create new
+  var existing=app.catalog.find(function(x){
+    return x.name.toLowerCase()===name.toLowerCase()&&(x.cardNumber||'')===(num);
+  });
+  var catId=existing?existing.id:uid();
+  var entry={id:catId,name:name,cardNumber:num,set:set,variant:variant,
+    mktprice:mkt?mkt*EU:0,color:'',rarity:'',image:null,tcgplayerUrl:''};
+  if(existing){Object.assign(existing,entry);}else{app.catalog.push(entry);}
+  // Link all matching inv entries
+  var linked=0;
+  app.inv.forEach(function(i){
+    if(i.name===name&&(!i.catalogId||app.catalog.findIndex(function(x){return x.id===i.catalogId;})===-1)){
+      i.catalogId=catId;
+      if(num)i.num=num;
+      if(set)i.set=set;
+      if(variant)i.variant=variant;
+      if(mkt)i.mkt=mkt;
+      linked++;
+    }
+  });
+  saveCatalog(app.catalog);saveInv();
+  toast('✅ '+name+' saved to catalog, linked '+linked+' entries');
+  renderMigrate();
+}
+
+function migrateSkip(name){
+  // Just re-render skipping this name — add to a skip list in session
+  if(!window._migrateSkip)window._migrateSkip=[];
+  window._migrateSkip.push(name);
+  renderMigrate();
+}
+
+function migrateAll(){
+  var el=g('migrate-list');
+  if(!el||!el._unique||!el._unique.length){toast('Nothing to migrate.');return;}
+  var count=0;
+  el._unique.forEach(function(inv,idx){
+    var numEl=g('mg-num-'+idx),setEl=g('mg-set-'+idx),varEl=g('mg-var-'+idx),mktEl=g('mg-mkt-'+idx);
+    if(!numEl)return;
+    var num=numEl.value.trim(),set=setEl?setEl.value.trim():'',variant=varEl?varEl.value.trim():'',mkt=parseFloat(mktEl?mktEl.value:0)||0;
+    var existing=app.catalog.find(function(x){return x.name.toLowerCase()===inv.name.toLowerCase()&&(x.cardNumber||'')===(num);});
+    var catId=existing?existing.id:uid();
+    var entry={id:catId,name:inv.name,cardNumber:num,set:set,variant:variant,mktprice:mkt?mkt*EU:0,color:inv.color||'',rarity:inv.rarity||'',image:inv.img||null,tcgplayerUrl:''};
+    if(existing){Object.assign(existing,entry);}else{app.catalog.push(entry);}
+    app.inv.forEach(function(i){
+      if(i.name===inv.name&&(!i.catalogId||app.catalog.findIndex(function(x){return x.id===i.catalogId;})===-1)){
+        i.catalogId=catId;if(num)i.num=num;if(set)i.set=set;if(variant)i.variant=variant;if(mkt)i.mkt=mkt;
+      }
+    });
+    count++;
+  });
+  saveCatalog(app.catalog);saveInv();
+  toast('✅ Migrated '+count+' cards to catalog');
+  renderMigrate();
 }
 
 // ─── Sellers ──────────────────────────────────────────────────────────────────
@@ -3137,8 +3218,8 @@ function delShow(id){_snapshot();if(!confirm('Delete this sale record?'))return;
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 function saveKey(){
-  var k=g('api-key-inp').value.trim();if(!k){toast('⚠️ Paste your API key first.');return;}
-  app.key=k;ls('key',k);
+  toast('API removed — no key needed.');
+  return;
   g('key-ok').style.display='';g('key-ok').textContent='✅ Key saved: ...'+k.slice(-6);
   banner();toast('✅ API key saved!');
   dbSave('api_key',k);
@@ -3252,7 +3333,7 @@ function delCatCard(id){_snapshot();
   fixInv();
   stats();
   if(app.key){
-    g('api-key-inp').value=app.key;
+    if(g('api-key-inp'))g('api-key-inp').value='';
     g('key-ok').style.display='';
     g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);
     banner();
