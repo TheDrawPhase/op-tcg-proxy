@@ -491,16 +491,6 @@ button{cursor:pointer}a{text-decoration:none}
       <div id="tier-list"></div>
       <button class="btn" style="margin-top:8px;font-size:12px;padding:6px 13px;background:var(--surface);color:var(--purple);border:1px solid var(--border)" onclick="addTier()">+ Add Tier</button>
     </div>
-    <div class="panel">
-      <div class="pt">🔄 Migrate API Cards to Catalog</div>
-      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Inventory cards without a catalog link are shown below. Review each one, edit the details, then save to your catalog to properly link them.</p>
-      <div id="migrate-stats" style="font-size:12px;margin-bottom:10px"></div>
-      <div id="migrate-list"></div>
-      <div class="row" style="margin-top:10px;gap:6px">
-        <button class="btn" style="font-size:12px;padding:6px 12px" onclick="renderMigrate()">🔄 Refresh</button>
-        <button class="btn btn-g" style="font-size:12px;padding:6px 12px" onclick="migrateAll()">✅ Save All to Catalog</button>
-      </div>
-    </div>
     </div>
   </div>
 </div>
@@ -1092,11 +1082,9 @@ function loadLocal(){
   fin=ll('fin',{paypal:0,bank:0,cash:0,history:[],shows:[]});
   if(!fin.history)fin.history=[];
   if(!fin.shows)fin.shows=[];
-  if(app.key&&g('key-ok')){
-    if(g('api-key-inp'))g('api-key-inp').value=app.key||'';
-    if(g('key-ok')){g('key-ok').style.display='';}
-    if(g('key-ok')){g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);}
-  }
+
+
+
   g('f-pp').value=fin.paypal||0;
   g('f-bank').value=fin.bank||0;
   g('f-cash').value=fin.cash||0;
@@ -1117,7 +1105,7 @@ function show(tab){
   if(tab==='whatnot')renderWhatnot();
   if(tab==='sellers')renderSellers();
   if(tab==='finance')updFin();
-  if(tab==='settings'){renderTiers();renderCatalog();setTimeout(renderMigrate,50);}
+  if(tab==='settings'){renderTiers();renderCatalog();}
 }
 function banner(){var b=g('banner');if(b)b.style.display='none';}
 
@@ -1483,7 +1471,7 @@ function saveOffer(){_snapshot();
 function openManualMod(catCard){
   g('me-name').value='';g('me-set').value='';g('me-num').value='';g('me-color').value='';
   g('me-rarity').value='';g('me-cond').value='NM';g('me-qty').value=1;
-  g('me-img').value='';g('me-tcglink').value='';
+  if(g('me-img'))g('me-img').value='';
   g('me-edit-id').textContent='';
   if(g('me-mktprice'))g('me-mktprice').value='';
   if(catCard){
@@ -1493,7 +1481,12 @@ function openManualMod(catCard){
     g('me-color').value=catCard.color||'';
     g('me-rarity').value=catCard.rarity||'';
     g('me-img').value=catCard.image||'';
-    g('me-tcglink').value=catCard.tcgplayerUrl||'';
+    
+  }
+  g('manual-modal').style.display='';
+}
+function closeManualMod(){g('manual-modal').style.display='none';}
+
 function autofillTCG(){
   toast('Enter price manually.');
 }
@@ -1583,7 +1576,7 @@ function manualToInv(){_snapshot();
 }
 
 function clearManual(){
-  ['me-name','me-set','me-num','me-color','me-rarity','me-img','me-tcglink'].forEach(function(id){var el=g(id);if(el)el.value='';});
+  ['me-name','me-set','me-num','me-color','me-rarity','me-img'].forEach(function(id){var el=g(id);if(el)el.value='';});
   g('me-qty').value=1;g('me-cond').value='NM';g('me-edit-id').textContent='';
   if(g('me-mktprice'))g('me-mktprice').value='';
 }
@@ -1806,8 +1799,6 @@ function buildOfferDetailHTML(o){
   h+='<div style="width:'+(tot2?Math.round(ms_n/tot2*100):0)+'%;background:var(--red);height:5px"></div></div>';
   h+='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">'+rec+'/'+tot+' received • '+mis+' missing</div>';
   h+='</div></div></div></div>';
-}
-}
   return h+bh+ch;
 }
 
@@ -2062,7 +2053,6 @@ function pdfOffer(id,sort){
 function renderInv(){
   invSel={};updBulkBar();
   var flt=(g('inv-q').value||'').toLowerCase(),sf=g('inv-sf').value,srt=g('inv-sort').value||'dd';
-  console.log('[renderInv] total:',app.inv.length,'filter:',flt,'sf:',sf,'inv sample:',app.inv.slice(0,3).map(function(i){return{name:i.name,qty:i.qty,status:i.status};}));
   var filtered=app.inv.filter(function(i){
     return((i.name||'').toLowerCase().includes(flt)||(i.set||'').toLowerCase().includes(flt)||(i.seller||'').toLowerCase().includes(flt))&&(!sf||i.status===sf);
   });
@@ -2202,7 +2192,6 @@ function openInvMod(ek){
     var parts=decoded.split('||');
     name=parts[0]||'';num=parts[1]||'';set=parts[2]||'';variant=parts[3]||'';
   }
-  console.log('[openInvMod] inv names=',app.inv.map(function(i){return i.name;}));
   var entries=app.inv.filter(function(i){
     return i.name===name&&(i.num||'')==num&&(i.set||'')==set&&(i.variant||'')==variant;
   });
@@ -2320,7 +2309,6 @@ function fixInv(){
     if(!i.cond){i.cond='NM';fixed++;}
   });
   if(fixed>0){
-    console.log('[fixInv] fixed',fixed,'field(s) across',app.inv.length,'entries');
     saveInv();
   }
   return fixed;
@@ -2825,110 +2813,6 @@ function updOfferTracking(oid,num,carrier){
 }
 
 
-// ─── Catalog Migration ────────────────────────────────────────────────────────
-function renderMigrate(){
-  var el=g('migrate-list');if(!el)return;
-  // Find inv entries with no catalogId or catalogId not in catalog
-  var catIds=app.catalog.map(function(x){return x.id;});
-  var unlinked=app.inv.filter(function(i){
-    return !i.catalogId || catIds.indexOf(i.catalogId)===-1;
-  });
-  // Dedupe by name+num+set
-  var seen={};
-  var unique=unlinked.filter(function(i){
-    var k=(i.name||'')+'||'+(i.num||'')+'||'+(i.set||'');
-    if(seen[k])return false;seen[k]=true;return true;
-  });
-  if(g('migrate-stats'))g('migrate-stats').textContent=unique.length+' unique cards need catalog linking ('+unlinked.length+' total entries)';
-  if(!unique.length){el.innerHTML='<div style="color:var(--green);font-size:12px;padding:8px">✅ All inventory cards are linked to catalog!</div>';return;}
-  var h='';
-  unique.forEach(function(inv,idx){
-    h+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px" id="mg-row-'+idx+'" data-name="'+inv.name.replace(/"/g,"&quot;")+'">';
-    h+='<div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start">';
-    // Thumbnail
-    h+=inv.img?'<img src="'+inv.img+'" style="width:44px;height:62px;border-radius:4px;object-fit:cover" onerror="this.hidden=1"/>':'<div style="width:44px;height:62px;background:var(--bg3);border-radius:4px"></div>';
-    h+='<div style="min-width:0">';
-    h+='<div style="font-weight:700;font-size:13px;margin-bottom:6px">'+inv.name+'</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
-    h+='<div><div style="font-size:10px;color:var(--text3)">Card #</div><input class="inp" id="mg-num-'+idx+'" value="'+(inv.num||'')+'" style="font-size:12px"/></div>';
-    h+='<div><div style="font-size:10px;color:var(--text3)">Set</div><input class="inp" id="mg-set-'+idx+'" value="'+(inv.set||'')+'" style="font-size:12px"/></div>';
-    h+='<div><div style="font-size:10px;color:var(--text3)">Variant</div><input class="inp" id="mg-var-'+idx+'" value="'+(inv.variant||'')+'" placeholder="SP/AA/FA..." style="font-size:12px"/></div>';
-    h+='<div><div style="font-size:10px;color:var(--text3)">Market Price $</div><input type="number" class="inp" id="mg-mkt-'+idx+'" value="'+(inv.mkt||'')+'" step="0.01" style="font-size:12px"/></div>';
-    h+='</div>';
-    h+='<div style="margin-top:6px;display:flex;gap:6px">';
-    h+='<button class="btn btn-g" style="font-size:11px;padding:4px 10px" data-idx="'+idx+'" onclick="migrateSingle(this.dataset.idx)">💾 Save to Catalog</button>';
-    h+='<button class="btn" style="font-size:11px;padding:4px 10px;background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow)" data-idx="'+idx+'" onclick="migrateSkip(this.dataset.idx)">Skip</button>';
-    h+='</div>';
-    h+='</div></div></div>';
-  });
-  el.innerHTML=h;
-  // Store unique list for migrateAll
-  el._unique=unique;
-}
-
-function migrateSingle(idx){
-  var row=g('mg-row-'+idx);if(!row)return;
-  var name=row.dataset.name;
-  var numEl=g('mg-num-'+idx),setEl=g('mg-set-'+idx),varEl=g('mg-var-'+idx),mktEl=g('mg-mkt-'+idx);
-  var num=numEl?numEl.value.trim():'';
-  var set=setEl?setEl.value.trim():'';
-  var variant=varEl?varEl.value.trim():'';
-  var mkt=parseFloat(mktEl?mktEl.value:0)||0;
-  // Find existing catalog entry or create new
-  var existing=app.catalog.find(function(x){
-    return x.name.toLowerCase()===name.toLowerCase()&&(x.cardNumber||'')===(num);
-  });
-  var catId=existing?existing.id:uid();
-  var entry={id:catId,name:name,cardNumber:num,set:set,variant:variant,
-    mktprice:mkt?mkt*EU:0,color:'',rarity:'',image:null,tcgplayerUrl:''};
-  if(existing){Object.assign(existing,entry);}else{app.catalog.push(entry);}
-  // Link all matching inv entries
-  var linked=0;
-  app.inv.forEach(function(i){
-    if(i.name===name&&(!i.catalogId||app.catalog.findIndex(function(x){return x.id===i.catalogId;})===-1)){
-      i.catalogId=catId;
-      if(num)i.num=num;
-      if(set)i.set=set;
-      if(variant)i.variant=variant;
-      if(mkt)i.mkt=mkt;
-      linked++;
-    }
-  });
-  saveCatalog(app.catalog);saveInv();
-  toast('✅ '+name+' saved to catalog, linked '+linked+' entries');
-  renderMigrate();
-}
-
-function migrateSkip(name){
-  // Just re-render skipping this name — add to a skip list in session
-  if(!window._migrateSkip)window._migrateSkip=[];
-  window._migrateSkip.push(name);
-  renderMigrate();
-}
-
-function migrateAll(){
-  var el=g('migrate-list');
-  if(!el||!el._unique||!el._unique.length){toast('Nothing to migrate.');return;}
-  var count=0;
-  el._unique.forEach(function(inv,idx){
-    var numEl=g('mg-num-'+idx),setEl=g('mg-set-'+idx),varEl=g('mg-var-'+idx),mktEl=g('mg-mkt-'+idx);
-    if(!numEl)return;
-    var num=numEl.value.trim(),set=setEl?setEl.value.trim():'',variant=varEl?varEl.value.trim():'',mkt=parseFloat(mktEl?mktEl.value:0)||0;
-    var existing=app.catalog.find(function(x){return x.name.toLowerCase()===inv.name.toLowerCase()&&(x.cardNumber||'')===(num);});
-    var catId=existing?existing.id:uid();
-    var entry={id:catId,name:inv.name,cardNumber:num,set:set,variant:variant,mktprice:mkt?mkt*EU:0,color:inv.color||'',rarity:inv.rarity||'',image:inv.img||null,tcgplayerUrl:''};
-    if(existing){Object.assign(existing,entry);}else{app.catalog.push(entry);}
-    app.inv.forEach(function(i){
-      if(i.name===inv.name&&(!i.catalogId||app.catalog.findIndex(function(x){return x.id===i.catalogId;})===-1)){
-        i.catalogId=catId;if(num)i.num=num;if(set)i.set=set;if(variant)i.variant=variant;if(mkt)i.mkt=mkt;
-      }
-    });
-    count++;
-  });
-  saveCatalog(app.catalog);saveInv();
-  toast('✅ Migrated '+count+' cards to catalog');
-  renderMigrate();
-}
 
 // ─── Sellers ──────────────────────────────────────────────────────────────────
 function renderSellers(){
@@ -3334,8 +3218,8 @@ function delCatCard(id){_snapshot();
   stats();
   if(app.key){
     if(g('api-key-inp'))g('api-key-inp').value='';
-    if(g('key-ok')){g('key-ok').style.display='';}
-    if(g('key-ok')){g('key-ok').textContent='✅ Key: ...'+app.key.slice(-6);}
+    
+    
     banner();
   }
   g('f-pp').value=fin.paypal||0;
